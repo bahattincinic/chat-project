@@ -1,5 +1,6 @@
 *.pyc
 celerybeat-schedule
+db.sqlite3
 ._*
 *.tmp
 settings.py
