@@ -1,0 +1,10 @@
+*.pyc
+celerybeat-schedule
+._*
+*.tmp
+settings.py
+.idea
+.DS_Store
+db_burakalkan
+bootstrap.min_bootstrap*
+jquery_jquery.hotkeys_bootstrap*
