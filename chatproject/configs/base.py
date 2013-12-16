@@ -30,15 +30,30 @@ ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = 'account.User'
 
-# Application definition
-INSTALLED_APPS = (
+
+# APP CONFIGURATION
+DJANGO_APPS = (
+    # Default Django apps:
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
-    'actstream',
-    'account'
 )
+
+THIRD_PARTY_APPS = (
+)
+
+# Apps specific for this project go here.
+LOCAL_APPS = (
+    'actstream',
+    'account',
+    'api',
+    'chat',
+    'network'
+)
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -81,3 +96,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Devices
+DESKTOP = 'desktop'
+MOBILE = 'mobile'
+IOS = 'ios'
+ANDROID = 'android'
+DEVICE_CHOCIES = ((DESKTOP, 'Desktop'), (IOS, 'ios'),
+                  (ANDROID, 'Android'), (MOBILE, 'Mobile'))

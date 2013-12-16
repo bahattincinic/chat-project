@@ -1,10 +1,40 @@
-*.pyc
-celerybeat-schedule
-db.sqlite3
-._*
-*.tmp
-settings.py
+# Python bytecode:
+*.py[co]
+
+# Packaging files:
+*.egg*
+
+# Editor temp files:
+*.swp
+*~
+
+# Sphinx docs:
+build
+
+# SQLite3 database files:
+*.db
+*.sqlite3
+
+# Logs:
+*.log
+
+#PyCharm
 .idea
+
+# Compress
+CACHE
+
+# Temp
+*.tmp
+._*
+
+# Celery
+celerybeat-schedule
+
+# Settings
+settings.py
+
+# Other
 .DS_Store
 bootstrap.min_bootstrap*
 jquery_jquery.hotkeys_bootstrap*
