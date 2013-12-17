@@ -63,7 +63,7 @@ class ChatMessage(models.Model):
 
     TO_USER = 'TO_USR'
     TO_ANON = 'TO_ANON'
-    DIRECTION = ((TO_USER, 'To User'), (TO_ANON, 'To Anon'))
+    DIRECTION = ((TO_USER, 'From Anon to User'), (TO_ANON, 'From User to Anon'))
     direction = models.CharField(max_length=8, choices=DIRECTION)
 
     content = models.TextField(_('Message'))
@@ -79,16 +79,16 @@ class ChatMessage(models.Model):
     @property
     def author(self):
         if self.direction == self.TO_ANON:
-            return self.session.anon
-        else:
             return self.session.target
+        else:
+            return self.session.anon
 
     @property
     def recipient(self):
         if self.direction == self.TO_ANON:
-            return self.session.target
-        else:
             return self.session.anon
+        else:
+            return self.session.target
 
     def __unicode__(self):
         return "ChatMessage with user %s(%s)" \
