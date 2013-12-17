@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 from account.models import User
 from django.conf import settings
 from django.utils import timezone
@@ -43,35 +41,30 @@ class ChatSession(models.Model):
     last_message_at = models.DateTimeField(_('Last Update Date'),
                                            default=timezone.now())
 
-    ACTIVE = 'active'
-    PASSIVE = 'passive'
-    STATUS_CHOCIRIES = ((ACTIVE, 'Active'), (PASSIVE, 'Passive'))
-    status = models.CharField(_('Status'), choices=STATUS_CHOCIRIES,
+    ACTIVE = 'ACT'
+    PASSIVE = 'PASS'
+    STATUS_CHOICES = ((ACTIVE, 'Active'), (PASSIVE, 'Passive'))
+    status = models.CharField(_('Status'), choices=STATUS_CHOICES,
                               max_length=20)
-
-    target_type = models.CharField(_('Target Type'),
-                                   choices=settings.DEVICE_CHOCIES,
-                                   max_length=20)
 
     class Meta:
         db_table = 'chat_session'
+
+    def __unicode__(self):
+        return "ChatSession with  %s (%s) " \
+               "as target an %s(%s) as anon user " \
+               "created_at %s" % (self.target.username, self.target.id,
+                                  self.anon.username, self.anon.id,
+                                  self.created_at)
 
 
 class ChatMessage(models.Model):
     session = models.ForeignKey(ChatSession)
 
-    from_content_type = models.ForeignKey(ContentType,
-                                          related_name='from_contenttype')
-    to_content_type = models.ForeignKey(ContentType,
-                                        related_name='to_contenttype')
-
-    from_object_id = models.PositiveIntegerField()
-    to_object_id = models.PositiveIntegerField()
-
-    to_content_object = generic.GenericForeignKey(
-        'to_content_type', 'to_object_id')
-    from_content_object = generic.GenericForeignKey(
-        'from_content_type', 'from_object_id')
+    TO_USER = 'TO_USR'
+    TO_ANON = 'TO_ANON'
+    DIRECTION = ((TO_USER, 'To User'), (TO_ANON, 'To Anon'))
+    direction = models.CharField(max_length=8, choices=DIRECTION)
 
     content = models.TextField(_('Message'))
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
@@ -82,3 +75,24 @@ class ChatMessage(models.Model):
 
     class Meta:
         db_table = 'chat_message'
+
+    @property
+    def author(self):
+        if self.direction == self.TO_ANON:
+            return self.session.anon
+        else:
+            return self.session.target
+
+    @property
+    def recipient(self):
+        if self.direction == self.TO_ANON:
+            return self.session.target
+        else:
+            return self.session.anon
+
+    def __unicode__(self):
+        return "ChatMessage with user %s(%s)" \
+               "and anon %s(%s)" % (self.session.target.username,
+                                    self.session.target.id,
+                                    self.session.anon.username,
+                                    self.session.anon.id)
