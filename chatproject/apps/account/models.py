@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core import validators
 from django.db import models
 from .managers import UserManager
-
+#from chatproject.core
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_('username'), max_length=30, unique=True,
