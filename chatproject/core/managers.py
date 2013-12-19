@@ -5,7 +5,7 @@ from core.exceptions import OPSException
 class FilteringManager(models.Manager):
     def __init__(self, **kwargs):
         self.filtering = kwargs
-        super(FilteringManager, self).__init__()
+        return super(FilteringManager, self).__init__()
 
     def get_query_set(self):
         return super(FilteringManager, self).get_queryset()\
