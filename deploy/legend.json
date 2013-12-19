@@ -1,13 +1,13 @@
 {
     "projects_root": "/opt/projects",
-    "project_address": "remento.burakalkan.com",
-    "project_source_repo": "git@bitbucket.org:balkan/remento.git",
-    "project_appname": "remento",
-    "project_upstream_name": "django_remento",
+    "project_address": "chat.burakalkan.com",
+    "project_source_repo": "git@bitbucket.org/bahattincinic/chatproject.git",
+    "project_appname": "chatproject",
+    "project_upstream_name": "django_chat",
 
     "project_conf_dir": "conf",
     "socket_protocol": "unix://",
-    "socket_name": "/tmp/uwsgi.remento.sock",
+    "socket_name": "/tmp/uwsgi.chat.sock",
     "remote_projects_dir": "/opt/projects",
     "overwrite_conf": true,
 
@@ -15,39 +15,11 @@
     "use_django_static": true,
     "update_haystack_index": true,
 
-    "tasks" : [
-        {
-            "filename": "remento_beat.conf",
-            "comment": "general celery beat for remento",
-            "name": "remento-beat",
-            "command": "/opt/projects/remento.burakalkan.com/venv/bin/python /opt/projects/remento.burakalkan.com/src/remento/manage.py celery beat",
-            "cwdir": "/tmp",
-            "user": "balkan",
-            "autostart": "true",
-            "use_custom_logging": false
-        },
-        {
-            "filename": "remento_worker_on_haystack.conf",
-            "comment": "handles insrance updates and deletions on search index",
-            "name": "remento-worker-haystack",
-            "command": "/opt/projects/remento.burakalkan.com/venv/bin/python /opt/projects/remento.burakalkan.com/src/remento/manage.py celery worker -c 1 -l info -Q haystack",
-            "cwdir": "/opt/projects/remento.burakalkan.com/src/remento",
-            "user": "balkan",
-            "autostart": "true",
-            "use_custom_logging": true,
-            "logging": {
-                "purge": true,
-                "logdir": "/opt/projects/remento.burakalkan.com/log/remento_haystack",
-                "logfile": "remento_haystack.log",
-                "logfile_maxbytes": 20480,
-                "logfile_backups": 8
-            }
-        }
-    ],
+    "tasks" : [],
 
     "settings": {
         "settings_parent": "settings",
-        "active_setting": "production",
+        "active_setting": "prod",
         "overwrite_settings": true
     }
 }
