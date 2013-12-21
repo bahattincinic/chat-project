@@ -231,8 +231,7 @@ class DeployTask(BaseTask):
                 if exists(self.ini['project_appname']):
                     print yellow('production_src %s exists..' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
-            run('cp -rf %s %s/%s' % \
-                    (source_tree, production_src, self.ini['project_appname']))
+            run('cp -rf %s %s' % (source_tree, production_src))
         except KeyError:
             print yellow(
                 'Src::no repo url found,'

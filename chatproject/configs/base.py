@@ -13,10 +13,10 @@ import os
 import sys
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
-CONFIG = os.path.join(BASE_DIR, 'configs')
+# CONFIG = os.path.join(BASE_DIR, 'configs')
 sys.path.insert(1, APPS)
 sys.path.insert(2, BASE_DIR)
-sys.path.insert(3, CONFIG)
+# sys.path.insert(3, CONFIG)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
