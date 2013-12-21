@@ -221,7 +221,7 @@ class DeployTask(BaseTask):
                 print yellow('already exists, removing old pull')
                 run('rm -rf %s' % source_tree)
             with cd("/tmp"):
-                run('git clone ' + self.ini['project_source_repo'])
+                run('git clone  -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
 
