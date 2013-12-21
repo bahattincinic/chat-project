@@ -163,15 +163,12 @@ class DeployTask(BaseTask):
             (self.ini.get('remote_projects_dir'),
              self.ini.get('project_address'),
              self.ini.get('project_appname'),
-             settings_dict.get("settings_parent", self.ini.get('project_appname')))
+             self.ini.get('project_appname'))
 
         # if None given use production settings
         filename = settings_dict.get("active_setting", "production") + '.py'
         self.original = '%sconfigs/%s' % (self.base, filename)
         self.target = '%ssettings.py' % (self.base)
-
-        print yellow(self.original)
-        print yellow(self.target)
 
         if not exists(self.original):
             raise ImproperlyConfigured(
