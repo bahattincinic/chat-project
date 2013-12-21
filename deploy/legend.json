@@ -1,7 +1,8 @@
 {
     "projects_root": "/opt/projects",
+    "project_branch": "1balkandeployment",
     "project_address": "chat.burakalkan.com",
-    "project_source_repo": "git@bitbucket.org/bahattincinic/chatproject.git",
+    "project_source_repo": "ssh://git@bitbucket.org/bahattincinic/chatproject.git",
     "project_appname": "chatproject",
     "project_upstream_name": "django_chat",
 
@@ -11,9 +12,9 @@
     "remote_projects_dir": "/opt/projects",
     "overwrite_conf": true,
 
-    "use_ssl": true,
-    "use_django_static": true,
-    "update_haystack_index": true,
+    "use_ssl": false,
+    "use_django_static": false,
+    "update_haystack_index": false,
 
     "tasks" : [],
 
@@ -21,5 +22,11 @@
         "settings_parent": "settings",
         "active_setting": "prod",
         "overwrite_settings": true
+    },
+
+    "requirements": {
+        "use_config": false,
+        "config_dir": "reqs",
+        "requirements": "prod.txt"
     }
 }

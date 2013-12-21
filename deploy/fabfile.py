@@ -12,6 +12,7 @@ from fabric.operations import put
 
 env.use_ssh_config = True
 env.hosts = ['burakalkan.com']
+# env.hosts = ['deploy']
 settings.configure()
 
 
@@ -152,6 +153,7 @@ class BaseTask:
 
 class DeployTask(BaseTask):
     """ helper class for task:deploy """
+
     def link_settings(self):
         # link production settings
         settings_dict = self.ini.get("settings")
@@ -244,13 +246,31 @@ class DeployTask(BaseTask):
                 run('virtualenv %s' % target)
             else:
                 print cyan(
-                    'already seems to have a env,'
+                    'already seems to have a env..'
                     'do not create a new env')
+        req_base = '%s/%s/src/%s/deploy' % \
+                   (self.ini['projects_root'],
+                    self.ini['project_address'],
+                    self.ini['project_appname'])
+        # default requirements file for venv
+        default_req_file = "%s/requirements.txt" % req_base
+        reqs = self.ini["requirements"]
+        if reqs and reqs["use_config"]:
+            config_dir = reqs["config_dir"]
+            req_file = reqs["requirements"]
+            if not (config_dir and req_file):
+                raise ImproperlyConfigured("use_config enabled but "
+                                           "no config_dir or requirements found")
+            target_req = "%s/%s/%s" % (req_base, config_dir, req_file)
+        else:
+            target_req = default_req_file
+        print red("will install this file %s" % target_req)
+        raise Exception()
 
-        req = '%s/%s/src/%s/deploy/requirements.txt' %\
-            (self.ini['projects_root'],
-             self.ini['project_address'],
-             self.ini['project_appname'])
+        # req = '%s/%s/src/%s/deploy/requirements.txt' %\
+        #     (self.ini['projects_root'],
+        #      self.ini['project_address'],
+        #      self.ini['project_appname'])
 
         if exists(req):
             print green('Found requirements file, installing it')
