@@ -1,1 +1,1 @@
-from base import *
+from configs.base import *
