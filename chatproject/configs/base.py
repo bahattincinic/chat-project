@@ -136,5 +136,6 @@ ANDROID = 'android'
 DEVICE_CHOCIES = ((DESKTOP, 'Desktop'), (IOS, 'ios'),
                   (ANDROID, 'Android'), (MOBILE, 'Mobile'))
 
-# Api Version
+# Api
 API_VERSION = 'v1'
+API_ALLOWED_FORMATS = ['json']
