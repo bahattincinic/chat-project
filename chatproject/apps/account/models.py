@@ -6,7 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.core import validators
 from django.db import models
 from .managers import UserManager
-#from chatproject.core
+from core.managers import CommonManager, FilteringManager
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_('username'), max_length=30, unique=True,
@@ -59,7 +60,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
-    objects = UserManager()
+    objects = UserManager(is_deleted=False)
+    actives = UserManager(is_deleted=False, is_active=True)
+
 
     class Meta:
         verbose_name = _('user')
@@ -67,7 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_table = 'user'
 
     def __unicode__(self):
-        return "%s - %s" % (self.id, self.username)
+        return "%s(%s)" % (self.username, self.id)
 
     def get_full_name(self):
         full_name = '%s <%s>' % (self.username, self.email)
@@ -82,6 +85,8 @@ class Follow(models.Model):
     following = models.ForeignKey(User, related_name='following_set')
     follower = models.ForeignKey(User, related_name='follower_set')
     created_at = models.DateTimeField(_('Follow Created'), auto_now_add=True)
+
+    objects = CommonManager()
 
     # TODO: follow, unfollow log atilmasi lazim
     class Meta:
@@ -106,6 +111,8 @@ class Report(models.Model):
     status = models.CharField(_('Status'), choices=STATUS_CHOCIRIES,
                               max_length=10)
     text = models.TextField(_('Other/Text'), null=True, blank=True)
+
+    objects = CommonManager()
 
     class Meta:
         db_table = 'user_report'
