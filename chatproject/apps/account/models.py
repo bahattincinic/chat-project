@@ -70,7 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_table = 'user'
 
     def __unicode__(self):
-        return "%s - %s" % (self.id, self.username)
+        return "%s(%s)" % (self.username, self.id)
 
     def get_full_name(self):
         full_name = '%s <%s>' % (self.username, self.email)

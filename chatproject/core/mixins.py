@@ -1,3 +1,4 @@
+from django.db.models.query import QuerySet
 from core.exceptions import OPSException
 
 
@@ -30,10 +31,12 @@ class ManagerMixins(object):
 
 
 class FilteringMixin(object):
-    def __init__(self, **kwargs):
-        self.filtering = kwargs
-        super(FilteringMixin, self).__init__()
+    def __init__(self, **filter_options):
+        self.clause = filter_options
 
     def get_query_set(self):
-        return super(FilteringMixin, self).get_queryset()\
-            .filter(**self.filtering)
+        """
+        Mixin class for default filtering
+        when creating a QuerySet
+        """
+        return QuerySet(self.model, using=self._db).filter(**self.clause)

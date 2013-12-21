@@ -2,11 +2,11 @@ from django.contrib.auth.models import BaseUserManager
 from core.managers import ManagerMixins, FilteringMixin
 
 
-class UserManager(BaseUserManager, ManagerMixins, FilteringMixin):
-
+class UserManager(FilteringMixin, ManagerMixins, BaseUserManager):
     def __init__(self, **kwargs):
         self.filtering = kwargs
-        super(UserManager, self).__init__()
+        FilteringMixin.__init__(self, **kwargs)
+        BaseUserManager.__init__(self)
 
     def create_user(self, username, password, **extra_fields):
         """
