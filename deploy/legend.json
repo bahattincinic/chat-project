@@ -19,7 +19,6 @@
     "tasks" : [],
 
     "settings": {
-        "settings_parent": "settings",
         "active_setting": "prod",
         "overwrite_settings": true
     },

@@ -170,7 +170,8 @@ class DeployTask(BaseTask):
         self.original = '%sconfigs/%s' % (self.base, filename)
         self.target = '%ssettings.py' % (self.base)
 
-        print self.original
+        print yellow(self.original)
+        print yellow(self.target)
 
         if not exists(self.original):
             raise ImproperlyConfigured(
@@ -264,21 +265,18 @@ class DeployTask(BaseTask):
             target_req = "%s/%s/%s" % (req_base, config_dir, req_file)
         else:
             target_req = default_req_file
-        print red("will install this file %s" % target_req)
-        raise Exception()
 
-        # req = '%s/%s/src/%s/deploy/requirements.txt' %\
-        #     (self.ini['projects_root'],
-        #      self.ini['project_address'],
-        #      self.ini['project_appname'])
-
-        if exists(req):
-            print green('Found requirements file, installing it')
+        if exists(target_req):
+            print green("requirements computed as: %s" % target_req)
+            # print green('Found requirements file, installing it')
             with prefix('source %s' % (target + '/bin/activate')):
-                    run('pip install -r %s' % req)
+                    run('pip install -r %s' % target_req)
         else:
-            print red("requirements.txt not found, "
-                      " install django at least")
+            message = "requirements.txt not found, " \
+                      " please give at least requirements.txt " \
+                      "file for deployment"
+            print red(message)
+            raise ImproperlyConfigured(message)
 
     def files(self):
         uwsgi_log = self.ini['projects_root'] + '/' + self.ini[
