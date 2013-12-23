@@ -388,7 +388,7 @@ class DeployTask(BaseTask):
 @task
 def deploy(branch_name):
     obj = DeployTask()
-    if obj.load_legend():
+    if obj.load_legend(branch_name):
         try:
             obj.check_dir()
             obj.render()
