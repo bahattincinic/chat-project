@@ -12,6 +12,7 @@ from fabric.operations import put
 
 env.use_ssh_config = True
 env.hosts = ['burakalkan.com']
+# env.hosts = ['deploy']
 settings.configure()
 
 
@@ -152,6 +153,7 @@ class BaseTask:
 
 class DeployTask(BaseTask):
     """ helper class for task:deploy """
+
     def link_settings(self):
         # link production settings
         settings_dict = self.ini.get("settings")
@@ -161,14 +163,12 @@ class DeployTask(BaseTask):
             (self.ini.get('remote_projects_dir'),
              self.ini.get('project_address'),
              self.ini.get('project_appname'),
-             settings_dict.get("settings_parent", self.ini.get('project_appname')))
+             self.ini.get('project_appname'))
 
         # if None given use production settings
         filename = settings_dict.get("active_setting", "production") + '.py'
         self.original = '%sconfigs/%s' % (self.base, filename)
         self.target = '%ssettings.py' % (self.base)
-
-        print self.original
 
         if not exists(self.original):
             raise ImproperlyConfigured(
@@ -219,7 +219,7 @@ class DeployTask(BaseTask):
                 print yellow('already exists, removing old pull')
                 run('rm -rf %s' % source_tree)
             with cd("/tmp"):
-                run('git clone ' + self.ini['project_source_repo'])
+                run('git clone  -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
 
@@ -228,8 +228,7 @@ class DeployTask(BaseTask):
                 if exists(self.ini['project_appname']):
                     print yellow('production_src %s exists..' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
-            run('cp -rf %s %s/%s' % \
-                    (source_tree, production_src, self.ini['project_appname']))
+            run('cp -rf %s %s' % (source_tree, production_src))
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
@@ -244,21 +243,36 @@ class DeployTask(BaseTask):
                 run('virtualenv %s' % target)
             else:
                 print cyan(
-                    'already seems to have a env,'
+                    'already seems to have a env..'
                     'do not create a new env')
-
-        req = '%s/%s/src/%s/deploy/requirements.txt' %\
-            (self.ini['projects_root'],
-             self.ini['project_address'],
-             self.ini['project_appname'])
-
-        if exists(req):
-            print green('Found requirements file, installing it')
-            with prefix('source %s' % (target + '/bin/activate')):
-                    run('pip install -r %s' % req)
+        req_base = '%s/%s/src/%s/deploy' % \
+                   (self.ini['projects_root'],
+                    self.ini['project_address'],
+                    self.ini['project_appname'])
+        # default requirements file for venv
+        default_req_file = "%s/requirements.txt" % req_base
+        reqs = self.ini["requirements"]
+        if reqs and reqs["use_config"]:
+            config_dir = reqs["config_dir"]
+            req_file = reqs["requirements"]
+            if not (config_dir and req_file):
+                raise ImproperlyConfigured("use_config enabled but "
+                                           "no config_dir or requirements found")
+            target_req = "%s/%s/%s" % (req_base, config_dir, req_file)
         else:
-            print red("requirements.txt not found, "
-                      " install django at least")
+            target_req = default_req_file
+
+        if exists(target_req):
+            print green("requirements computed as: %s" % target_req)
+            # print green('Found requirements file, installing it')
+            with prefix('source %s' % (target + '/bin/activate')):
+                    run('pip install -r %s' % target_req)
+        else:
+            message = "requirements.txt not found, " \
+                      " please give at least requirements.txt " \
+                      "file for deployment"
+            print red(message)
+            raise ImproperlyConfigured(message)
 
     def files(self):
         uwsgi_log = self.ini['projects_root'] + '/' + self.ini[

@@ -4,7 +4,6 @@ Pillow==2.2.2
 argparse==1.2.1
 django-extensions==1.2.5
 ecdsa==0.10
-ipdb==0.8
 ipython==1.1.0
 paramiko==1.12.0
 pycrypto==2.6.1
