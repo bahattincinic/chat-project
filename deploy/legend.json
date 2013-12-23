@@ -1,6 +1,5 @@
 {
     "projects_root": "/opt/projects",
-    "project_branch": "1balkandeployment",
     "project_address": "chat.burakalkan.com",
     "project_source_repo": "ssh://git@bitbucket.org/bahattincinic/chatproject.git",
     "project_appname": "chatproject",
@@ -24,7 +23,6 @@
     },
 
     "requirements": {
-        "use_config": false,
         "config_dir": "reqs",
         "requirements": "prod.txt"
     }
