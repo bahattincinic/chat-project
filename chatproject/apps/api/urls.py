@@ -7,6 +7,7 @@ from account.urls import api_v1
 v1_routers = patterns('',
     url(r'^account/', include(api_v1)),
 )
+
 v1_routers = format_suffix_patterns(v1_routers,
                                     allowed=settings.API_ALLOWED_FORMATS)
 

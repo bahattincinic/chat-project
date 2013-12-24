@@ -6,7 +6,7 @@ class CommonManager(models.Manager, ManagerMixins):
     pass
 
 
-class FilteringManager(CommonManager, FilteringMixin):
+class FilteringManager(FilteringMixin, CommonManager):
     pass
 
 
