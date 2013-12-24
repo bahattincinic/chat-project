@@ -13,6 +13,7 @@ from actstream.models import action, Action
 from account.models import User
 from api.models import AccessToken
 from rest_framework.permissions import AllowAny
+from .serializers import UserDetailSerializer
 
 
 class ObtainExpiringAuthToken(ObtainAuthToken):
@@ -20,7 +21,7 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
         serializer = self.serializer_class(data=request.DATA)
         if serializer.is_valid():
             token, created = AccessToken.objects.get_or_create(
-                user=serializer.object['user'])
+                user=serializer.object['user'], is_deleted=False)
 
             if not created:
                 # update the created time of the token to keep it valid
@@ -29,7 +30,8 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
 
             action.send(serializer.object['user'], verb=User.verbs.get("login"),
                         level=Action.INFO, type=settings.TOKEN_SESSION)
-            return Response({'token': token.key})
+            user_data = UserDetailSerializer(serializer.object['user'])
+            return Response({'user': user_data.data, 'token': token.key})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -44,5 +46,6 @@ class SessionAuthentication(APIView):
             login(request, serializer.object['user'])
             action.send(serializer.object['user'], verb=User.verbs.get("login"),
                         level=Action.INFO, type=settings.AUTH_SESSION)
-            return Response({'result': "success"})
+            user_data = UserDetailSerializer(serializer.object['user'])
+            return Response(user_data.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
