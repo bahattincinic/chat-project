@@ -65,11 +65,12 @@ class BaseTask:
         self.ini = {}
         self.out = 'out'
 
-    def load_legend(self):
+    def load_legend(self, branch_name):
         """ """
         try:
             with open('legend.json', 'r') as f:
                 self.ini = json.loads(f.read())
+                self.ini["project_branch"] = branch_name
             return True
         except IOError:
             return False
@@ -235,6 +236,7 @@ class DeployTask(BaseTask):
                 'not doing anything with /src')
 
     def venv(self):
+        no_reqs = "No requirement instructions found for venv"
         target = self.ini['projects_root'] + '/' + self.ini[
             'project_address'] + '/venv'
         with cd(target):
@@ -249,18 +251,18 @@ class DeployTask(BaseTask):
                    (self.ini['projects_root'],
                     self.ini['project_address'],
                     self.ini['project_appname'])
+
         # default requirements file for venv
-        default_req_file = "%s/requirements.txt" % req_base
         reqs = self.ini["requirements"]
-        if reqs and reqs["use_config"]:
-            config_dir = reqs["config_dir"]
-            req_file = reqs["requirements"]
-            if not (config_dir and req_file):
-                raise ImproperlyConfigured("use_config enabled but "
-                                           "no config_dir or requirements found")
-            target_req = "%s/%s/%s" % (req_base, config_dir, req_file)
-        else:
-            target_req = default_req_file
+        if not (reqs and reqs["config_dir"] and reqs["requirements"]):
+            raise ImproperlyConfigured(no_reqs)
+
+        config_dir = reqs["config_dir"]
+        req_file = reqs["requirements"]
+        if not (config_dir and req_file):
+            raise ImproperlyConfigured("use_config enabled but "
+                                       "no config_dir or requirements found")
+        target_req = "%s/%s/%s" % (req_base, config_dir, req_file)
 
         if exists(target_req):
             print green("requirements computed as: %s" % target_req)
@@ -268,11 +270,8 @@ class DeployTask(BaseTask):
             with prefix('source %s' % (target + '/bin/activate')):
                     run('pip install -r %s' % target_req)
         else:
-            message = "requirements.txt not found, " \
-                      " please give at least requirements.txt " \
-                      "file for deployment"
-            print red(message)
-            raise ImproperlyConfigured(message)
+            print red(no_reqs)
+            raise ImproperlyConfigured(no_reqs)
 
     def files(self):
         uwsgi_log = self.ini['projects_root'] + '/' + self.ini[
@@ -387,9 +386,9 @@ class DeployTask(BaseTask):
 
 
 @task
-def deploy():
+def deploy(branch_name):
     obj = DeployTask()
-    if obj.load_legend():
+    if obj.load_legend(branch_name):
         try:
             obj.check_dir()
             obj.render()
