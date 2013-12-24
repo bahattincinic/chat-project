@@ -39,3 +39,7 @@ settings.py
 .DS_Store
 bootstrap.min_bootstrap*
 jquery_jquery.hotkeys_bootstrap*
+
+# Vagrant
+Vagrantfile
+.vagrant

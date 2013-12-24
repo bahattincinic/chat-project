@@ -63,6 +63,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager(is_deleted=False)
     actives = UserManager(is_deleted=False, is_active=True)
 
+    verbs = {
+        'login': 'Login',
+        'logout': 'Logout',
+        'register': 'Register'
+    }
 
     class Meta:
         verbose_name = _('user')

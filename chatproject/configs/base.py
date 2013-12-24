@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import sys
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
 # CONFIG = os.path.join(BASE_DIR, 'configs')
@@ -45,6 +46,7 @@ DJANGO_APPS = (
 
 THIRD_PARTY_APPS = (
     'django_extensions',
+    'rest_framework'
 )
 
 # Apps specific for this project go here.
@@ -83,6 +85,32 @@ DATABASES = {
     }
 }
 
+# Rest Framework Config http://django-rest-framework.org/#installation
+REST_FRAMEWORK = {
+    # Use hyperlinked styles by default.
+    # Only used if the `serializer_class` attribute is not set on a view.
+    'DEFAULT_MODEL_SERIALIZER_CLASS':
+        'rest_framework.serializers.HyperlinkedModelSerializer',
+
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'account.authentication.ExpiringTokenAuthentication'
+    ),
+    # Custom Exception Handler
+    'EXCEPTION_HANDLER': 'api.exceptions.custom_exception_handler',
+
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.MultiPartRenderer',
+        'rest_framework.renderers.JSONRenderer',
+    )
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -108,3 +136,13 @@ IOS = 'ios'
 ANDROID = 'android'
 DEVICE_CHOCIES = ((DESKTOP, 'Desktop'), (IOS, 'ios'),
                   (ANDROID, 'Android'), (MOBILE, 'Mobile'))
+
+AUTH_SESSION = 'authsession'
+TOKEN_SESSION = 'tokensession'
+AUTH_TYPES = ((AUTH_SESSION, 'Auth Session'), (TOKEN_SESSION, 'Token Session'))
+
+# Api
+API_VERSION = 'v1'
+API_ALLOWED_FORMATS = ['json']
+# 15 days
+API_TOKEN_TTL = 15
