@@ -23,7 +23,7 @@
     },
 
     "requirements": {
-        "config_dir": "reqs",
+        "config_dir": "requirements",
         "requirements": "prod.txt"
     }
 }
