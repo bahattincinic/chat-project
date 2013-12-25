@@ -4,7 +4,6 @@ from core.managers import ManagerMixins, FilteringMixin
 
 class UserManager(FilteringMixin, ManagerMixins, BaseUserManager):
     def __init__(self, **kwargs):
-        self.filtering = kwargs
         FilteringMixin.__init__(self, **kwargs)
         BaseUserManager.__init__(self)
 

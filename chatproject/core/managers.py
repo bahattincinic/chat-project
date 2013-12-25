@@ -8,8 +8,12 @@ class CommonManager(models.Manager, ManagerMixins):
 
 
 class FilteringManager(FilteringMixin, CommonManager):
-    pass
+    def __init__(self, **filter_options):
+        FilteringMixin.__init__(self, **filter_options)
+        CommonManager.__init__(self)
 
 
-class FilteringBaseManager(models.Manager, FilteringMixin):
-    pass
+class FilteringBaseManager(FilteringMixin, models.Manager):
+    def __init__(self, **filter_options):
+        FilteringMixin.__init__(self, **filter_options)
+        models.Manager.__init__(self)

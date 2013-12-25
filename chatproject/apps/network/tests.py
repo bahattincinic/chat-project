@@ -25,7 +25,6 @@ class NetworkTestCase(TestCase):
         url = reverse('network-lists')
         request = self.c.get(path=url,
                              content_type='application/json')
-        print request
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
     # def test_session_login(self):

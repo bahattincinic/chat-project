@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from account.models import User
 from django_extensions.db.fields import AutoSlugField
+from core.managers import FilteringManager
 
 
 class Network(models.Model):
@@ -14,6 +15,10 @@ class Network(models.Model):
     is_deleted = models.BooleanField(_('Is deleted'), default=False)
     is_public = models.BooleanField(_('Is Public'), default=True)
     deleted_at = models.DateTimeField(_('Deleted Date'), null=True, blank=True)
+    # managers
+    public = FilteringManager(is_public=True, is_deleted=False)
+    private = FilteringManager(is_public=False, is_deleted=False)
+    objects = FilteringManager(is_deleted=False)
 
     class Meta:
         db_table = 'network'
