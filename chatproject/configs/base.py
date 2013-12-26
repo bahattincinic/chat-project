@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import sys
+import djcelery
+
+djcelery.setup_loader()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
@@ -30,6 +33,32 @@ DEBUG = True
 
 TEMPLATE_DEBUG = True
 
+# TEMPLATE CONFIGURATION
+# See:
+# https://docs.djangoproject.com/en/dev/ref/
+# settings/#template-context-processors
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.tz',
+    'django.core.context_processors.request',
+)
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
+TEMPLATE_LOADERS = (
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
+)
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
+TEMPLATE_DIRS = (
+    os.path.join(BASE_DIR, 'templates')
+)
+# END TEMPLATE CONFIGURATION
+
 ALLOWED_HOSTS = ["*"]
 
 AUTH_USER_MODEL = 'account.User'
@@ -46,7 +75,8 @@ DJANGO_APPS = (
 
 THIRD_PARTY_APPS = (
     'django_extensions',
-    'rest_framework'
+    'rest_framework',
+    'djcelery'
 )
 
 # Apps specific for this project go here.
@@ -111,6 +141,19 @@ REST_FRAMEWORK = {
     )
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "redis_cache.cache.RedisCache",
+        "LOCATION": "127.0.0.1:6379:1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "redis_cache.client.DefaultClient",
+        }
+    }
+}
+
+# Celery Config
+BROKER_URL = "amqp://guest:guest@localhost:5672//"
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -123,6 +166,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+DEFAULT_FROM_EMAIL = "system@chatproject.com"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
