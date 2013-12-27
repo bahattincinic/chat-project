@@ -1,5 +1,7 @@
 import os
 import simplejson as json
+import pytz
+from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, Context
@@ -214,12 +216,21 @@ class DeployTask(BaseTask):
 
     def src(self):
         try:
-            source_tree = '/tmp/%s' % self.ini['project_appname']
+            import random
+            import string
+
+            source_tree_base = '/tmp/%s__%s' % (self.ini['project_appname'],
+                                                datetime.utcnow().replace(tzinfo=pytz.utc).date())
+            rnd = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(3))
+            source_tree = "%s_%s" % (source_tree_base, rnd)
+
             print green('git repo:%s' % self.ini['project_source_repo'])
-            if exists(source_tree):
-                print yellow('already exists, removing old pull')
-                run('rm -rf %s' % source_tree)
+
             with cd("/tmp"):
+                if exists(self.ini["project_appname"]):
+                    print yellow('remove old %s' % self.ini["project_appname"])
+                    run('rm -rf %s' % self.ini["project_appname"])
+
                 run('git clone  -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
@@ -229,7 +240,12 @@ class DeployTask(BaseTask):
                 if exists(self.ini['project_appname']):
                     print yellow('production_src %s exists..' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
-            run('cp -rf %s %s' % (source_tree, production_src))
+
+            with cd("/tmp"):
+                run('cp -rf %s %s' % (self.ini["project_appname"], production_src))
+
+            with cd("production_src"):
+                run("mv %s %s")
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
