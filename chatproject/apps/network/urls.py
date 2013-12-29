@@ -3,9 +3,11 @@ from django.conf.urls import patterns, url
 from .api import NetworkAPIView
 
 # Network Api v1
-network_v1 = patterns('',
-    url(r'^list/$', NetworkAPIView.as_view(), name='network-lists'),
+from .api import NetworkDetailAPIView
 
-    # url(r'^login/session/$', NetworkAPIView.as_view(),
-    #     name='login-session'),
+network_v1 = patterns('',
+    url(r'^$', NetworkAPIView.as_view(),
+        name='network-lists'),
+    url(r'^(?P<pk>[0-9]+)/$', NetworkDetailAPIView.as_view(),
+        name='network-detail'),
 )

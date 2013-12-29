@@ -108,7 +108,11 @@ REST_FRAMEWORK = {
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.MultiPartRenderer',
         'rest_framework.renderers.JSONRenderer',
-    )
+    ),
+    # Pagination settings
+    'PAGINATE_BY': 5, # TODO: burasi arttirilmali daha sonra
+    'PAGINATE_BY_PARAM': 'page_size',
+    'MAX_PAGINATE_BY': 100,
 }
 
 # Internationalization

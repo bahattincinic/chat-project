@@ -16,9 +16,9 @@ class Network(models.Model):
     is_public = models.BooleanField(_('Is Public'), default=True)
     deleted_at = models.DateTimeField(_('Deleted Date'), null=True, blank=True)
     # managers
+    objects = FilteringManager(is_deleted=False)
     public = FilteringManager(is_public=True, is_deleted=False)
     private = FilteringManager(is_public=False, is_deleted=False)
-    objects = FilteringManager(is_deleted=False)
 
     class Meta:
         db_table = 'network'
@@ -51,9 +51,27 @@ class NetworkConnection(models.Model):
     network = models.ForeignKey(Network)
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
     is_approved = models.BooleanField(_('Is Approved'), default=False)
+    # objects
+    objects = models.Manager()
+    approved = FilteringManager(is_approved=True)
 
     class Meta:
         db_table = 'network_connection'
+
+    @staticmethod
+    def check_membership(user, network):
+        # check types
+        assert isinstance(user, User), u"Must be instance of User"
+        assert isinstance(network, Network), u"Must be instance of Network"
+        # user must be active
+        if not User.actives.filter(id=user.id).exists():
+            return False
+        # network must not be deleted
+        if not Network.objects.filter(id=network.id).exists():
+            return False
+        # finally check the connection
+        return NetworkConnection.approved.filter(user=user,
+                                                 network=network).exists()
 
     def __unicode__(self):
         return "connection for %s(%s) to %s" % (self.user.username,

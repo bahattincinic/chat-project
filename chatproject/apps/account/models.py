@@ -66,13 +66,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     verbs = {
         'login': 'Login',
         'logout': 'Logout',
-        'register': 'Register'
+        'register': 'Register',
+        'permission_exception_network': 'Permission Exception Network',
     }
 
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
         db_table = 'user'
+
+    @staticmethod
+    def get_logger():
+        logger, _ = User.objects.get_or_create(username="logger")
+        return logger
 
     def __unicode__(self):
         return "%s(%s)" % (self.username, self.id)
