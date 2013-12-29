@@ -8,6 +8,11 @@ SAFE_METHODS = ('GET', 'HEAD')
 
 class NetworkDetailPermission(BasePermission):
     def has_permission(self, request, view):
+        if not request.method in SAFE_METHODS:
+            # inappropriate request for this
+            # permission set
+            return False
+
         network = Network.objects.none()
         pk = None
 
@@ -17,7 +22,9 @@ class NetworkDetailPermission(BasePermission):
             if network.is_public:
                 return True
             else:
-                # check if user is part of the network
+                # network is private
+                # check if user is
+                # part of this network
                 if request.user \
                     and request.user.is_authenticated() \
                     and NetworkConnection.check_membership(request.user, network):
@@ -32,3 +39,18 @@ class NetworkDetailPermission(BasePermission):
                         description="exception during %s" % \
                                    self.__class__.__name__)
             return False
+
+
+class NetworkListCreatePermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        if request.method == 'POST' \
+            and request.user \
+            and request.user.is_authenticated() \
+            and User.actives.filter(id=request.user.id).exists():
+            # TODO: probably we need to check for limits as well
+            # i.e maximum number of networks created by user
+            return True
+        return False
