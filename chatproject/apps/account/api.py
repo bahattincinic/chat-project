@@ -10,6 +10,7 @@ from django.db import transaction
 from django.template import Context
 from django.template.loader import get_template
 from django.core.cache import cache
+from django.core.mail import send_mail
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import status
 from rest_framework.response import Response
@@ -116,11 +117,9 @@ class ForgotMyPassword(APIView):
             action.send(user, verb=User.verbs.get('forgot_password'),
                         code='%s' % user.secret_key, content=content,
                         level=Action.INFO)
-            # cache
-            mail_data = {'content': content, 'to': user.email,
-                         'subject': 'Forgot my password'}
-            cache.set('forgot_my_password_%s' % user.id,
-                      simplejson.dumps(mail_data))
+            # mail send
+            send_mail(subject="Forgot My Password", message=content,
+                      recipient_list=[user.email])
         return Response(data=data, status=statu)
 
     def put(self, request):
