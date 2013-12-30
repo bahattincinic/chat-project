@@ -2,7 +2,9 @@ from django.conf.urls import patterns, url
 from . import api
 
 api_v1 = patterns('',
-    url(r'^$', api.AccountDetail.as_view(), name='user-account'),
+    url(r'^$', api.AccountCreate.as_view(), name='user-account-create'),
+    url(r'^(?P<username>[a-zA-Z]+)/$', api.AccountDetail.as_view(),
+        name='user-account-detail'),
     url(r'^login/authtoken/$', api.ObtainExpiringAuthToken.as_view(),
         name='login-token'),
     url(r'^login/session/$', api.SessionAuthentication.as_view(),

@@ -11,7 +11,7 @@ from django.db import models
 from django.conf import settings
 from .managers import UserManager
 from api.models import AccessToken
-from core.managers import CommonManager, FilteringManager
+from core.managers import CommonManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -99,6 +99,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         utc_limit = utc_now - datetime.timedelta(days=settings.API_TOKEN_TTL)
         return AccessToken.objects.filter(user=self, is_deleted=False,
                                           created__gt=utc_limit)
+
+    def delete(self, using=None):
+        self.is_deleted = True
+        self.save()
 
 
 class Follow(models.Model):

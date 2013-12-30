@@ -18,6 +18,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
                   'last_notification_date', 'gender')
 
 
+class AnonUserDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'location', 'avatar',
+                  'background', 'bio', 'gender')
+
+
 class ForgotMyPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
@@ -48,7 +56,7 @@ class NewPasswordSerializer(serializers.Serializer):
         return attrs
 
 
-class UserRegister(serializers.Serializer):
+class UserRegister(serializers.ModelSerializer):
     """
     Create Account Serializer
     """
@@ -56,15 +64,25 @@ class UserRegister(serializers.Serializer):
     username = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
 
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'password')
+
     def validate_username(self, attrs, source):
         username = attrs.get('username')
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError('E-mail this already exists')
+            raise serializers.ValidationError('username this already exists')
         return attrs
 
     def validate_email(self, attrs, source):
         email = attrs.get('email', None)
         if email:
             if User.objects.filter(email=email).exists():
-                raise serializers.ValidationError('username this already exists')
+                raise serializers.ValidationError('E-Mail this already exists')
         return attrs
+
+    def get_fields(self, *args, **kwargs):
+        # encrypted password field clear
+        fields = super(UserRegister, self).get_fields(*args, **kwargs)
+        fields.pop('password')
+        return fields

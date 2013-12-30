@@ -9,7 +9,6 @@ from django.contrib.auth import login, logout
 from django.db import transaction
 from django.template import Context
 from django.template.loader import get_template
-from django.core.cache import cache
 from django.core.mail import send_mail
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework import status
@@ -23,6 +22,7 @@ from api.models import AccessToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from . import serializers
 from .permissions import UserCreatePermission, UserDetailPermission
+from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 
 
 class ObtainExpiringAuthToken(ObtainAuthToken):
@@ -119,7 +119,8 @@ class ForgotMyPassword(APIView):
                         level=Action.INFO)
             # mail send
             send_mail(subject="Forgot My Password", message=content,
-                      recipient_list=[user.email])
+                      recipient_list=[user.email],
+                      from_email=settings.DEFAULT_FROM_EMAIL)
         return Response(data=data, status=statu)
 
     def put(self, request):
@@ -145,75 +146,48 @@ class ForgotMyPassword(APIView):
         return Response(data=data, status=statu)
 
 
-class AccountDetail(APIView):
-    permission_classes = (UserCreatePermission, UserDetailPermission,)
+class AccountCreate(CreateAPIView):
+    permission_classes = (UserCreatePermission,)
+    model = User
+    serializer_class = serializers.UserRegister
+
+    def post_save(self, obj, created=False):
+        # encrypted password set
+        obj.set_password(obj.password)
+        obj.save()
+        # log
+        action.send(obj, verb=User.verbs.get('register'),
+                    level=Action.INFO)
+
+
+class AccountDetail(RetrieveUpdateDestroyAPIView):
+    permission_classes = (UserDetailPermission,)
     model = User
     serializer_class = serializers.UserDetailSerializer
+    old_profile = None
+    # request field <username>
+    slug_url_kwarg = "username"
+    # db field
+    slug_field = "username"
 
-    def get(self, request):
-        user_data = self.serializer_class(instance=request.user)
-        return Response(user_data.data)
+    def get_serializer_class(self):
+        if self.request.user.is_anonymous():
+            return serializers.AnonUserDetailSerializer
+        return serializers.UserDetailSerializer
 
-    def put(self, request):
-        user = request.user
-        data = None
-        try:
-            with transaction.atomic():
-                serializer = self.serializer_class(
-                    instance=user, data=request.DATA,
-                    files=request.FILES, partial=False)
-                if not serializer.is_valid():
-                    data = serializer.errors
-                    raise OPSException()
-                # TODO: Frontend yazilirken file upload testi yapilmali
-                # TODO: save yaparken avatar path inin ayarlanmasi
-                serializer.save(force_update=True)
-                data = serializer.data
-        except OPSException:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            old_profile = simplejson.dumps(
-                self.serializer_class(instance=request.user).data)
-            action.send(user, verb=User.verbs.get('update'), level=Action.INFO,
-                        old_profile=old_profile)
-        return Response(data=data, status=statu)
+    def pre_save(self, obj):
+        self.old_profile = simplejson.dumps(
+            self.serializer_class(instance=self.request.user).data)
 
-    def post(self, request):
-        user = User.objects.none()
-        data = None
-        try:
-            with transaction.atomic():
-                serializer = serializers.UserRegister(data=request.DATA)
-                if not serializer.is_valid():
-                    data = serializer.errors
-                    raise OPSException()
-                user = User.objects.create_user(
-                    is_sound_enabled=True, follow_needs_approve=True,
-                    status=User.CHAT_ACTIVE, **serializer.data)
-                data = self.serializer_class(instance=user).data
-        except OPSException:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_201_CREATED
-            action.send(user, verb=User.verbs.get('register'),
-                        level=Action.INFO)
-        return Response(data=data, status=statu)
+    def post_save(self, obj, created=False):
+        action.send(self.request.user, verb=User.verbs.get('update'),
+                    level=Action.INFO, old_profile=self.old_profile)
 
-    def delete(self, request):
-        user = request.user
-        try:
-            with transaction.atomic():
-                user.is_deleted = True
-                user.save()
-                # session logout
-                logout(request)
-                # token logout
-                tokens = user.get_active_tokens()
-                tokens.select_for_update().update(is_deleted=True)
-        except:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            action.send(user, verb=User.verbs.get('delete'))
-        return Response(status=statu)
+    def post_delete(self, obj):
+        # token logout
+        tokens = obj.get_active_tokens()
+        tokens.select_for_update().update(is_deleted=True)
+        # session logout
+        logout(self.request)
+        # log
+        action.send(obj, verb=User.verbs.get('delete'))

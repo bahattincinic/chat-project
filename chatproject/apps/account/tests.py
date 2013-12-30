@@ -57,7 +57,7 @@ class AuthenticationTestCase(CommonTest, TestCase):
         """
         User Register
         """
-        url = reverse('user-account')
+        url = reverse('user-account-create')
         payload = simplejson.dumps({'username': 'testaccount',
                                     'password': '123456'})
         request = self.c.post(path=url, data=payload,
@@ -105,7 +105,7 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         User Account Detail
         """
-        url = reverse('user-account')
+        url = reverse('user-account-detail', args=[self.username])
         self.token_login()
         request = self.c.get(path=url, content_type='application/json',
                              **self.client_header)
@@ -115,17 +115,17 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         User Account Delete
         """
-        url = reverse('user-account')
+        url = reverse('user-account-detail', args=[self.username])
         self.token_login()
         request = self.c.delete(path=url, content_type='application/json',
                                 **self.client_header)
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_account_update(self):
         """
         User Account Update
         """
-        url = reverse('user-account')
+        url = reverse('user-account-detail', args=[self.username])
         self.token_login()
         data = UserDetailSerializer(instance=self.u).data
         data['gender'] = User.MALE
