@@ -44,3 +44,15 @@ class NetworkListCreatePermission(BasePermission):
             # TODO: maybe check for throttling as well
             return True
         return False
+
+
+class NetworkConnectionPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+
+        if request.user and \
+                request.user.is_authenticated() and \
+                User.actives.filter(id=request.user.id):
+            return True
+        return False

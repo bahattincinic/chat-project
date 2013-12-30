@@ -48,15 +48,19 @@ class NetworkAdmin(models.Model):
 
 class NetworkConnection(models.Model):
     user = models.ForeignKey(User)
-    network = models.ForeignKey(Network)
+    network = models.ForeignKey(Network, related_name='connection_set')
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
-    is_approved = models.BooleanField(_('Is Approved'), default=False)
+    is_approved = models.BooleanField(_('Is Approved'))
     # objects
     objects = models.Manager()
     approved = FilteringManager(is_approved=True)
 
     class Meta:
         db_table = 'network_connection'
+
+    def __unicode__(self):
+        return "connection for %s(%s) to %s" % (self.user.username,
+                                                self.user.id, self.network.name)
 
     @staticmethod
     def check_membership(user, network):
@@ -72,7 +76,3 @@ class NetworkConnection(models.Model):
         # finally check the connection
         return NetworkConnection.approved.filter(user=user,
                                                  network=network).exists()
-
-    def __unicode__(self):
-        return "connection for %s(%s) to %s" % (self.user.username,
-                                                self.user.id, self.network.name)
