@@ -67,7 +67,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         'login': 'Login',
         'logout': 'Logout',
         'register': 'Register',
-        'permission_exception_network': 'Permission Exception Network',
     }
 
     class Meta:
