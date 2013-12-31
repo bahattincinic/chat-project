@@ -20,7 +20,7 @@ class UserDetailPermission(permissions.BasePermission):
                     return True
                 return False
             else:
-                return True
+                return False
         else:
             return True
 

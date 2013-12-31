@@ -40,7 +40,8 @@ class ObtainExpiringAuthToken(ApiTransactionMixin, ObtainAuthToken):
 
             action.send(serializer.object['user'], verb=User.verbs.get("login"),
                         level=Action.INFO, type=settings.TOKEN_SESSION)
-            user_data = serializers.UserDetailSerializer(serializer.object['user'])
+            user_data = serializers.UserDetailSerializer(
+                serializer.object['user'])
             return Response({'user': user_data.data, 'token': token.key})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
