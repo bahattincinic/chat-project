@@ -23,9 +23,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from . import serializers
 from .permissions import UserCreatePermission, UserDetailPermission
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+from core.mixins import ApiTransactionMixin
 
 
-class ObtainExpiringAuthToken(ObtainAuthToken):
+class ObtainExpiringAuthToken(ApiTransactionMixin, ObtainAuthToken):
     def post(self, request):
         serializer = self.serializer_class(data=request.DATA)
         if serializer.is_valid():
@@ -44,7 +45,7 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SessionAuthentication(APIView):
+class SessionAuthentication(ApiTransactionMixin, APIView):
     serializer_class = AuthTokenSerializer
     permission_classes = (AllowAny,)
     model = User
@@ -60,7 +61,7 @@ class SessionAuthentication(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SessionLogout(APIView):
+class SessionLogout(ApiTransactionMixin, APIView):
     permission_classes = (IsAuthenticated,)
     model = User
 
@@ -71,7 +72,7 @@ class SessionLogout(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class TokenLogout(APIView):
+class TokenLogout(ApiTransactionMixin, APIView):
     permission_classes = (IsAuthenticated,)
     model = User
 
@@ -86,7 +87,7 @@ class TokenLogout(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ForgotMyPassword(APIView):
+class ForgotMyPassword(ApiTransactionMixin, APIView):
     permission_classes = (AllowAny,)
     model = User
 
@@ -146,21 +147,20 @@ class ForgotMyPassword(APIView):
         return Response(data=data, status=statu)
 
 
-class AccountCreate(CreateAPIView):
+class AccountCreate(ApiTransactionMixin, CreateAPIView):
     permission_classes = (UserCreatePermission,)
     model = User
     serializer_class = serializers.UserRegister
 
-    def post_save(self, obj, created=False):
+    def pre_save(self, obj):
         # encrypted password set
         obj.set_password(obj.password)
-        obj.save()
-        # log
-        action.send(obj, verb=User.verbs.get('register'),
-                    level=Action.INFO)
+
+    def post_save(self, obj, created=False):
+        action.send(obj, verb=User.verbs.get('register'), level=Action.INFO)
 
 
-class AccountDetail(RetrieveUpdateDestroyAPIView):
+class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = (UserDetailPermission,)
     model = User
     serializer_class = serializers.UserDetailSerializer

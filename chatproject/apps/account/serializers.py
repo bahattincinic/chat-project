@@ -22,8 +22,8 @@ class AnonUserDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'location', 'avatar',
-                  'background', 'bio', 'gender')
+        fields = ('username', 'location', 'avatar', 'background',
+                  'bio', 'gender')
 
 
 class ForgotMyPasswordSerializer(serializers.Serializer):

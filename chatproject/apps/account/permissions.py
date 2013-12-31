@@ -8,13 +8,19 @@ class UserDetailPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        safe_methods = ('PUT', 'DELETE')
-        if request.method in safe_methods and request.user.is_authenticated():
-            username = request.parser_context.get("kwargs").get("username")
-            user = User.objects.get(username=username)
-            if request.user.username == user.username:
+        forbidden_methods = ('PUT', 'DELETE')
+        if request.method in forbidden_methods:
+            if request.user.is_authenticated():
+                username = request.parser_context.get("kwargs").get("username")
+                user = User.objects.filter(username=username)
+                if not user.exists():
+                    return False
+                user = user.get()
+                if request.user.username == user.username:
+                    return True
+                return False
+            else:
                 return True
-            return False
         else:
             return True
 

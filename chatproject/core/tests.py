@@ -25,6 +25,9 @@ class CommonTest(object):
     def session_login(self):
         self.c.login(username=self.username, password=self.password)
 
+    def sessiong_logout(self):
+        self.c.logout()
+
     def token_login(self):
         url = reverse('login-token')
         payload = simplejson.dumps({'username': self.username,
@@ -34,3 +37,8 @@ class CommonTest(object):
         request_json = simplejson.loads(request.content)
         self.client_header['HTTP_AUTHORIZATION'] = 'Token %s' %(
             request_json.get('token'))
+
+    def token_logout(self):
+        self.token_login()
+        url = reverse('logout-token')
+        self.c.get(path=url,  **self.client_header)
