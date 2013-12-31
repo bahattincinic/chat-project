@@ -13,9 +13,11 @@ class NetworkListAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = Network
         fields = ('id', 'name', 'created_at', 'is_public', 'slug')
+        read_only_fields = ('id', 'created_at')
 
 
 class NetworkConnectionAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = NetworkConnection
         fields = ('user', 'network')
+        read_only_fields = ('user', 'network')

@@ -51,7 +51,8 @@ class NetworkConnectionPermission(BasePermission):
         if request.method in SAFE_METHODS:
             return True
 
-        if request.user and \
+        if request.mothod in ('POST',) and \
+                request.user and \
                 request.user.is_authenticated() and \
                 User.actives.filter(id=request.user.id):
             return True

@@ -37,6 +37,10 @@ class NetworkAdmin(models.Model):
     TYPE_CHOICES = ((MODERATOR, 'Moderator'), (ADMIN, 'Admin'))
     status = models.CharField(_('Type'), choices=TYPE_CHOICES, max_length=15)
 
+    verbs = {
+        'assigned': 'Network admin assigned',
+    }
+
     class Meta:
         db_table = 'network_admin'
 

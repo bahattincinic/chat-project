@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from django.db import transaction
 from rest_framework.generics import RetrieveAPIView, ListCreateAPIView
-from rest_framework.permissions import AllowAny
+from core.mixins import ApiTransactionMixin
 from network.models import NetworkConnection, NetworkAdmin
 from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission
 from network.serializers import NetworkListAPISerializer, NetworkConnectionAPISerializer
 from .permissions import NetworkDetailPermission
 from .serializers import NetworkAPISerializer
 from .models import Network
+from actstream.models import action
 
 
-class NetworkAPIView(ListCreateAPIView):
+class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
     serializer_class = NetworkListAPISerializer
     permission_classes = (NetworkListCreatePermission,)
     model = Network
@@ -22,14 +22,16 @@ class NetworkAPIView(ListCreateAPIView):
         if not created:
             return
 
-        with transaction.atomic():
-            # now create a new NetworkAdmin and NetworkConnection
-            NetworkConnection.objects.create(user=self.request.user,
-                                             network=obj,
-                                             is_approved=True)
-            NetworkAdmin.objects.create(user=self.request.user,
-                                        network=obj,
-                                        status=NetworkAdmin.ADMIN)
+        # now create a new NetworkAdmin and NetworkConnection
+        NetworkConnection.objects.create(user=self.request.user,
+                                         network=obj,
+                                         is_approved=True)
+        NetworkAdmin.objects.create(user=self.request.user,
+                                    network=obj,
+                                    status=NetworkAdmin.ADMIN)
+        action.send(self.request.user,
+                    verb=NetworkAdmin.verbs.get('assigned'),
+                    action_object=obj)
 
 
 class NetworkDetailAPIView(RetrieveAPIView):

@@ -2,29 +2,15 @@ import simplejson
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
-from django.test.client import Client
 from rest_framework import status
-from account.models import User
+from core.tests import CommonTest
 from .models import Network
 
 
-class NetworkTestCase(TestCase):
-
-    def setUp(self):
-        self.username = 'test'
-        self.password = 123456
-        self.user = User.objects.create_user(self.username, self.password)
-        Network.objects.create(name="Moscow Metro 2033",
-                               created_by=self.user)
-        self.c = Client()
-
-    def login_as_test(self):
-        url = reverse('login-session')
-        payload = simplejson.dumps({'username': self.username,
-                                    'password': self.password})
-        request = self.c.post(path=url, data=payload,
-                              content_type='application/json')
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+class NetworkTestCase(CommonTest, TestCase):
+    def tearDown(self):
+        # purges all previous network data
+        Network.objects.all().delete()
 
     def test_network_list(self):
         """
@@ -39,7 +25,7 @@ class NetworkTestCase(TestCase):
         """
         Network Create
         """
-        self.login_as_test()
+        self.session_login()
         # now create a network
         create_url = reverse('network-lists')
         network_name = 'Metro Last Light'
@@ -52,5 +38,10 @@ class NetworkTestCase(TestCase):
         self.assertTrue(network.is_public)
         self.assertFalse(network.is_deleted)
         self.assertIsNotNone(network.slug)
-        self.assertEqual(network.created_by, self.user)
+        self.assertEqual(network.created_by, self.u)
+
+    def test_network_update(self):
+        self.session_login()
+        create_url = reverse('network-lists')
+        self.assertEqual(0, Network.objects.all().count())
 
