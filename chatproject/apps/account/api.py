@@ -7,7 +7,6 @@ import simplejson
 from django.utils.timezone import utc
 from django.conf import settings
 from django.contrib.auth import login, logout
-from django.db import transaction
 from django.template import Context
 from django.template.loader import get_template
 from django.core.mail import send_mail
