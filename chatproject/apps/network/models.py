@@ -80,3 +80,4 @@ class NetworkConnection(models.Model):
         # finally check the connection
         return NetworkConnection.approved.filter(user=user,
                                                  network=network).exists()
+

@@ -3,15 +3,15 @@ from rest_framework.generics import RetrieveAPIView, ListCreateAPIView
 from core.mixins import ApiTransactionMixin
 from network.models import NetworkConnection, NetworkAdmin
 from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission
-from network.serializers import NetworkListAPISerializer, NetworkConnectionAPISerializer
+from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer
 from .permissions import NetworkDetailPermission
-from .serializers import NetworkAPISerializer
+from .serializers import NetworkDetailAPISerializer
 from .models import Network
 from actstream.models import action
 
 
 class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
-    serializer_class = NetworkListAPISerializer
+    serializer_class = NetworkAPISerializer
     permission_classes = (NetworkListCreatePermission,)
     model = Network
 
@@ -35,12 +35,12 @@ class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
 
 
 class NetworkDetailAPIView(RetrieveAPIView):
-    serializer_class = NetworkAPISerializer
+    serializer_class = NetworkDetailAPISerializer
     permission_classes = (NetworkDetailPermission,)
     model = Network
 
 
-class NetworkUsersAPIView(ListCreateAPIView):
+class NetworkConnectionAPIView(ListCreateAPIView):
     serializer_class = NetworkConnectionAPISerializer
     permission_classes = (NetworkConnectionPermission,)
     model = NetworkConnection
