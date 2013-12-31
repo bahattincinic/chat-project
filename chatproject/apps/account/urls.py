@@ -1,7 +1,8 @@
 from django.conf.urls import patterns, url
 from . import api
 
-api_v1 = patterns('',
+
+account_v1 = patterns('',
     url(r'^$', api.AccountCreate.as_view(), name='user-account-create'),
     url(r'^(?P<username>[a-zA-Z]+)/$', api.AccountDetail.as_view(),
         name='user-account-detail'),
