@@ -98,20 +98,19 @@ class ForgotMyPassword(ApiTransactionMixin, APIView):
         content = ""
         data = None
         try:
-            with transaction.atomic():
-                serializer = serializers.ForgotMyPasswordSerializer(
-                    data=request.DATA)
-                if not serializer.is_valid():
-                    data = serializer.errors
-                    raise OPSException()
-                # set secret key
-                user = serializer.object.get('user')
-                user.secret_key = uuid.uuid4()
-                user.save()
-                # Template
-                template = get_template('email/forgot_my_password.html')
-                template_context = Context({'user': user, 'request': request})
-                content = template.render(template_context)
+            serializer = serializers.ForgotMyPasswordSerializer(
+                data=request.DATA)
+            if not serializer.is_valid():
+                data = serializer.errors
+                raise OPSException()
+            # set secret key
+            user = serializer.object.get('user')
+            user.secret_key = uuid.uuid4()
+            user.save()
+            # Template
+            template = get_template('email/forgot_my_password.html')
+            template_context = Context({'user': user, 'request': request})
+            content = template.render(template_context)
         except OPSException:
             statu = status.HTTP_400_BAD_REQUEST
         else:
@@ -130,16 +129,15 @@ class ForgotMyPassword(ApiTransactionMixin, APIView):
         user = User.objects.none()
         data = None
         try:
-            with transaction.atomic():
-                serializer = serializers.NewPasswordSerializer(
-                    data=request.DATA)
-                if not serializer.is_valid():
-                    data = serializer.errors
-                    raise OPSException()
-                user = serializer.object.get('user')
-                user.set_password(serializer.data.get('new_password'))
-                user.secret_key = ''
-                user.save()
+            serializer = serializers.NewPasswordSerializer(
+                data=request.DATA)
+            if not serializer.is_valid():
+                data = serializer.errors
+                raise OPSException()
+            user = serializer.object.get('user')
+            user.set_password(serializer.data.get('new_password'))
+            user.secret_key = ''
+            user.save()
         except OPSException:
             statu = status.HTTP_400_BAD_REQUEST
         else:
