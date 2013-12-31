@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import re
+import datetime
 
+from django.utils.timezone import utc
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
 from django.core import validators
 from django.db import models
+from django.conf import settings
 from .managers import UserManager
-from core.managers import CommonManager, FilteringManager
+from api.models import AccessToken
+from core.managers import CommonManager
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -17,7 +22,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             validators.RegexValidator(re.compile('^[\w.@+-]+$'),
                                       _('Enter a valid username.'), 'invalid')
         ])
-    email = models.EmailField(_('email address'), blank=True)
+    email = models.EmailField(_('email address'), blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True,
         help_text=_('Designates whether this user should be treated as '
                     'active. Unselect this instead of deleting accounts.'))
@@ -67,6 +72,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         'login': 'Login',
         'logout': 'Logout',
         'register': 'Register',
+        'forgot_password': 'Forgot new password',
+        'new_password': 'New Password',
+        'update': 'Profile Update',
+        'delete': 'Account Delete'
     }
 
     class Meta:
@@ -89,6 +98,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_short_name(self):
         """Returns the short name for the user."""
         return self.username
+
+    def get_active_tokens(self):
+        utc_now = datetime.datetime.utcnow().replace(tzinfo=utc)
+        utc_limit = utc_now - datetime.timedelta(days=settings.API_TOKEN_TTL)
+        return AccessToken.objects.filter(user=self, is_deleted=False,
+                                          created__gt=utc_limit)
+
+    def delete(self, using=None):
+        self.is_deleted = True
+        self.save()
 
 
 class Follow(models.Model):

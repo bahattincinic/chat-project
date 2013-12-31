@@ -1,19 +1,15 @@
 import simplejson
+import uuid
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
-from .models import User
-from django.test.client import Client
 from rest_framework import status
+from core.tests import CommonTest
+from account.models import User
+from account.serializers import UserDetailSerializer
 
 
-class AuthenticationTestCase(TestCase):
-
-    def setUp(self):
-        self.username = 'test'
-        self.password = 123456
-        User.objects.create_user(self.username, self.password)
-        self.c = Client()
+class AuthenticationTestCase(CommonTest, TestCase):
 
     def test_token_login(self):
         """
@@ -36,3 +32,106 @@ class AuthenticationTestCase(TestCase):
         request = self.c.post(path=url, data=payload,
                               content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_session_logout(self):
+        """
+        Session Logout
+        """
+        url = reverse('logout-session')
+        # session login
+        self.session_login()
+        request = self.c.get(path=url, content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_token_logout(self):
+        """
+        Token Logout
+        """
+        # Token Login
+        self.token_login()
+        url = reverse('logout-token')
+        request = self.c.get(path=url,  **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_account_register(self):
+        """
+        User Register
+        """
+        url = reverse('user-account-create')
+        payload = simplejson.dumps({'username': 'testaccount',
+                                    'password': '123456'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        # created
+        user = User.objects.filter(username='testaccount')
+        self.assertEqual(True, user.exists())
+
+
+class UserAccountTestCase(CommonTest, TestCase):
+
+    def test_forgot_my_password(self):
+        """
+        Forgot my password
+        """
+        url = reverse('forgot-password')
+        payload = simplejson.dumps({'email': self.email})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_new_password(self):
+        """
+        Set New Password
+        """
+        user = User.objects.filter()[0]
+        user.secret_key = uuid.uuid4()
+        user.save()
+        url = reverse('forgot-password')
+        payload = simplejson.dumps({
+            'email': user.email, 'secret_key': '%s' % user.secret_key,
+            'new_password': '123456'
+        })
+        request = self.c.put(path=url, data=payload,
+                             content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        # control
+        new_user = User.objects.get(id=user.id)
+        self.assertEqual('', new_user.secret_key)
+        self.assertEqual(True, new_user.check_password('123456'))
+        self.assertNotEquals(user.password, new_user.password)
+
+    def test_account_detail(self):
+        """
+        User Account Detail
+        """
+        url = reverse('user-account-detail', args=[self.username])
+        self.token_login()
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_account_delete(self):
+        """
+        User Account Delete
+        """
+        url = reverse('user-account-detail', args=[self.username])
+        self.token_login()
+        request = self.c.delete(path=url, content_type='application/json',
+                                **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_account_update(self):
+        """
+        User Account Update
+        """
+        url = reverse('user-account-detail', args=[self.username])
+        self.token_login()
+        data = UserDetailSerializer(instance=self.u).data
+        data['gender'] = User.MALE
+        request = self.c.put(path=url, data=simplejson.dumps(data),
+                             content_type='application/json',
+                             **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['gender'],
+                         User.objects.get(username=self.username).gender)
