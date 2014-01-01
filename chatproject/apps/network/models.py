@@ -26,6 +26,11 @@ class Network(models.Model):
     def __unicode__(self):
         return self.name
 
+    def check_ownership(self, user):
+        assert isinstance(User, user)
+        assert User.actives.filter(id=user.id)
+        return NetworkAdmin.objects.filter(user=user, network=self).exists()
+
 
 class NetworkAdmin(models.Model):
     user = models.ForeignKey(User)
