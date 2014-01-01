@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from rest_framework.generics import RetrieveAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from core.mixins import ApiTransactionMixin
 from network.models import NetworkConnection, NetworkAdmin
 from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission
@@ -34,7 +34,8 @@ class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
                     action_object=obj)
 
 
-class NetworkDetailAPIView(RetrieveAPIView):
+class NetworkDetailAPIView(ApiTransactionMixin,
+                           RetrieveUpdateDestroyAPIView):
     serializer_class = NetworkDetailAPISerializer
     permission_classes = (NetworkDetailPermission,)
     model = Network

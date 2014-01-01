@@ -14,6 +14,8 @@ class NetworkAPISerializer(serializers.ModelSerializer):
 class NetworkDetailAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = Network
+        read_only_fields = ('id', 'created_by', 'created_at',
+                            'slug', 'is_deleted', 'deleted_at')
 
 
 class NetworkConnectionAPISerializer(serializers.ModelSerializer):

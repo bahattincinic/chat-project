@@ -1,27 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import re
 import datetime
 
 from django.utils.timezone import utc
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils.translation import ugettext_lazy as _
-from django.core import validators
 from django.db import models
 from django.conf import settings
 from .managers import UserManager
 from api.models import AccessToken
 from core.managers import CommonManager
+from .validators import validate_username
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(_('username'), max_length=30, unique=True,
+    username = models.CharField(_('username'), max_length=25, unique=True,
         help_text=_('Required. 30 characters or fewer. Letters, numbers and '
                     '@/./+/-/_ characters'),
-        validators=[
-            validators.RegexValidator(re.compile('^[\w.@+-]+$'),
-                                      _('Enter a valid username.'), 'invalid')
-        ])
+        validators=[validate_username])
     email = models.EmailField(_('email address'), blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True,
         help_text=_('Designates whether this user should be treated as '
