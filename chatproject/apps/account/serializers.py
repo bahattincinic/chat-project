@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 from account.models import User
+from .validators import username_re
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -62,7 +63,9 @@ class UserRegister(serializers.ModelSerializer):
     Create Account Serializer
     """
     email = serializers.EmailField(required=False)
-    username = serializers.CharField(required=True)
+    username = serializers.RegexField(
+        required=True, regex=username_re,
+        error_messages={'invalid': 'invalid username'})
     password = serializers.CharField(required=True)
 
     class Meta:

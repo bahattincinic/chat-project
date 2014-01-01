@@ -1,3 +1,4 @@
+from django.http.response import Http404
 from rest_framework import permissions
 from account.models import User
 
@@ -12,10 +13,8 @@ class UserDetailPermission(permissions.BasePermission):
         if request.method in forbidden_methods:
             if request.user.is_authenticated():
                 username = request.parser_context.get("kwargs").get("username")
-                user = User.objects.filter(username=username)
-                if not user.exists():
-                    return False
-                user = user.get()
+                user = User.objects.get_or_raise(username=username,
+                                                 exc=Http404())
                 if request.user.username == user.username:
                     return True
                 return False

@@ -2,7 +2,6 @@
 from django.http.response import Http404
 from rest_framework.permissions import BasePermission
 from account.models import User
-from actstream.models import action
 from network.models import Network, NetworkConnection
 
 SAFE_METHODS = ('GET', 'HEAD')
@@ -30,6 +29,8 @@ class NetworkDetailPermission(BasePermission):
                 return True
             else:
                 return False
+        else:
+            return False
 
 
 class NetworkListCreatePermission(BasePermission):
