@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import datetime
 import uuid
 import simplejson
-
 from django.utils.timezone import utc
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -15,15 +14,19 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import (CreateAPIView, ListAPIView,
+                                     RetrieveUpdateDestroyAPIView)
+
 from actstream.models import action, Action
-from account.models import User
+from account.models import User, Follow
 from core.exceptions import OPSException
 from api.models import AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from . import serializers
 from .permissions import (UserCreatePermission, UserDetailPermission,
-                          UserChangePasswordPermission)
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+                          UserChangePasswordPermission,
+                          UserFollowingsFollowersPermission,
+                          UserAccountFollowPermission)
 from core.mixins import ApiTransactionMixin
 
 
@@ -207,4 +210,88 @@ class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
         else:
             statu = status.HTTP_200_OK
             action.send(user, verb=User.verbs.get('password_update'))
+        return Response(data=data, status=statu)
+
+
+class AccountFollowers(ListAPIView):
+    """
+    User Followers
+    """
+    permission_classes = (UserFollowingsFollowersPermission, )
+    serializer_class = serializers.AnonUserDetailSerializer
+    model = User
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        return User.objects.filter(follower_set__following__username=username)
+
+
+class AccountFollowings(ListAPIView):
+    """
+    User Followings
+    """
+    permission_classes = (UserFollowingsFollowersPermission, )
+    serializer_class = serializers.AnonUserDetailSerializer
+    model = User
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        return User.objects.filter(following_set__follower__username=username)
+
+
+class AccountFollow(ApiTransactionMixin, APIView):
+    """
+    User Follow, UnFollow
+    """
+    model = User
+    permission_classes = (UserAccountFollowPermission, )
+
+    def post(self, request, *args, **kwargs):
+        """
+        User Follow
+        """
+        data = None
+        try:
+            username = kwargs.get('username')
+            user = User.objects.get(username=username)
+            control = Follow.objects.filter(follower=user,
+                                            following=request.user)
+            if control.exists():
+                raise OPSException('User already follow')
+            follow = Follow.objects.create(follower=user,
+                                           following=request.user)
+        except OPSException, e:
+            data = {'username': e.message}
+            statu = status.HTTP_400_BAD_REQUEST
+        else:
+            statu = status.HTTP_200_OK
+            action.send(request.user, verb=Follow.verbs.get('follow'),
+                        action_object=follow)
+        return Response(data=data, status=statu)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        User UnFollow
+        """
+        data = None
+        try:
+            username = kwargs.get('username')
+            user = User.objects.get(username=username)
+            control = Follow.objects.filter(follower=user,
+                                            following=request.user)
+            if not control.exists():
+                raise OPSException('user do not follow')
+            control = control.get()
+            # log
+            following = control.following.username
+            follower = control.follower.username
+            # delete
+            control.delete()
+        except OPSException, e:
+            data = {'username': e.message}
+            statu = status.HTTP_400_BAD_REQUEST
+        else:
+            statu = status.HTTP_204_NO_CONTENT
+            action.send(request.user, verb=Follow.verbs.get('unfollow'),
+                        following=following, follower=follower)
         return Response(data=data, status=statu)

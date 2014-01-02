@@ -49,3 +49,41 @@ class UserChangePasswordPermission(permissions.BasePermission):
                 return False
         else:
             return True
+
+
+class UserFollowingsFollowersPermission(permissions.BasePermission):
+    """
+    User Followings, Followers Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'GET':
+            if request.user.is_anonymous():
+                return False
+            if request.user.username != user.username:
+                return False
+            return True
+        else:
+            return True
+
+
+class UserAccountFollowPermission(permissions.BasePermission):
+    """
+    User Follow, UnFollow Permission
+    """
+    def has_permission(self, request, view):
+        forbidden_methods = ('POST', 'DELETE')
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method in forbidden_methods:
+            if request.user.is_authenticated():
+                # User can not follow self
+                if request.user.username == user.username:
+                    return False
+                else:
+                    return True
+            else:
+                return False
+        else:
+            return True

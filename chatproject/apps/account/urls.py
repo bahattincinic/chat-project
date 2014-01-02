@@ -14,6 +14,12 @@ account_v1 = patterns('',
         name='logout-token'),
     url(r'^forgot-my-password/$', api.ForgotMyPassword.as_view(),
         name='forgot-password'),
+    url(r'^(?P<username>[A-Za-z0-9-_]+)/followers/$',
+        api.AccountFollowers.as_view(), name='user-account-followers'),
+    url(r'^(?P<username>[A-Za-z0-9-_]+)/followings/$',
+        api.AccountFollowings.as_view(), name='user-account-followings'),
+    url(r'^(?P<username>[A-Za-z0-9-_]+)/follow/$',
+        api.AccountFollow.as_view(), name='user-account-follow'),
     url(r'^(?P<username>[A-Za-z0-9-_]+)/$', api.AccountDetail.as_view(),
-        name='user-account-detail')
+        name='user-account-detail'),
 )

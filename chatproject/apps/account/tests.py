@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from core.tests import CommonTest
-from account.models import User
+from account.models import User, Follow
 from account.serializers import UserDetailSerializer
 
 
@@ -151,3 +151,69 @@ class UserAccountTestCase(CommonTest, TestCase):
         # password control
         new_user = User.objects.get(username=self.username)
         self.assertNotEqual(self.u.password, new_user.password)
+
+
+class UserFollowTestCase(CommonTest, TestCase):
+
+    def test_account_self_follow(self):
+        """
+        User can not follow self
+        """
+        url = reverse('user-account-follow', args=[self.username])
+        self.token_login()
+        request = self.c.post(path=url, content_type='application/json',
+                              **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_account_follow(self):
+        """
+        User Follow
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-account-follow', args=[user.username])
+        self.token_login()
+        request = self.c.post(path=url, content_type='application/json',
+                              **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_account_unfollow(self):
+        """
+        User unfollow
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-account-follow', args=[user.username])
+        self.token_login()
+        Follow.objects.create(follower=user, following=self.u)
+        request = self.c.delete(path=url, content_type='application/json',
+                                **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_account_followers(self):
+        """
+        User Followers
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        Follow.objects.create(follower=user, following=self.u)
+        url = reverse('user-account-followers', args=[self.u.username])
+        self.token_login()
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        data = simplejson.loads(request.content)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data.get("results")),
+                         Follow.objects.filter(following=self.u).count())
+
+    def test_account_following(self):
+        """
+        User Followings
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        Follow.objects.create(following=self.u, follower=user)
+        url = reverse('user-account-followings', args=[self.u.username])
+        self.token_login()
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        data = simplejson.loads(request.content)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data.get("results")),
+                         Follow.objects.filter(follower=self.u).count())

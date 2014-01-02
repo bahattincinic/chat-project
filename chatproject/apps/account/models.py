@@ -109,6 +109,11 @@ class Follow(models.Model):
 
     objects = CommonManager()
 
+    verbs = {
+        'follow': 'Account Follow',
+        'unfollow': 'Account UnFollow'
+    }
+
     # TODO: follow, unfollow log atilmasi lazim
     class Meta:
         db_table = 'user_follow'
