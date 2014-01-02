@@ -4,13 +4,30 @@ from account.models import User
 from .validators import username_re
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class BaseUserSerializer(serializers.ModelSerializer):
     """
-    User Detail, User Profile Update Serializer
+    Base User Serializer
     """
+    followers = serializers.SerializerMethodField('followers_count')
+    followings = serializers.SerializerMethodField('followings_count')
     username = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True,
                                            format='%d-%m-%Y %H:%M',)
+
+    def followers_count(self, obj):
+        return obj.follower_set.count()
+
+    def followings_count(self, obj):
+        return obj.following_set.count()
+
+    class Meta:
+        abstract = True
+
+
+class UserDetailSerializer(BaseUserSerializer):
+    """
+    User Detail, User Profile Update Serializer
+    """
 
     def validate(self, attrs):
         user = self.context['view'].request.user
@@ -24,15 +41,18 @@ class UserDetailSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'created_at', 'location',
                   'avatar', 'background', 'is_sound_enabled', 'bio',
                   'follow_needs_approve', 'status',
-                  'last_notification_date', 'gender')
+                  'last_notification_date', 'gender', 'followers', 'followings')
 
 
-class AnonUserDetailSerializer(serializers.ModelSerializer):
+class AnonUserDetailSerializer(BaseUserSerializer):
+    """
+    Anon User Detail Serializer
+    """
 
     class Meta:
         model = User
         fields = ('username', 'location', 'avatar', 'background',
-                  'bio', 'gender')
+                  'bio', 'gender', 'followers', 'followings')
 
 
 class ForgotMyPasswordSerializer(serializers.Serializer):
