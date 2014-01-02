@@ -59,8 +59,10 @@ class UserFollowingsFollowersPermission(permissions.BasePermission):
         username = request.parser_context.get("kwargs").get("username")
         user = User.objects.get_or_raise(username=username, exc=Http404())
         if request.method == 'GET':
+            # not authenticated
             if request.user.is_anonymous():
                 return False
+            # not only me
             if request.user.username != user.username:
                 return False
             return True
