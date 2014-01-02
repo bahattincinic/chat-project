@@ -197,7 +197,7 @@ class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
         serializer = serializers.UserChangePasswordSerializer(data=request.DATA)
         try:
             if not serializer.is_valid():
-                data = serializers.errors
+                data = serializer.errors
                 raise OPSException()
             user = request.user
             user.set_password(serializer.data.get('new_password'))
