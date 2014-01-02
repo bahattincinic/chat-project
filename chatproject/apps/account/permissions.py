@@ -35,3 +35,17 @@ class UserCreatePermission(permissions.BasePermission):
             return False
         else:
             return False
+
+
+class UserChangePasswordPermission(permissions.BasePermission):
+    """
+    User Change Password
+    """
+    def has_permission(self, request, view):
+        if request.method == 'PATCH':
+            if request.user.is_authenticated():
+                return True
+            else:
+                return False
+        else:
+            return True

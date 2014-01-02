@@ -71,7 +71,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         'forgot_password': 'Forgot new password',
         'new_password': 'New Password',
         'update': 'Profile Update',
-        'delete': 'Account Delete'
+        'delete': 'Account Delete',
+        'password_update': 'Password Update'
     }
 
     class Meta:

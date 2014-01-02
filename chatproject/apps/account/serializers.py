@@ -12,6 +12,13 @@ class UserDetailSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True,
                                            format='%d-%m-%Y %H:%M',)
 
+    def validate(self, attrs):
+        user = self.context['view'].request.user
+        if isinstance(user, User) and user.email != attrs.get('email'):
+            if User.objects.filter(email=attrs.get('email')).exists():
+                raise serializers.ValidationError('email is used')
+        return attrs
+
     class Meta:
         model = User
         fields = ('username', 'email', 'created_at', 'location',
@@ -90,3 +97,23 @@ class UserRegister(serializers.ModelSerializer):
         fields = super(UserRegister, self).get_fields(*args, **kwargs)
         fields.pop('password')
         return fields
+
+
+class UserChangePasswordSerializer(serializers.Serializer):
+    """
+    Account New Password
+    """
+    password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+
+    def validate(self, attrs):
+        new_password = attrs.get('new_password', None)
+        confirm_password = attrs.get('confirm_password', None)
+        if new_password and confirm_password:
+            if new_password == confirm_password:
+                return attrs
+            else:
+                raise serializers.ValidationError('passwords did not match')
+        else:
+            raise serializers.ValidationError('passwords did not match')

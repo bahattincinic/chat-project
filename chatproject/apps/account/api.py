@@ -21,7 +21,8 @@ from core.exceptions import OPSException
 from api.models import AccessToken
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from . import serializers
-from .permissions import UserCreatePermission, UserDetailPermission
+from .permissions import (UserCreatePermission, UserDetailPermission,
+                          UserChangePasswordPermission)
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
 from core.mixins import ApiTransactionMixin
 
@@ -160,7 +161,7 @@ class AccountCreate(ApiTransactionMixin, CreateAPIView):
 
 
 class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = (UserDetailPermission,)
+    permission_classes = (UserDetailPermission, UserChangePasswordPermission,)
     model = User
     serializer_class = serializers.UserDetailSerializer
     old_profile = None
@@ -190,3 +191,20 @@ class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
         logout(self.request)
         # log
         action.send(obj, verb=User.verbs.get('delete'))
+
+    def patch(self, request, *args, **kwargs):
+        data = None
+        serializer = serializers.UserChangePasswordSerializer(data=request.DATA)
+        try:
+            if not serializer.is_valid():
+                data = serializers.errors
+                raise OPSException()
+            user = request.user
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+        except OPSException:
+            statu = status.HTTP_400_BAD_REQUEST
+        else:
+            statu = status.HTTP_200_OK
+            action.send(user, verb=User.verbs.get('password_update'))
+        return Response(data=data, status=statu)

@@ -135,3 +135,19 @@ class UserAccountTestCase(CommonTest, TestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(data['gender'],
                          User.objects.get(username=self.username).gender)
+
+    def test_account_password_update(self):
+        """
+        User Account Password Update
+        """
+        url = reverse('user-account-detail', args=[self.username])
+        self.token_login()
+        data = {'password': self.password, 'new_password': 'testtest',
+                'confirm_password': 'testtest'}
+        request = self.c.patch(url, data=simplejson.dumps(data),
+                               content_type='application/json',
+                               **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        # password control
+        new_user = User.objects.get(username=self.username)
+        self.assertNotEqual(self.u.password, new_user.password)
