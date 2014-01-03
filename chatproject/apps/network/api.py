@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from rest_framework.generics import RetrieveAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from core.mixins import ApiTransactionMixin
 from network.models import NetworkConnection, NetworkAdmin
-from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission
-from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer
+from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission, NetworkUserDetailPermission
+from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer, NetworkAdminAPISerializer
 from .permissions import NetworkDetailPermission
 from .serializers import NetworkDetailAPISerializer
 from .models import Network
@@ -48,3 +48,16 @@ class NetworkConnectionAPIView(ListCreateAPIView):
 
     def pre_save(self, obj):
         obj.is_approved = True if obj.network.is_public else False
+
+
+class NetworkUserDetailAPIView(ApiTransactionMixin,
+                               RetrieveDestroyAPIView):
+    serializer_class = NetworkConnectionAPISerializer
+    permission_classes = (NetworkUserDetailPermission,)
+    model = NetworkConnection
+
+
+class NetworkAdminAPIView(ListCreateAPIView):
+    serializer_class = NetworkAdminAPISerializer
+    permission_classes = (NetworkConnectionPermission,)
+    model = NetworkAdmin

@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import Network
 from .models import NetworkConnection
+from network.models import NetworkAdmin
 
 
 class NetworkAPISerializer(serializers.ModelSerializer):
@@ -21,5 +22,12 @@ class NetworkDetailAPISerializer(serializers.ModelSerializer):
 class NetworkConnectionAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = NetworkConnection
+        fields = ('user', 'network')
+        read_only_fields = ('user', 'network')
+
+
+class NetworkAdminAPISerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetworkAdmin
         fields = ('user', 'network')
         read_only_fields = ('user', 'network')

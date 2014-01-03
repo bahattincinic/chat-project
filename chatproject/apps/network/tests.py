@@ -76,3 +76,16 @@ class NetworkTestCase(CommonTest, TestCase):
                               content_type='application/json')
         self.assertFalse(is_success(request.status_code))
 
+    def test_network_add_admin(self):
+        self.session_login()
+        self.test_network_create()
+        network = Network.objects.get()
+        mod_url = reverse('network-mods', args=(network.id,))
+        response = self.c.get(path=mod_url,
+                              content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(len(data['results']), 1)
+        self.assertEqual(data['results'][0]['user'], self.u.id)
+        self.assertEqual(data['results'][0]['network'], network.id)
