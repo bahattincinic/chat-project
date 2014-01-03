@@ -36,6 +36,7 @@ class NetworkAdmin(models.Model):
     user = models.ForeignKey(User)
     network = models.ForeignKey(Network)
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
+    connection = models.OneToOneField(NetworkConnection)
 
     MODERATOR = 'MOD'
     ADMIN = 'ADM'

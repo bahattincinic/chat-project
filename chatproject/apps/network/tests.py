@@ -89,3 +89,12 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(len(data['results']), 1)
         self.assertEqual(data['results'][0]['user'], self.u.id)
         self.assertEqual(data['results'][0]['network'], network.id)
+
+    def test_network_connection_deletion(self):
+        self.session_login()
+        self.test_network_create()
+        network = Network.objects.get()
+        user = self.u
+        delete_url = reverse('network-users-detail', args=(network.id, user.id))
+        print delete_url
+

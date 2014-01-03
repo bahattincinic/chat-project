@@ -23,12 +23,13 @@ class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
             return
 
         # now create a new NetworkAdmin and NetworkConnection
-        NetworkConnection.objects.create(user=self.request.user,
-                                         network=obj,
-                                         is_approved=True)
+        connection = NetworkConnection.objects.create(user=self.request.user,
+                                                      network=obj,
+                                                      is_approved=True)
         NetworkAdmin.objects.create(user=self.request.user,
                                     network=obj,
-                                    status=NetworkAdmin.ADMIN)
+                                    status=NetworkAdmin.ADMIN,
+                                    connection=connection)
         action.send(self.request.user,
                     verb=NetworkAdmin.verbs.get('assigned'),
                     action_object=obj)
@@ -47,7 +48,7 @@ class NetworkConnectionAPIView(ListCreateAPIView):
     model = NetworkConnection
 
     def pre_save(self, obj):
-        obj.is_approved = True if obj.network.is_public else False
+        obj.is_approved = obj.network.is_public
 
 
 class NetworkUserDetailAPIView(ApiTransactionMixin,
