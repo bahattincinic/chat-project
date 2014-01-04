@@ -15,21 +15,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                     RetrieveUpdateDestroyAPIView,
-                                     ListCreateAPIView, RetrieveAPIView)
+from rest_framework import generics
 
 from actstream.models import action, Action
 from account.models import User, Follow, Report
 from core.exceptions import OPSException
 from api.models import AccessToken
 from . import serializers
-from .permissions import (UserCreatePermission, UserDetailPermission,
-                          UserChangePasswordPermission,
-                          UserFollowingsFollowersPermission,
-                          UserAccountFollowPermission,
-                          UserCreateReportPermission,
-                          UserReportDetailPermission)
+from . import permissions
 from core.mixins import ApiTransactionMixin
 
 
@@ -153,8 +146,8 @@ class ForgotMyPassword(ApiTransactionMixin, APIView):
         return Response(data=data, status=statu)
 
 
-class AccountCreate(ApiTransactionMixin, CreateAPIView):
-    permission_classes = (UserCreatePermission,)
+class AccountCreate(ApiTransactionMixin, generics.CreateAPIView):
+    permission_classes = (permissions.UserCreatePermission,)
     model = User
     serializer_class = serializers.UserRegister
 
@@ -166,8 +159,9 @@ class AccountCreate(ApiTransactionMixin, CreateAPIView):
         action.send(obj, verb=User.verbs.get('register'), level=Action.INFO)
 
 
-class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = (UserDetailPermission, UserChangePasswordPermission,)
+class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (permissions.UserDetailPermission,
+                          permissions.UserChangePasswordPermission,)
     model = User
     serializer_class = serializers.UserDetailSerializer
     old_profile = None
@@ -216,11 +210,11 @@ class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
         return Response(data=data, status=statu)
 
 
-class AccountFollowers(ListAPIView):
+class AccountFollowers(generics.ListAPIView):
     """
     User Followers
     """
-    permission_classes = (UserFollowingsFollowersPermission, )
+    permission_classes = (permissions.UserFollowingsFollowersPermission, )
     serializer_class = serializers.AnonUserDetailSerializer
     model = User
 
@@ -229,11 +223,11 @@ class AccountFollowers(ListAPIView):
         return User.objects.filter(follower_set__following__username=username)
 
 
-class AccountFollowings(ListAPIView):
+class AccountFollowings(generics.ListAPIView):
     """
     User Followings
     """
-    permission_classes = (UserFollowingsFollowersPermission, )
+    permission_classes = (permissions.UserFollowingsFollowersPermission, )
     serializer_class = serializers.AnonUserDetailSerializer
     model = User
 
@@ -247,7 +241,7 @@ class AccountFollow(ApiTransactionMixin, APIView):
     User Follow, UnFollow
     """
     model = User
-    permission_classes = (UserAccountFollowPermission, )
+    permission_classes = (permissions.UserAccountFollowPermission, )
 
     def post(self, request, *args, **kwargs):
         """
@@ -300,14 +294,14 @@ class AccountFollow(ApiTransactionMixin, APIView):
         return Response(data=data, status=statu)
 
 
-class AccountReportList(ApiTransactionMixin, ListCreateAPIView):
+class AccountReportList(ApiTransactionMixin, generics.ListCreateAPIView):
     """
     Account Report Create
     """
     model = Report
     queryset = Report.actives.all()
     serializer_class = serializers.UserReportSerializer
-    permission_classes = (UserCreateReportPermission,)
+    permission_classes = (permissions.UserCreateReportPermission,)
 
     def pre_save(self, obj):
         username = self.kwargs.get('username')
@@ -316,11 +310,11 @@ class AccountReportList(ApiTransactionMixin, ListCreateAPIView):
         obj.offender = user
 
 
-class AccountReportDetail(RetrieveAPIView):
+class AccountReportDetail(generics.RetrieveAPIView):
     """
     Account Report Detail
     """
     model = Report
     queryset = Report.actives.all()
     serializer_class = serializers.UserReportSerializer
-    permission_classes = (UserReportDetailPermission, )
+    permission_classes = (permissions.UserReportDetailPermission, )
