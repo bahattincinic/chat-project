@@ -9,7 +9,7 @@ from django.db import models
 from django.conf import settings
 from .managers import UserManager
 from api.models import AccessToken
-from core.managers import CommonManager
+from core.managers import CommonManager, FilteringManager
 from .validators import validate_username
 
 
@@ -135,10 +135,11 @@ class Report(models.Model):
     STATUS_CHOCIRIES = ((ACTIVE, 'Active'), (PASSIVE, 'Passive'),
                         (RESOLVED, 'Resolved'))
     status = models.CharField(_('Status'), choices=STATUS_CHOCIRIES,
-                              max_length=10)
+                              max_length=10, default=PASSIVE)
     text = models.TextField(_('Other/Text'), null=True, blank=True)
 
     objects = CommonManager()
+    actives = FilteringManager(status=ACTIVE)
 
     class Meta:
         db_table = 'user_report'

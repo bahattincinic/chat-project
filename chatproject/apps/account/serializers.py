@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from account.models import User
+from account.models import User, Report
 from .validators import username_re
 
 
@@ -137,3 +137,16 @@ class UserChangePasswordSerializer(serializers.Serializer):
                 raise serializers.ValidationError('passwords did not match')
         else:
             raise serializers.ValidationError('passwords did not match')
+
+
+class UserReportSerializer(serializers.ModelSerializer):
+    """
+    Account Report Serializer
+    """
+    reporter = AnonUserDetailSerializer(read_only=True)
+    offender = AnonUserDetailSerializer(read_only=True)
+
+    class Meta:
+        model = Report
+        fields = ('id', 'reporter', 'offender', 'text')
+        read_only_fields = ('id',)

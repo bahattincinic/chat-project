@@ -89,3 +89,38 @@ class UserAccountFollowPermission(permissions.BasePermission):
                 return False
         else:
             return True
+
+
+class UserCreateReportPermission(permissions.BasePermission):
+    """
+    User Create Report Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'POST':
+            if request.user.is_authenticated() and request.user.id != user.id:
+                return True
+            else:
+                return False
+        if request.method == 'GET':
+            if request.user.is_authenticated() and request.user.id == user.id:
+                return True
+            else:
+                return False
+        return True
+
+
+class UserReportDetailPermission(permissions.BasePermission):
+    """
+    User Report Detail Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'GET':
+            if request.user.is_authenticated() and request.user.id == user.id:
+                return True
+            else:
+                return False
+        return True

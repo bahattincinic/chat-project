@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from core.tests import CommonTest
-from account.models import User, Follow
+from account.models import User, Follow, Report
 from account.serializers import UserDetailSerializer
 
 
@@ -217,3 +217,46 @@ class UserFollowTestCase(CommonTest, TestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
                          Follow.objects.filter(follower=self.u).count())
+
+
+class UserReportTestCase(CommonTest, TestCase):
+
+    def test_report_create(self):
+        """
+        Create Report
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-reports', args=[user.username])
+        self.token_login()
+        data = simplejson.dumps({'text': 'Test'})
+        request = self.c.post(path=url, content_type='application/json',
+                              data=data, **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+
+    def test_report_list(self):
+        """
+        Report List
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-reports', args=[self.u.username])
+        self.token_login()
+        Report.objects.create(reporter=user, offender=self.u, text='tests',
+                              status=Report.ACTIVE)
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        data = simplejson.loads(request.content)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data.get("results")),
+                         Report.objects.filter(offender=self.u).count())
+
+    def test_report_detail(self):
+        """
+        Report Detail
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        self.token_login()
+        report = Report.objects.create(reporter=user, offender=self.u,
+                                       text='tests', status=Report.ACTIVE)
+        url = reverse('user-report-detail', args=[self.u.username, report.id])
+        request = self.c.get(path=url, **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)

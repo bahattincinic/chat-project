@@ -16,17 +16,20 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                     RetrieveUpdateDestroyAPIView)
+                                     RetrieveUpdateDestroyAPIView,
+                                     ListCreateAPIView, RetrieveAPIView)
 
 from actstream.models import action, Action
-from account.models import User, Follow
+from account.models import User, Follow, Report
 from core.exceptions import OPSException
 from api.models import AccessToken
 from . import serializers
 from .permissions import (UserCreatePermission, UserDetailPermission,
                           UserChangePasswordPermission,
                           UserFollowingsFollowersPermission,
-                          UserAccountFollowPermission)
+                          UserAccountFollowPermission,
+                          UserCreateReportPermission,
+                          UserReportDetailPermission)
 from core.mixins import ApiTransactionMixin
 
 
@@ -295,3 +298,29 @@ class AccountFollow(ApiTransactionMixin, APIView):
             action.send(request.user, verb=Follow.verbs.get('unfollow'),
                         following=following, follower=follower)
         return Response(data=data, status=statu)
+
+
+class AccountReportList(ApiTransactionMixin, ListCreateAPIView):
+    """
+    Account Report Create
+    """
+    model = Report
+    queryset = Report.actives.all()
+    serializer_class = serializers.UserReportSerializer
+    permission_classes = (UserCreateReportPermission,)
+
+    def pre_save(self, obj):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        obj.reporter = self.request.user
+        obj.offender = user
+
+
+class AccountReportDetail(RetrieveAPIView):
+    """
+    Account Report Detail
+    """
+    model = Report
+    queryset = Report.actives.all()
+    serializer_class = serializers.UserReportSerializer
+    permission_classes = (UserReportDetailPermission, )
