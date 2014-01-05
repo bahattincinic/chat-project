@@ -222,7 +222,7 @@ class AccountFollowers(generics.ListAPIView):
     def get_queryset(self):
         username = self.kwargs.get('username')
         user = User.actives.get(username=username)
-        return user.followees()
+        return user.followers()
 
 
 class AccountFollowees(generics.ListAPIView):
@@ -236,7 +236,7 @@ class AccountFollowees(generics.ListAPIView):
     def get_queryset(self):
         username = self.kwargs.get('username')
         user = User.actives.get(username=username)
-        return user.followers()
+        return user.followees()
 
 
 class AccountFollow(ApiTransactionMixin, CreateDestroyAPIView):
