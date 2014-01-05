@@ -23,6 +23,7 @@ from core.exceptions import OPSException
 from api.models import AccessToken
 from . import serializers
 from . import permissions
+from core.generics import CreateDestroyAPIView
 from core.mixins import ApiTransactionMixin
 
 
@@ -214,84 +215,64 @@ class AccountFollowers(generics.ListAPIView):
     """
     User Followers
     """
-    permission_classes = (permissions.UserFollowingsFollowersPermission, )
+    permission_classes = (permissions.FollowRelationPermissions, )
     serializer_class = serializers.AnonUserDetailSerializer
     model = User
 
     def get_queryset(self):
         username = self.kwargs.get('username')
-        return User.objects.filter(follower_set__following__username=username)
+        user = User.actives.get(username=username)
+        return user.followees()
 
 
-class AccountFollowings(generics.ListAPIView):
+class AccountFollowees(generics.ListAPIView):
     """
-    User Followings
+    User Followees
     """
-    permission_classes = (permissions.UserFollowingsFollowersPermission, )
+    permission_classes = (permissions.FollowRelationPermissions, )
     serializer_class = serializers.AnonUserDetailSerializer
     model = User
 
     def get_queryset(self):
         username = self.kwargs.get('username')
-        return User.objects.filter(following_set__follower__username=username)
+        user = User.actives.get(username=username)
+        return user.followers()
 
 
-class AccountFollow(ApiTransactionMixin, APIView):
+class AccountFollow(ApiTransactionMixin, CreateDestroyAPIView):
     """
     User Follow, UnFollow
+    /account/bahattincinic/follow/ -> (post)
+        request.user bahattincinicí takip etmek istiyor
     """
     model = User
-    permission_classes = (permissions.UserAccountFollowPermission, )
+    permission_classes = (IsAuthenticated,
+                          permissions.UserAccountFollowPermission, )
+    serializer_class = serializers.UserFollowSerializer
+    # request field <username>
+    slug_url_kwarg = "username"
+    # db field
+    slug_field = "followee__username"
 
-    def post(self, request, *args, **kwargs):
-        """
-        User Follow
-        """
-        data = None
-        try:
-            username = kwargs.get('username')
-            user = User.objects.get(username=username)
-            control = Follow.objects.filter(follower=user,
-                                            following=request.user)
-            if control.exists():
-                raise OPSException('User already follow')
-            follow = Follow.objects.create(follower=user,
-                                           following=request.user)
-        except OPSException, e:
-            data = {'username': e.message}
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            action.send(request.user, verb=Follow.verbs.get('follow'),
-                        action_object=follow)
-        return Response(data=data, status=statu)
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        return Follow.objects.filter(followee=user, follower=self.request.user)
 
-    def delete(self, request, *args, **kwargs):
-        """
-        User UnFollow
-        """
-        data = None
-        try:
-            username = kwargs.get('username')
-            user = User.objects.get(username=username)
-            control = Follow.objects.filter(follower=user,
-                                            following=request.user)
-            if not control.exists():
-                raise OPSException('user do not follow')
-            control = control.get()
-            # log
-            following = control.following.username
-            follower = control.follower.username
-            # delete
-            control.delete()
-        except OPSException, e:
-            data = {'username': e.message}
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_204_NO_CONTENT
-            action.send(request.user, verb=Follow.verbs.get('unfollow'),
-                        following=following, follower=follower)
-        return Response(data=data, status=statu)
+    def pre_save(self, obj):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        obj.followee = user
+        obj.follower = self.request.user
+
+    def post_save(self, obj, created=False):
+        action.send(self.request.user, verb=Follow.verbs.get('follow'),
+                    action_object=obj)
+
+    def post_delete(self, obj):
+        action.send(self.request.user, verb=Follow.verbs.get('unfollow'),
+                    followee=obj.follower.username,
+                    follower=obj.followee.username)
 
 
 class AccountReportList(ApiTransactionMixin, generics.ListCreateAPIView):

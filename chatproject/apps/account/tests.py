@@ -169,21 +169,21 @@ class UserFollowTestCase(CommonTest, TestCase):
         """
         User Follow
         """
-        user = User.objects.create_user(username='hede', password='hede')
-        url = reverse('user-account-follow', args=[user.username])
+        User.objects.get_or_create(username='hede')
+        url = reverse('user-account-follow', args=('hede',))
         self.token_login()
         request = self.c.post(path=url, content_type='application/json',
                               **self.client_header)
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
 
     def test_account_unfollow(self):
         """
         User unfollow
         """
-        user = User.objects.create_user(username='hede', password='hede')
-        url = reverse('user-account-follow', args=[user.username])
+        hede, _ = User.objects.get_or_create(username='hede')
+        Follow.objects.create(followee=hede, follower=self.u)
+        url = reverse('user-account-follow', args=('hede',))
         self.token_login()
-        Follow.objects.create(follower=user, following=self.u)
         request = self.c.delete(path=url, content_type='application/json',
                                 **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_204_NO_CONTENT)
@@ -192,8 +192,8 @@ class UserFollowTestCase(CommonTest, TestCase):
         """
         User Followers
         """
-        user = User.objects.create_user(username='hede', password='hede')
-        Follow.objects.create(follower=user, following=self.u)
+        hede = User.objects.create_user(username='hede', password='hede')
+        Follow.objects.create(follower=hede, followee=self.u)
         url = reverse('user-account-followers', args=[self.u.username])
         self.token_login()
         request = self.c.get(path=url, content_type='application/json',
@@ -201,22 +201,22 @@ class UserFollowTestCase(CommonTest, TestCase):
         data = simplejson.loads(request.content)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
-                         Follow.objects.filter(following=self.u).count())
+                         Follow.objects.filter(follower=self.u).count())
 
     def test_account_following(self):
         """
-        User Followings
+        User Followees
         """
         user = User.objects.create_user(username='hede', password='hede')
-        Follow.objects.create(following=self.u, follower=user)
-        url = reverse('user-account-followings', args=[self.u.username])
+        Follow.objects.create(followee=self.u, follower=user)
+        url = reverse('user-account-followees', args=[self.u.username])
         self.token_login()
         request = self.c.get(path=url, content_type='application/json',
                              **self.client_header)
         data = simplejson.loads(request.content)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
-                         Follow.objects.filter(follower=self.u).count())
+                         Follow.objects.filter(followee=self.u).count())
 
 
 class UserReportTestCase(CommonTest, TestCase):

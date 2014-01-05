@@ -49,6 +49,14 @@ class ApiTransactionMixin(object):
     Method transaction management
     """
     @method_decorator(transaction.atomic)
-    def dispatch(self, *args, **kwargs):
-        return super(ApiTransactionMixin, self).dispatch(*args, **kwargs)
+    def post(self, *args, **kwargs):
+        return super(ApiTransactionMixin, self).post(*args, **kwargs)
+
+    @method_decorator(transaction.atomic)
+    def put(self, *args, **kwargs):
+        return super(ApiTransactionMixin, self).put(*args, **kwargs)
+
+    @method_decorator(transaction.atomic)
+    def delete(self, *args, **kwargs):
+        return super(ApiTransactionMixin, self).delete(*args, **kwargs)
 

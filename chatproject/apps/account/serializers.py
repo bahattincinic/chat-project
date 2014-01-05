@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
-from account.models import User, Report
+from account.models import User, Report, Follow
 from .validators import username_re
 
 
@@ -9,16 +9,16 @@ class BaseUserSerializer(serializers.ModelSerializer):
     Base User Serializer
     """
     followers = serializers.SerializerMethodField('followers_count')
-    followings = serializers.SerializerMethodField('followings_count')
+    followees = serializers.SerializerMethodField('followees_count')
     username = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True,
                                            format='%d-%m-%Y %H:%M',)
 
     def followers_count(self, obj):
-        return obj.follower_set.count()
+        return obj.followers().count()
 
-    def followings_count(self, obj):
-        return obj.following_set.count()
+    def followees_count(self, obj):
+        return obj.followees().count()
 
     class Meta:
         abstract = True
@@ -41,7 +41,7 @@ class UserDetailSerializer(BaseUserSerializer):
         fields = ('username', 'email', 'created_at', 'location',
                   'avatar', 'background', 'is_sound_enabled', 'bio',
                   'follow_needs_approve', 'status',
-                  'last_notification_date', 'gender', 'followers', 'followings')
+                  'last_notification_date', 'gender', 'followers', 'followees')
 
 
 class AnonUserDetailSerializer(BaseUserSerializer):
@@ -52,7 +52,7 @@ class AnonUserDetailSerializer(BaseUserSerializer):
     class Meta:
         model = User
         fields = ('username', 'location', 'avatar', 'background',
-                  'bio', 'gender', 'followers', 'followings')
+                  'bio', 'gender', 'followers', 'followees')
 
 
 class ForgotMyPasswordSerializer(serializers.Serializer):
@@ -150,3 +150,13 @@ class UserReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = ('id', 'reporter', 'offender', 'text')
         read_only_fields = ('id',)
+
+
+class UserFollowSerializer(serializers.ModelSerializer):
+
+    followee = AnonUserDetailSerializer(read_only=True)
+    follower = AnonUserDetailSerializer(read_only=True)
+
+    class Meta:
+        model = Follow
+        fields = ('followee', 'follower')

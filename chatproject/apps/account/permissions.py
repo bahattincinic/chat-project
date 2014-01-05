@@ -1,6 +1,6 @@
 from django.http.response import Http404
 from rest_framework import permissions
-from account.models import User
+from account.models import User, Follow
 
 
 class UserDetailPermission(permissions.BasePermission):
@@ -51,9 +51,9 @@ class UserChangePasswordPermission(permissions.BasePermission):
             return True
 
 
-class UserFollowingsFollowersPermission(permissions.BasePermission):
+class FollowRelationPermissions(permissions.BasePermission):
     """
-    User Followings, Followers Permission
+    User Followees, Followers Permission
     """
     def has_permission(self, request, view):
         username = request.parser_context.get("kwargs").get("username")
@@ -75,20 +75,16 @@ class UserAccountFollowPermission(permissions.BasePermission):
     User Follow, UnFollow Permission
     """
     def has_permission(self, request, view):
-        forbidden_methods = ('POST', 'DELETE')
         username = request.parser_context.get("kwargs").get("username")
         user = User.objects.get_or_raise(username=username, exc=Http404())
-        if request.method in forbidden_methods:
-            if request.user.is_authenticated():
-                # User can not follow self
-                if request.user.username == user.username:
-                    return False
-                else:
-                    return True
-            else:
+        follow = Follow.objects.filter(follower=request.user, followee=user)
+        if request.method == 'POST':
+            if request.user.id == user.id:
                 return False
-        else:
-            return True
+            return not follow.exists()
+        if request.method == 'DELETE':
+            return follow.exists()
+        return True
 
 
 class UserCreateReportPermission(permissions.BasePermission):
