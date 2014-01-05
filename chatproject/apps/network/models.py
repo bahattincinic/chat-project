@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from account.models import User
 from django_extensions.db.fields import AutoSlugField
-from core.managers import FilteringManager
+from core.managers import FilteringManager, CommonManager
 
 
 class Network(models.Model):
@@ -26,18 +26,33 @@ class Network(models.Model):
     def __unicode__(self):
         return self.name
 
-    def check_ownership(self, user):
+    def check_ownership(self, user, admin=False):
         assert isinstance(User, user)
         assert User.actives.filter(id=user.id)
-        return NetworkAdmin.objects.filter(user=user, network=self).exists()
+        group = (NetworkAdmin.ADMIN,) if admin \
+            else (NetworkAdmin.MODERATOR, NetworkAdmin.ADMIN)
+        return NetworkAdmin.objects.filter(user=user,
+                                           network=self,
+                                           status=group).exists()
 
 
 class NetworkAdmin(models.Model):
+    AWAITING = 'AWA'
+    REJECTED = 'REJ'
+    APPROVED = 'APP'
+    STATUS_CHOICES = ((AWAITING, 'Awaiting Approval'),
+                      (REJECTED, 'Request Rejected'),
+                      (APPROVED, 'Request Approved'))
     user = models.ForeignKey(User)
-    network = models.ForeignKey(Network)
+    network = models.ForeignKey(Network, related_name='admin_set')
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
-    connection = models.OneToOneField(NetworkConnection)
-
+    connection = models.OneToOneField('NetworkConnection')
+    # eligible only for mods appointed by admins
+    approval_status = models.CharField(_('Approval Status'),
+                                       choices=STATUS_CHOICES,
+                                       default=AWAITING,
+                                       max_length=3)
+    # type of this administrational connection
     MODERATOR = 'MOD'
     ADMIN = 'ADM'
     TYPE_CHOICES = ((MODERATOR, 'Moderator'), (ADMIN, 'Admin'))
@@ -46,6 +61,9 @@ class NetworkAdmin(models.Model):
     verbs = {
         'assigned': 'Network admin assigned',
     }
+
+    objects = CommonManager()
+    approved_mods = FilteringManager(approval_status=APPROVED, status=MODERATOR)
 
     class Meta:
         db_table = 'network_admin'

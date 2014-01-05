@@ -11,10 +11,6 @@ from account.models import User
 
 
 class NetworkTestCase(CommonTest, TestCase):
-    def tearDown(self):
-        # purges all previous network data
-        Network.objects.all().delete()
-
     def test_network_list(self):
         """
         Network List
@@ -68,6 +64,25 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(NetworkAdmin.objects.all().count(), 0)
         self.assertEqual(NetworkConnection.objects.all().count(), 0)
 
+    def test_network_connection_deletion(self):
+        self.session_login()
+        self.test_network_create()
+        network = Network.objects.get()
+        user = self.u
+        # create test user
+        balkan = User.objects.create(username='balkan', email='osman@osman.com')
+        balkan.set_password('1q2w3e')
+        balkan.save()
+        # assign balkan as mod to network
+        assign_url = reverse('network-mods', args=(network.id,))
+        response = self.c.post(path=assign_url,
+                               data=simplejson.dumps({
+                                   'user': balkan.id,
+                                   'network': network.id
+                               }),
+                               content_type='application/json')
+        # continue here
+
     def test_unauthorized_network_creation(self):
         create_url = reverse('network-lists')
         network_name = 'Metro Last Light'
@@ -90,11 +105,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(data['results'][0]['user'], self.u.id)
         self.assertEqual(data['results'][0]['network'], network.id)
 
-    def test_network_connection_deletion(self):
-        self.session_login()
-        self.test_network_create()
-        network = Network.objects.get()
-        user = self.u
-        delete_url = reverse('network-users-detail', args=(network.id, user.id))
-        print delete_url
+
+
+
 

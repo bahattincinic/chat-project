@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.http.response import Http404
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import BasePermission
 from account.models import User
-from network.models import Network, NetworkConnection
+from network.models import Network, NetworkConnection, NetworkAdmin
 
 SAFE_METHODS = ('GET', 'HEAD')
 
@@ -48,6 +47,12 @@ class NetworkListCreatePermission(BasePermission):
         return False
 
 
+class IsNetworkAdminOrIsSelf(BasePermission):
+    def has_permission(self, request, view):
+        # TODO: write this
+        pass
+
+
 class NetworkConnectionPermission(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
@@ -85,8 +90,11 @@ class NetworkUserDetailPermission(BasePermission):
         network = Network.objects.get_or_raise(id=network_pk, exc=Http404())
 
         if request.method in SAFE_METHODS:
-            return network.is_public
+            return True
         elif request.method in ('DELETE',):
+            # requesting user must be authenticated
+            if not (request.user and request.user.is_authenticated()):
+                return False
             # requesting user must be admin or mod of the network
             # or requesting user id and user_id must be same
             user_pk = request.parser_context.get("kwargs").get("user_pk")
@@ -98,9 +106,6 @@ class NetworkUserDetailPermission(BasePermission):
             if not NetworkConnection.approved.filter(user=user,
                                                      network=network).exists():
                 raise Http404()
-            # requesting user must be authenticated
-            if not (request.user and request.user.is_authenticated()):
-                return False
             # if requesting user has privilege on this network then we allow request
             if network.check_ownership(user=request.user):
                 return True
@@ -112,3 +117,33 @@ class NetworkUserDetailPermission(BasePermission):
         # no other operation supported at this moment
         return False
 
+
+class NetworkModsDetailPermission(BasePermission):
+    def has_permission(self, request, view):
+    # supports get and delete requests
+        network_pk = request.parser_context.get("kwargs").get("pk")
+        network = Network.objects.get_or_raise(id=network_pk, exc=Http404())
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method in ('DELETE',):
+            # requesting user must be authenticated
+            if not request.user and request.user.is_authenticated():
+                return False
+            # the mod in question
+            mod_pk = request.parser_context.get("kwargs").get("mod_pk")
+            mod = User.actives.get_or_raise(pk=mod_pk, exc=Http404())
+            # mod must really be a moderator of this network
+            NetworkAdmin.objects.get_or_raise(user=mod, network=network,
+                                              exc=Http404())
+            # requesting user must be active
+            requesting_user = User.actives.get_or_raise(pk=request.user.id,
+                                                        exc=Http404())
+            # if requesting user is admin of this network then allow this request
+            if network.check_ownership(user=requesting_user, admin=True):
+                return True
+            # if requesting user is the mod himself
+            # then allow this request to proceed
+            if mod.id == requesting_user.id:
+                return True
+            return  False
+        return False

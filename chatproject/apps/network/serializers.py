@@ -27,7 +27,8 @@ class NetworkConnectionAPISerializer(serializers.ModelSerializer):
 
 
 class NetworkAdminAPISerializer(serializers.ModelSerializer):
+    network = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = NetworkAdmin
         fields = ('user', 'network')
-        read_only_fields = ('user', 'network')
