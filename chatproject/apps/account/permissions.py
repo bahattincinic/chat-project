@@ -1,6 +1,6 @@
 from django.http.response import Http404
 from rest_framework import permissions
-from account.models import User
+from account.models import User, Follow
 
 
 class UserDetailPermission(permissions.BasePermission):
@@ -35,3 +35,88 @@ class UserCreatePermission(permissions.BasePermission):
             return False
         else:
             return False
+
+
+class UserChangePasswordPermission(permissions.BasePermission):
+    """
+    User Change Password
+    """
+    def has_permission(self, request, view):
+        if request.method == 'PATCH':
+            if request.user.is_authenticated():
+                return True
+            else:
+                return False
+        else:
+            return True
+
+
+class FollowRelationPermissions(permissions.BasePermission):
+    """
+    User Followees, Followers Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'GET':
+            # not authenticated
+            if request.user.is_anonymous():
+                return False
+            # not only me
+            if request.user.username != user.username:
+                return False
+            return True
+        else:
+            return True
+
+
+class UserAccountFollowPermission(permissions.BasePermission):
+    """
+    User Follow, UnFollow Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        follow = Follow.objects.filter(follower=request.user, followee=user)
+        if request.method == 'POST':
+            if request.user.id == user.id:
+                return False
+            return not follow.exists()
+        if request.method == 'DELETE':
+            return follow.exists()
+        return True
+
+
+class UserCreateReportPermission(permissions.BasePermission):
+    """
+    User Create Report Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'POST':
+            if request.user.is_authenticated() and request.user.id != user.id:
+                return True
+            else:
+                return False
+        if request.method == 'GET':
+            if request.user.is_authenticated() and request.user.id == user.id:
+                return True
+            else:
+                return False
+        return True
+
+
+class UserReportDetailPermission(permissions.BasePermission):
+    """
+    User Report Detail Permission
+    """
+    def has_permission(self, request, view):
+        username = request.parser_context.get("kwargs").get("username")
+        user = User.objects.get_or_raise(username=username, exc=Http404())
+        if request.method == 'GET':
+            if request.user.is_authenticated() and request.user.id == user.id:
+                return True
+            else:
+                return False
+        return True
