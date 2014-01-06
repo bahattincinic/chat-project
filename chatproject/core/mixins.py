@@ -59,4 +59,3 @@ class ApiTransactionMixin(object):
     @method_decorator(transaction.atomic)
     def delete(self, *args, **kwargs):
         return super(ApiTransactionMixin, self).delete(*args, **kwargs)
-
