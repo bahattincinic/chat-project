@@ -42,6 +42,7 @@ class NetworkDetailAPIView(ApiTransactionMixin,
                            RetrieveUpdateDestroyAPIView):
     serializer_class = NetworkDetailAPISerializer
     permission_classes = (NetworkDetailPermission,)
+    lookup_field = 'slug'
     model = Network
 
 
@@ -49,6 +50,7 @@ class NetworkConnectionAPIView(ListCreateAPIView):
     serializer_class = NetworkConnectionAPISerializer
     permission_classes = (NetworkConnectionPermission,)
     model = NetworkConnection
+    lookup_field = 'user__username'
 
     def pre_save(self, obj):
         obj.is_approved = obj.network.is_public
@@ -59,6 +61,7 @@ class NetworkUserDetailAPIView(ApiTransactionMixin,
     serializer_class = NetworkConnectionAPISerializer
     permission_classes = (NetworkUserDetailPermission,)
     model = NetworkConnection
+    lookup_field = 'slug'
 
 
 class NetworkAdminAPIView(ApiTransactionMixin,

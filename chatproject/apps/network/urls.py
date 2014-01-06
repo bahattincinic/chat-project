@@ -9,9 +9,10 @@ from network.api import NetworkAdminAPIView, NetworkUserDetailAPIView, NetworkMo
 network_v1 = patterns('',
     url(r'^$', NetworkAPIView.as_view(),
         name='network-lists'),
-    url(r'^(?P<pk>[0-9]+)/$', NetworkDetailAPIView.as_view(),
+    # retrieve, update, destroy a network
+    url(r'^(?P<slug>[A-Za-z0-9-_]+)/$', NetworkDetailAPIView.as_view(),
         name='network-detail'),
-    url(r'^(?P<pk>[0-9]+)/users/$', NetworkConnectionAPIView.as_view(),
+    url(r'^(?P<user__username>[A-Za-z0-9-_]+)/users/$', NetworkConnectionAPIView.as_view(),
         name='network-users'),
     url(r'^(?P<pk>[0-9]+)/users/(?P<user_pk>[0-9]+)/$',
         NetworkUserDetailAPIView.as_view(),

@@ -9,9 +9,8 @@ SAFE_METHODS = ('GET', 'HEAD')
 
 class NetworkDetailPermission(BasePermission):
     def has_permission(self, request, view):
-        pk = request.parser_context.get("kwargs").get("pk")
-        network = Network.objects.get_or_raise(pk=pk, exc=Http404())
         if request.method in SAFE_METHODS:
+            network = view.get_object()
             if network.is_public:
                 return True
             else:
@@ -23,6 +22,7 @@ class NetworkDetailPermission(BasePermission):
                     return True
                 return False
         elif request.method in ('PUT', 'PATCH', 'DELETE'):
+            network = view.get_object()
             if request.user and \
                     request.user.is_authenticated() and \
                     network.check_ownership(request.user):

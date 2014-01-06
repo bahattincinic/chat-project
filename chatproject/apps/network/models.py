@@ -26,14 +26,15 @@ class Network(models.Model):
     def __unicode__(self):
         return self.name
 
-    def check_ownership(self, user, admin=False):
-        assert isinstance(User, user)
-        assert User.actives.filter(id=user.id)
-        group = (NetworkAdmin.ADMIN,) if admin \
-            else (NetworkAdmin.MODERATOR, NetworkAdmin.ADMIN)
+    def check_ownership(self, user):
+        """
+        Checks if user is creator and admin of this network
+        """
+        assert isinstance(user, User)
+        assert User.actives.filter(id=user.id).exists()
         return NetworkAdmin.objects.filter(user=user,
                                            network=self,
-                                           status=group).exists()
+                                           status=NetworkAdmin.ADMIN).exists()
 
 
 class NetworkAdmin(models.Model):

@@ -28,6 +28,7 @@ class NetworkTestCase(CommonTest, TestCase):
         create_url = reverse('network-lists')
         network_name = 'Metro Last Light'
         create_payload = simplejson.dumps({'name': network_name})
+        self.assertTrue(isinstance(self.u, User))
         request = self.c.post(path=create_url, data=create_payload,
                               content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
@@ -37,6 +38,31 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertFalse(network.is_deleted)
         self.assertIsNotNone(network.slug)
         self.assertEqual(network.created_by, self.u)
+        self.assertEqual(NetworkConnection.objects.count(), 1)
+        self.assertEqual(NetworkAdmin.objects.count(), 1)
+        admin = NetworkAdmin.objects.get()
+        self.assertEqual(admin.user.id, self.u.id)
+        self.assertEqual(admin.network.id, network.id)
+        self.assertEqual(admin.status, NetworkAdmin.ADMIN)
+        connection = NetworkConnection.objects.get()
+        self.assertEqual(connection.id, admin.connection.id)
+
+
+    def test_retrieve_network_details(self):
+        self.test_network_create()
+        self.assertEqual(Network.objects.count(), 1)
+        network = Network.objects.get()
+        url = reverse('network-detail', args=(network.slug,))
+        response = self.c.get(path=url, content_type='application/json')
+        self.assertTrue(is_success(response.status_code))
+
+    def test_network_delete(self):
+        self.test_retrieve_network_details()
+        network = Network.objects.get()
+        self.assertTrue(network.check_ownership(self.u))
+        url = reverse('network-detail', args=(network.slug,))
+        response = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_network_update_byid_fail(self):
         self.session_login()
@@ -103,8 +129,4 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(len(data['results']), 1)
         self.assertEqual(data['results'][0]['user'], self.u.id)
         self.assertEqual(data['results'][0]['network'], network.id)
-
-
-
-
 
