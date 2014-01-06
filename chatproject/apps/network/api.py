@@ -67,33 +67,15 @@ class NetworkAdminAPIView(ApiTransactionMixin,
     permission_classes = (NetworkConnectionPermission,)
     model = NetworkAdmin
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.DATA, files=request.FILES)
-        network_pk = kwargs.get('pk')
-
-        try:
-            if not (network_pk and Network.objects.filter(pk=network_pk).exists()):
-                serializer.errors = {'network': [u'Invalid network']}
-                raise OPSException
-            network = Network.objects.get(pk=network_pk)
-        except OPSException:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        if serializer.is_valid():
-            serializer.object.network = network
-            self.pre_save(serializer.object)
-            self.object = serializer.save(force_insert=True)
-            self.post_save(self.object, created=True)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED,
-                            headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def pre_save(self, obj):
         assert obj.user, u'Invalid obj'
-        assert obj.network, u'Invalid obj'
+        # set network of this NetworkAdmin obj
+        network_pk = self.kwargs.get('pk')
+        network = Network.objects.get(pk=network_pk)
+        obj.network = network
         obj.status = NetworkAdmin.MODERATOR
         # by default this mod status is not approved
+        # since it is mod request
         obj.is_approved = False
         conn = NetworkConnection.objects.create(user=obj.user,
                                                 network=obj.network,

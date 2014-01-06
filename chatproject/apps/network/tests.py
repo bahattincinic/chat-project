@@ -5,9 +5,8 @@ from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
 from core.tests import CommonTest
-from .models import Network
-from network.models import NetworkConnection, NetworkAdmin
 from account.models import User
+from .models import Network, NetworkConnection, NetworkAdmin
 
 
 class NetworkTestCase(CommonTest, TestCase):
@@ -39,11 +38,12 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertIsNotNone(network.slug)
         self.assertEqual(network.created_by, self.u)
 
-    def test_network_update_fail(self):
+    def test_network_update_byid_fail(self):
         self.session_login()
         create_url = reverse('network-lists')
         self.test_network_create()
         self.assertEqual(1, Network.objects.all().count())
+        # create by id is not supported
         total_url = '%s%s/' % (create_url, Network.objects.get().id)
         request = self.c.post(path=total_url,
                               data=simplejson.dumps({'name': 'xxx'}),
@@ -81,7 +81,6 @@ class NetworkTestCase(CommonTest, TestCase):
                                    'network': network.id
                                }),
                                content_type='application/json')
-        # continue here
 
     def test_unauthorized_network_creation(self):
         create_url = reverse('network-lists')
