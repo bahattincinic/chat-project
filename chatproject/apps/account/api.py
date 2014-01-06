@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import datetime
 import uuid
 import simplejson
-
 from django.utils.timezone import utc
 from django.conf import settings
 from django.contrib.auth import login, logout
@@ -15,14 +14,16 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import generics
+
 from actstream.models import action, Action
-from account.models import User
+from account.models import User, Follow, Report
 from core.exceptions import OPSException
 from api.models import AccessToken
-from rest_framework.permissions import AllowAny, IsAuthenticated
 from . import serializers
-from .permissions import UserCreatePermission, UserDetailPermission
-from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView
+from . import permissions
+from core.generics import CreateDestroyAPIView
 from core.mixins import ApiTransactionMixin
 
 
@@ -146,8 +147,8 @@ class ForgotMyPassword(ApiTransactionMixin, APIView):
         return Response(data=data, status=statu)
 
 
-class AccountCreate(ApiTransactionMixin, CreateAPIView):
-    permission_classes = (UserCreatePermission,)
+class AccountCreate(ApiTransactionMixin, generics.CreateAPIView):
+    permission_classes = (permissions.UserCreatePermission,)
     model = User
     serializer_class = serializers.UserRegister
 
@@ -159,8 +160,9 @@ class AccountCreate(ApiTransactionMixin, CreateAPIView):
         action.send(obj, verb=User.verbs.get('register'), level=Action.INFO)
 
 
-class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
-    permission_classes = (UserDetailPermission,)
+class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = (permissions.UserDetailPermission,
+                          permissions.UserChangePasswordPermission,)
     model = User
     serializer_class = serializers.UserDetailSerializer
     old_profile = None
@@ -190,3 +192,110 @@ class AccountDetail(ApiTransactionMixin, RetrieveUpdateDestroyAPIView):
         logout(self.request)
         # log
         action.send(obj, verb=User.verbs.get('delete'))
+
+    def patch(self, request, *args, **kwargs):
+        data = None
+        serializer = serializers.UserChangePasswordSerializer(data=request.DATA)
+        try:
+            if not serializer.is_valid():
+                data = serializer.errors
+                raise OPSException()
+            user = request.user
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+        except OPSException:
+            statu = status.HTTP_400_BAD_REQUEST
+        else:
+            statu = status.HTTP_200_OK
+            action.send(user, verb=User.verbs.get('password_update'))
+        return Response(data=data, status=statu)
+
+
+class AccountFollowers(generics.ListAPIView):
+    """
+    User Followers
+    """
+    permission_classes = (permissions.FollowRelationPermissions, )
+    serializer_class = serializers.AnonUserDetailSerializer
+    model = User
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = User.actives.get(username=username)
+        return user.followees()
+
+
+class AccountFollowees(generics.ListAPIView):
+    """
+    User Followees
+    """
+    permission_classes = (permissions.FollowRelationPermissions, )
+    serializer_class = serializers.AnonUserDetailSerializer
+    model = User
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = User.actives.get(username=username)
+        return user.followers()
+
+
+class AccountFollow(ApiTransactionMixin, CreateDestroyAPIView):
+    """
+    User Follow, UnFollow
+    /account/bahattincinic/follow/ -> (post)
+        request.user bahattincinicí takip etmek istiyor
+    """
+    model = User
+    permission_classes = (IsAuthenticated,
+                          permissions.UserAccountFollowPermission, )
+    serializer_class = serializers.UserFollowSerializer
+    # request field <username>
+    slug_url_kwarg = "username"
+    # db field
+    slug_field = "followee__username"
+
+    def get_queryset(self):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        return Follow.objects.filter(followee=user, follower=self.request.user)
+
+    def pre_save(self, obj):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        obj.followee = user
+        obj.follower = self.request.user
+
+    def post_save(self, obj, created=False):
+        action.send(self.request.user, verb=Follow.verbs.get('follow'),
+                    action_object=obj)
+
+    def post_delete(self, obj):
+        action.send(self.request.user, verb=Follow.verbs.get('unfollow'),
+                    followee=obj.follower.username,
+                    follower=obj.followee.username)
+
+
+class AccountReportList(ApiTransactionMixin, generics.ListCreateAPIView):
+    """
+    Account Report Create
+    """
+    model = Report
+    queryset = Report.actives.all()
+    serializer_class = serializers.UserReportSerializer
+    permission_classes = (permissions.UserCreateReportPermission,)
+
+    def pre_save(self, obj):
+        username = self.kwargs.get('username')
+        user = User.objects.get(username=username)
+        obj.reporter = self.request.user
+        obj.offender = user
+
+
+class AccountReportDetail(generics.RetrieveAPIView):
+    """
+    Account Report Detail
+    """
+    model = Report
+    queryset = Report.actives.all()
+    serializer_class = serializers.UserReportSerializer
+    permission_classes = (permissions.UserReportDetailPermission, )

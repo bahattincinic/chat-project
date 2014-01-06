@@ -9,7 +9,7 @@ from django.db import models
 from django.conf import settings
 from .managers import UserManager
 from api.models import AccessToken
-from core.managers import CommonManager
+from core.managers import CommonManager, FilteringManager
 from .validators import validate_username
 
 
@@ -64,6 +64,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager(is_deleted=False)
     actives = UserManager(is_deleted=False, is_active=True)
 
+
+
     verbs = {
         'login': 'Login',
         'logout': 'Logout',
@@ -71,7 +73,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         'forgot_password': 'Forgot new password',
         'new_password': 'New Password',
         'update': 'Profile Update',
-        'delete': 'Account Delete'
+        'delete': 'Account Delete',
+        'password_update': 'Password Update'
     }
 
     class Meta:
@@ -100,22 +103,41 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.is_deleted = True
         self.save()
 
+    def followees(self):
+        follow = Follow.objects.filter(follower=self)
+        followee_ids = [x.followee.id for x in follow]
+        return User.actives.filter(id__in=followee_ids)
+
+    def followers(self):
+        follow = Follow.objects.filter(followee=self)
+        follower_ids = [x.follower.id for x in follow]
+        return User.actives.filter(id__in=follower_ids)
+
 
 class Follow(models.Model):
-    following = models.ForeignKey(User, related_name='following_set')
+    """
+    followee -> takip edilen insan
+    follower -> takip eden insan
+    """
+    followee = models.ForeignKey(User, related_name='followee_set')
     follower = models.ForeignKey(User, related_name='follower_set')
     created_at = models.DateTimeField(_('Follow Created'), auto_now_add=True)
 
     objects = CommonManager()
+
+    verbs = {
+        'follow': 'Account Follow',
+        'unfollow': 'Account UnFollow'
+    }
 
     # TODO: follow, unfollow log atilmasi lazim
     class Meta:
         db_table = 'user_follow'
 
     def __unicode__(self):
-        return "%s following %s  since %s" % (self.follower.username,
-                                              self.following.username,
-                                              self.created_at)
+        return "%s followee %s  since %s" % (self.follower.username,
+                                             self.followee.username,
+                                             self.created_at)
 
 
 class Report(models.Model):
@@ -129,10 +151,11 @@ class Report(models.Model):
     STATUS_CHOCIRIES = ((ACTIVE, 'Active'), (PASSIVE, 'Passive'),
                         (RESOLVED, 'Resolved'))
     status = models.CharField(_('Status'), choices=STATUS_CHOCIRIES,
-                              max_length=10)
+                              max_length=10, default=PASSIVE)
     text = models.TextField(_('Other/Text'), null=True, blank=True)
 
     objects = CommonManager()
+    actives = FilteringManager(status=ACTIVE)
 
     class Meta:
         db_table = 'user_report'

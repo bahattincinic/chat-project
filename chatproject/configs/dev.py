@@ -29,7 +29,7 @@ LOGGING = {
    }
 }
 
-#ignore the following error when using ipython:
+#ignore the followee error when using ipython:
 #/django/db/backends/sqlite3/base.py:50: RuntimeWarning:
 #SQLite received a naive datetime (2012-11-02 11:20:15.156506)
 # while time zone support is active.
