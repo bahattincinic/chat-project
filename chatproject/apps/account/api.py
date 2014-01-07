@@ -161,8 +161,7 @@ class AccountCreate(ApiTransactionMixin, generics.CreateAPIView):
 
 
 class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = (permissions.UserDetailPermission,
-                          permissions.UserChangePasswordPermission,)
+    permission_classes = (permissions.UserDetailPermission, )
     model = User
     serializer_class = serializers.UserDetailSerializer
     old_profile = None
@@ -191,22 +190,17 @@ class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
         # log
         action.send(obj, verb=User.verbs.get('delete'))
 
-    def patch(self, request, *args, **kwargs):
-        data = None
-        serializer = serializers.UserChangePasswordSerializer(data=request.DATA)
-        try:
-            if not serializer.is_valid():
-                data = serializer.errors
-                raise OPSException()
-            user = request.user
-            user.set_password(serializer.data.get('new_password'))
-            user.save()
-        except OPSException:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            action.send(user, verb=User.verbs.get('password_update'))
-        return Response(data=data, status=statu)
+
+class AccountChangePassword(ApiTransactionMixin, generics.UpdateAPIView):
+    model = User
+    serializer_class = serializers.UserChangePasswordSerializer
+    permission_classes = (IsAuthenticated,
+                          permissions.UserChangePasswordPermission)
+    lookup_field = "username"
+    lookup_url_kwarg = "username"
+
+    def post_save(self, obj, created=False):
+        action.send(obj, verb=User.verbs.get('password_update'))
 
 
 class AccountFollowers(generics.ListAPIView):

@@ -232,7 +232,7 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         User Account Password Update
         """
-        url = reverse('user-account-detail', args=[self.username])
+        url = reverse('user-change-password', args=[self.username])
         self.token_login()
         data = {'password': self.password, 'new_password': 'testtest',
                 'confirm_password': 'testtest'}

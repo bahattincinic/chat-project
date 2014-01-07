@@ -36,8 +36,10 @@ class UserChangePasswordPermission(permissions.BasePermission):
     User Change Password
     """
     def has_permission(self, request, view):
-        if request.method == 'PATCH':
-            return request.user.is_authenticated()
+        if request.method == 'PUT':
+            user = view.get_object()
+            r_user = request.user
+            return user.id == r_user.id
         else:
             return True
 

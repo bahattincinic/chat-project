@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from account.models import User, Report, Follow
 from .validators import username_re
+from django.contrib.auth import authenticate
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -137,6 +138,28 @@ class UserChangePasswordSerializer(serializers.Serializer):
                 raise serializers.ValidationError('passwords did not match')
         else:
             raise serializers.ValidationError('passwords did not match')
+
+    def validate_password(self, attrs, source):
+        password = attrs.get('password')
+        user = self.context['view'].request.user
+        if not user.is_authenticated():
+            raise serializers.ValidationError("user not authenticated")
+        if not user.check_password(password):
+            raise serializers.ValidationError('passwords invalid')
+        return attrs
+
+    def restore_object(self, attrs, instance=None):
+        user = self.context['view'].request.user
+        if not user.is_authenticated():
+            raise serializers.ValidationError("user not authenticated")
+        # change password
+        instance = user
+        instance.set_password(attrs.get('new_password'))
+        # fields pop
+        self.fields.pop('new_password')
+        self.fields.pop('confirm_password')
+        self.fields.pop('password')
+        return instance
 
 
 class UserReportSerializer(serializers.ModelSerializer):
