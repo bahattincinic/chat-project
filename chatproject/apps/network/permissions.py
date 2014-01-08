@@ -33,36 +33,26 @@ class NetworkDetailPermission(BasePermission):
             return False
 
 
-class NetworkListCreatePermission(BasePermission):
+class IsSafeOrUserActive(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-
-        if request.method == 'POST' and \
-                request.user and \
+        elif request.user and \
                 request.user.is_authenticated() and \
                 User.actives.filter(id=request.user.id).exists():
-            # TODO: maybe check for throttling as well
             return True
         return False
 
 
-class IsNetworkAdminOrIsSelf(BasePermission):
-    def has_permission(self, request, view):
-        # TODO: write this
-        pass
-
-
-class NetworkConnectionPermission(BasePermission):
+class IsSafeOrNoNetworkConnection(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-
-        if request.method in ('POST',) and \
-                request.user and \
-                request.user.is_authenticated() and \
-                User.actives.filter(id=request.user.id):
-            return True
+        elif request.method in ('POST',):
+            network = view.get_network()
+            return not NetworkConnection.objects.filter(
+                network=network,
+                user=request.user).exists()
         return False
 
 
@@ -85,32 +75,26 @@ class NetworkAdminPermission(BasePermission):
 
 class NetworkUserDetailPermission(BasePermission):
     def has_permission(self, request, view):
-        # supports get and delete requests
-        network_pk = request.parser_context.get("kwargs").get("pk")
-        network = Network.objects.get_or_raise(id=network_pk, exc=Http404())
-
         if request.method in SAFE_METHODS:
             return True
         elif request.method in ('DELETE',):
-            # requesting user must be authenticated
-            if not (request.user and request.user.is_authenticated()):
-                return False
+            # get network connection
+            nc = view.get_object()
             # requesting user must be admin or mod of the network
             # or requesting user id and user_id must be same
-            user_pk = request.parser_context.get("kwargs").get("user_pk")
-            user = User.actives.get_or_raise(pk=user_pk, exc=Http404())
+            user = nc.user
+            username = user.username
             # requesting user must be active
-            requesting_user = User.actives.get_or_raise(pk=request.user.id,
-                                                        exc=Http404())
+            requesting_user = User.actives.get_or_raise(pk=request.user.id, exc=Http404())
             # approved connection of this user and network must already exists
             if not NetworkConnection.approved.filter(user=user,
-                                                     network=network).exists():
+                                                     network=nc.network).exists():
                 raise Http404()
             # if requesting user has privilege on this network then we allow request
-            if network.check_ownership(user=request.user):
+            if nc.network.check_ownership(user=request.user):
                 return True
             # or it must be same user leaving the network
-            if requesting_user.id == user_pk:
+            if requesting_user.username == username:
                 return True
             # else requesting user cannot remove this network connection
             return False

@@ -80,16 +80,16 @@ class NetworkConnection(models.Model):
     network = models.ForeignKey(Network, related_name='connection_set')
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
     is_approved = models.BooleanField(_('Is Approved'))
-    # objects
-    objects = models.Manager()
+    # managers
     approved = FilteringManager(is_approved=True)
+    objects = models.Manager()
 
     class Meta:
         db_table = 'network_connection'
 
-    def __unicode__(self):
-        return "connection for %s(%s) to %s" % (self.user.username,
-                                                self.user.id, self.network.name)
+    # def __unicode__(self):
+    #     return "connection for %s(%s) to %s" % (self.user.username,
+    #                                             self.user.id, self.network.name)
 
     @staticmethod
     def check_membership(user, network):

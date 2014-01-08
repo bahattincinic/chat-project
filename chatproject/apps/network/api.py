@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
+from django.http.response import Http404
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from rest_framework.response import Response
-from rest_framework import status
-from core.exceptions import OPSException
 from core.mixins import ApiTransactionMixin
 from network.models import NetworkConnection, NetworkAdmin
-from network.permissions import NetworkListCreatePermission, NetworkConnectionPermission, NetworkUserDetailPermission
+from network.permissions import IsSafeOrUserActive, NetworkUserDetailPermission, IsSafeOrNoNetworkConnection
 from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer, NetworkAdminAPISerializer
 from .permissions import NetworkDetailPermission
 from .serializers import NetworkDetailAPISerializer
 from .models import Network
 from actstream.models import action
+from account.models import User
 
 
 class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
     serializer_class = NetworkAPISerializer
-    permission_classes = (NetworkListCreatePermission,)
+    permission_classes = (IsSafeOrUserActive,)
     model = Network
 
     def pre_save(self, obj):
@@ -48,26 +48,49 @@ class NetworkDetailAPIView(ApiTransactionMixin,
 
 class NetworkConnectionAPIView(ListCreateAPIView):
     serializer_class = NetworkConnectionAPISerializer
-    permission_classes = (NetworkConnectionPermission,)
-    model = NetworkConnection
-    lookup_field = 'user__username'
+    permission_classes = (IsSafeOrUserActive,
+                          IsSafeOrNoNetworkConnection)
+    model = Network
+    lookup_field = 'slug'
+
+    def get_network(self):
+        filtering = {self.lookup_field: self.kwargs.get(self.lookup_field)}
+        network = self.model.objects.filter(**filtering).get()
+        return network
+
+    def get_queryset(self):
+        return NetworkConnection.approved.filter(network=self.get_network())
 
     def pre_save(self, obj):
+        obj.network = self.get_network()
+        obj.user = User.actives.get(id=self.request.user.id)
         obj.is_approved = obj.network.is_public
 
 
 class NetworkUserDetailAPIView(ApiTransactionMixin,
                                RetrieveDestroyAPIView):
     serializer_class = NetworkConnectionAPISerializer
-    permission_classes = (NetworkUserDetailPermission,)
-    model = NetworkConnection
+    permission_classes = (IsSafeOrUserActive,
+                          NetworkUserDetailPermission)
+    model = Network
     lookup_field = 'slug'
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        slug = self.kwargs.get('slug')
+        user = User.actives.get_or_raise(username=username, exc=Http404())
+        network = Network.objects.get_or_raise(slug=slug, exc=Http404())
+        nc = NetworkConnection.approved.get_or_raise(
+            user=user,
+            network=network,
+            exc=Http404())
+        return nc
 
 
 class NetworkAdminAPIView(ApiTransactionMixin,
                           ListCreateAPIView):
     serializer_class = NetworkAdminAPISerializer
-    permission_classes = (NetworkConnectionPermission,)
+    permission_classes = (IsSafeOrUserActive,)
     model = NetworkAdmin
 
     def pre_save(self, obj):
