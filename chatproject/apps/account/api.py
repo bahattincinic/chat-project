@@ -19,7 +19,6 @@ from rest_framework import generics
 
 from actstream.models import action, Action
 from account.models import User, Follow, Report
-from core.exceptions import OPSException
 from api.models import AccessToken
 from . import serializers
 from . import permissions
