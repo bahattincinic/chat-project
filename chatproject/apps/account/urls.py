@@ -14,7 +14,15 @@ auth_v1 = patterns('',
         url(r'^authtoken/$', api.TokenLogout.as_view(), name='logout-token'),
         )
     )),
-    url(r'^forgot/$', api.ForgotMyPassword.as_view(), name='forgot-password')
+    url(r'^forgot/', include(patterns('',
+        url(r'^password/$', api.ForgotPassword.as_view(),
+            name='forgot-password'),
+        url(r'^username/$', api.ForgotUsername.as_view(),
+            name='forgot-username'),
+        url(r'^new-password/$', api.NewPassword.as_view(),
+            name='forgot-new-password'),
+        )
+    ))
 )
 
 account_v1 = patterns('',
