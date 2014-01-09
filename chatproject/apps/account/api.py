@@ -138,7 +138,7 @@ class ForgotUsername(generics.UpdateAPIView):
                   from_email=settings.DEFAULT_FROM_EMAIL)
 
 
-class NewPassword(generics.UpdateAPIView):
+class ForgotNewPassword(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.NewPasswordSerializer

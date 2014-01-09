@@ -19,7 +19,7 @@ auth_v1 = patterns('',
             name='forgot-password'),
         url(r'^username/$', api.ForgotUsername.as_view(),
             name='forgot-username'),
-        url(r'^new-password/$', api.NewPassword.as_view(),
+        url(r'^new-password/$', api.ForgotNewPassword.as_view(),
             name='forgot-new-password'),
         )
     ))
