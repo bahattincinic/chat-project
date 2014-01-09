@@ -88,7 +88,7 @@ class TokenLogout(ApiTransactionMixin, APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ForgotPassword(generics.UpdateAPIView):
+class ForgotPassword(ApiTransactionMixin, generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.ForgotMyPasswordSerializer
@@ -115,7 +115,7 @@ class ForgotPassword(generics.UpdateAPIView):
                   from_email=settings.DEFAULT_FROM_EMAIL)
 
 
-class ForgotUsername(generics.UpdateAPIView):
+class ForgotUsername(ApiTransactionMixin, generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.ForgotMyPasswordSerializer
@@ -138,7 +138,7 @@ class ForgotUsername(generics.UpdateAPIView):
                   from_email=settings.DEFAULT_FROM_EMAIL)
 
 
-class ForgotNewPassword(generics.UpdateAPIView):
+class ForgotNewPassword(ApiTransactionMixin, generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.NewPasswordSerializer
