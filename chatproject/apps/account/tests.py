@@ -137,8 +137,18 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         url = reverse('forgot-password')
         payload = simplejson.dumps({'email': self.email})
-        request = self.c.post(path=url, data=payload,
-                              content_type='application/json')
+        request = self.c.put(path=url, data=payload,
+                             content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_forgot_username(self):
+        """
+        Forgot Username
+        """
+        url = reverse('forgot-username')
+        payload = simplejson.dumps({'email': self.email})
+        request = self.c.put(path=url, data=payload,
+                             content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
     def test_forgot_password_email_invalid(self):
@@ -147,8 +157,8 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         url = reverse('forgot-password')
         payload = simplejson.dumps({'email': 'ffdf@fdf.com'})
-        request = self.c.post(path=url, data=payload,
-                              content_type='application/json')
+        request = self.c.put(path=url, data=payload,
+                             content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_new_password(self):
@@ -158,7 +168,7 @@ class UserAccountTestCase(CommonTest, TestCase):
         user = User.objects.filter()[0]
         user.secret_key = uuid.uuid4()
         user.save()
-        url = reverse('forgot-password')
+        url = reverse('forgot-new-password')
         payload = simplejson.dumps({
             'email': user.email, 'secret_key': '%s' % user.secret_key,
             'new_password': '123456'

@@ -89,62 +89,68 @@ class TokenLogout(ApiTransactionMixin, APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ForgotMyPassword(ApiTransactionMixin, APIView):
+class ForgotPassword(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
+    serializer_class = serializers.ForgotMyPasswordSerializer
 
-    def post(self, request):
-        user = User.objects.none()
-        content = ""
-        data = None
-        try:
-            serializer = serializers.ForgotMyPasswordSerializer(
-                data=request.DATA)
-            if not serializer.is_valid():
-                data = serializer.errors
-                raise OPSException()
-            # set secret key
-            user = serializer.object.get('user')
-            user.secret_key = uuid.uuid4()
-            user.save()
-            # Template
-            template = get_template('email/forgot_my_password.html')
-            template_context = Context({'user': user, 'request': request})
-            content = template.render(template_context)
-        except OPSException:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            # log
-            action.send(user, verb=User.verbs.get('forgot_password'),
-                        code='%s' % user.secret_key, content=content,
-                        level=Action.INFO)
-            # mail send
-            send_mail(subject="Forgot My Password", message=content,
-                      recipient_list=[user.email],
-                      from_email=settings.DEFAULT_FROM_EMAIL)
-        return Response(data=data, status=statu)
+    def pre_save(self, obj):
+        obj.secret_key = uuid.uuid4()
 
-    def put(self, request):
-        user = User.objects.none()
-        data = None
-        try:
-            serializer = serializers.NewPasswordSerializer(
-                data=request.DATA)
-            if not serializer.is_valid():
-                data = serializer.errors
-                raise OPSException()
-            user = serializer.object.get('user')
-            user.set_password(serializer.data.get('new_password'))
-            user.secret_key = ''
-            user.save()
-        except OPSException:
-            statu = status.HTTP_400_BAD_REQUEST
-        else:
-            statu = status.HTTP_200_OK
-            action.send(user, verb=User.verbs.get('new_password'),
-                        level=Action.INFO)
-        return Response(data=data, status=statu)
+    def get_object(self, queryset=None):
+        serializer = self.serializer_class(data=self.request.DATA)
+        return serializer.object if serializer.is_valid() else None
+
+    def post_save(self, obj, created=False):
+        # Template
+        template = get_template('email/forgot_password.html')
+        template_context = Context({'user': obj, 'request': self.request})
+        content = template.render(template_context)
+        # log
+        action.send(obj, verb=User.verbs.get('forgot_password'),
+                    code='%s' % obj.secret_key, content=content,
+                    level=Action.INFO)
+        # mail send
+        send_mail(subject="Forgot My Password", message=content,
+                  recipient_list=[obj.email],
+                  from_email=settings.DEFAULT_FROM_EMAIL)
+
+
+class ForgotUsername(generics.UpdateAPIView):
+    permission_classes = (AllowAny,)
+    model = User
+    serializer_class = serializers.ForgotMyPasswordSerializer
+
+    def get_object(self, queryset=None):
+        serializer = self.serializer_class(data=self.request.DATA)
+        return serializer.object if serializer.is_valid() else None
+
+    def post_save(self, obj, created=False):
+        # Template
+        template = get_template('email/forgot_username.html')
+        template_context = Context({'user': obj, 'request': self.request})
+        content = template.render(template_context)
+        # log
+        action.send(obj, verb=User.verbs.get('forgot_username'),
+                    content=content, level=Action.INFO)
+        # mail send
+        send_mail(subject="Forgot My Username", message=content,
+                  recipient_list=[obj.email],
+                  from_email=settings.DEFAULT_FROM_EMAIL)
+
+
+class NewPassword(generics.UpdateAPIView):
+    permission_classes = (AllowAny,)
+    model = User
+    serializer_class = serializers.NewPasswordSerializer
+
+    def get_object(self, queryset=None):
+        serializer = self.serializer_class(data=self.request.DATA)
+        return serializer.object if serializer.is_valid() else None
+
+    def post_save(self, obj, created=False):
+        action.send(obj, verb=User.verbs.get('new_password'),
+                    level=Action.INFO)
 
 
 class AccountCreate(ApiTransactionMixin, generics.CreateAPIView):

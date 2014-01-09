@@ -59,14 +59,20 @@ class AnonUserDetailSerializer(BaseUserSerializer):
 class ForgotMyPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
 
-    def validate(self, attrs):
+    def validate_email(self, attrs, source):
         email = attrs.get('email')
         user = User.objects.get_for_update_or_raise(
             email=email, exc=serializers.ValidationError('Email not found'))
         if not user.is_active:
             raise serializers.ValidationError('User account is disabled.')
-        attrs['user'] = user
         return attrs
+
+    def restore_object(self, attrs, instance=None):
+        email = attrs.get('email')
+        instance = User.objects.get(email=email)
+        # fields pop
+        self.fields.pop('email')
+        return instance
 
 
 class NewPasswordSerializer(serializers.Serializer):
@@ -84,6 +90,17 @@ class NewPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError('User account is disabled.')
         attrs['user'] = user
         return attrs
+
+    def restore_object(self, attrs, instance=None):
+        email = attrs.get('email')
+        instance = User.objects.get(email=email)
+        instance.set_password(attrs.get('new_password'))
+        instance.secret_key = ''
+        # fields pop
+        self.fields.pop('email')
+        self.fields.pop('secret_key')
+        self.fields.pop('new_password')
+        return instance
 
 
 class UserRegister(serializers.ModelSerializer):
@@ -116,6 +133,7 @@ class UserRegister(serializers.ModelSerializer):
     def get_fields(self, *args, **kwargs):
         # encrypted password field clear
         fields = super(UserRegister, self).get_fields(*args, **kwargs)
+        # fields pop
         fields.pop('password')
         return fields
 
