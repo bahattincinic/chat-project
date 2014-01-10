@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import patterns, include, url
 from rest_framework.urlpatterns import format_suffix_patterns
-from account.urls import account_v1, auth_v1
+from account.urls import account_v1
+from auth.urls import auth_v1
 from network.urls import network_v1
 from django.conf import settings
 
@@ -22,5 +23,6 @@ urlpatterns = patterns('',
 
 if settings.DEBUG:
     urlpatterns += patterns('',
-        url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')))
+        url(r'^api-auth/', include('rest_framework.urls',
+                                   namespace='rest_framework')))
 
