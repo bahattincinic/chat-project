@@ -32,39 +32,33 @@ class Network(models.Model):
         """
         assert isinstance(user, User)
         assert User.actives.filter(id=user.id).exists()
-        return NetworkAdmin.objects.filter(user=user,
-                                           network=self,
-                                           status=NetworkAdmin.ADMIN).exists()
+        admin = NetworkAdmin.objects.get(network=self, status=NetworkAdmin.ADMIN).user
+        return admin.id == user.id
 
 
 class NetworkAdmin(models.Model):
-    AWAITING = 'AWA'
-    REJECTED = 'REJ'
-    APPROVED = 'APP'
-    STATUS_CHOICES = ((AWAITING, 'Awaiting Approval'),
-                      (REJECTED, 'Request Rejected'),
-                      (APPROVED, 'Request Approved'))
+    """
+    Administration rights
+    if ADMIN then creator of this network
+    if MODERATOR then user appointed by admin
+    """
+    # type of this connection
+    ADMIN = 'ADM'
+    MODERATOR = 'MOD'
+    TYPE_CHOICES = ((MODERATOR, 'Moderator'), (ADMIN, 'Admin'))
+    status = models.CharField(_('Type'), choices=TYPE_CHOICES, max_length=4)
+    # which user
     user = models.ForeignKey(User)
+    # which network
     network = models.ForeignKey(Network, related_name='admin_set')
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
     connection = models.OneToOneField('NetworkConnection')
-    # eligible only for mods appointed by admins
-    approval_status = models.CharField(_('Approval Status'),
-                                       choices=STATUS_CHOICES,
-                                       default=AWAITING,
-                                       max_length=3)
-    # type of this administrational connection
-    MODERATOR = 'MOD'
-    ADMIN = 'ADM'
-    TYPE_CHOICES = ((MODERATOR, 'Moderator'), (ADMIN, 'Admin'))
-    status = models.CharField(_('Type'), choices=TYPE_CHOICES, max_length=15)
 
     verbs = {
         'assigned': 'Network admin assigned',
     }
 
     objects = CommonManager()
-    approved_mods = FilteringManager(approval_status=APPROVED, status=MODERATOR)
 
     class Meta:
         db_table = 'network_admin'
@@ -87,9 +81,10 @@ class NetworkConnection(models.Model):
     class Meta:
         db_table = 'network_connection'
 
-    # def __unicode__(self):
-    #     return "connection for %s(%s) to %s" % (self.user.username,
-    #                                             self.user.id, self.network.name)
+    def __unicode__(self):
+        return "%s NetworkConnection '%s' to '%s'" % ('Approved' if self.is_approved else 'Awaiting',
+                                                      self.user.username,
+                                                      self.network.name)
 
     @staticmethod
     def check_membership(user, network):

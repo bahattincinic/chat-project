@@ -3,7 +3,7 @@ from django.conf.urls import patterns, url
 from .api import NetworkAPIView
 from .api import NetworkConnectionAPIView
 from .api import NetworkDetailAPIView
-from network.api import NetworkAdminAPIView, NetworkUserDetailAPIView, NetworkModsDetailAPIView
+from network.api import NetworkModAPIView, NetworkConnectionDetailAPIView, NetworkModDetailAPIView
 
 
 network_v1 = patterns('',
@@ -15,11 +15,12 @@ network_v1 = patterns('',
     url(r'^(?P<slug>[A-Za-z0-9-_]+)/users/$', NetworkConnectionAPIView.as_view(),
         name='network-users'),
     url(r'^(?P<slug>[A-Za-z0-9-_]+)/users/(?P<username>[A-Za-z0-9-_]+)/$',
-        NetworkUserDetailAPIView.as_view(),
+        NetworkConnectionDetailAPIView.as_view(),
         name='network-users-detail'),
-    url(r'^(?P<pk>[0-9]+)/mods/$', NetworkAdminAPIView.as_view(),
+    # list and create mod
+    url(r'^(?P<slug>[A-Za-z0-9-_]+)/mods/$', NetworkModAPIView.as_view(),
         name='network-mods'),
-    url(r'^(?P<pk>[0-9]+)/mods/(?P<mod_pk>[0-9]+)/$',
-        NetworkModsDetailAPIView.as_view(),
+    url(r'^(?P<slug>[A-Za-z0-9-_]+)/mods/(?P<username>[A-Za-z0-9-_]+)/$',
+        NetworkModDetailAPIView.as_view(),
         name='network-mods-detail'),
 )

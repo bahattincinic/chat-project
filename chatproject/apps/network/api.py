@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.http.response import Http404
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
-from rest_framework.response import Response
-from core.mixins import ApiTransactionMixin
-from network.models import NetworkConnection, NetworkAdmin
-from network.permissions import IsSafeOrUserActive, NetworkUserDetailPermission, IsSafeOrNoNetworkConnection
+from .models import NetworkConnection, NetworkAdmin
+from .permissions import IsSafeOrUserActive, NetworkUserDetailPermission, \
+    IsSafeOrNoNetworkConnection, IsSafeOrNetworkUser, IsSafeOrNetworkAdmin, \
+    NetworkModsDetailPermission
 from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer, NetworkAdminAPISerializer
 from .permissions import NetworkDetailPermission
 from .serializers import NetworkDetailAPISerializer
@@ -13,7 +13,7 @@ from actstream.models import action
 from account.models import User
 
 
-class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
+class NetworkAPIView(ListCreateAPIView):
     serializer_class = NetworkAPISerializer
     permission_classes = (IsSafeOrUserActive,)
     model = Network
@@ -38,8 +38,7 @@ class NetworkAPIView(ApiTransactionMixin, ListCreateAPIView):
                     action_object=obj)
 
 
-class NetworkDetailAPIView(ApiTransactionMixin,
-                           RetrieveUpdateDestroyAPIView):
+class NetworkDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = NetworkDetailAPISerializer
     permission_classes = (NetworkDetailPermission,)
     lookup_field = 'slug'
@@ -67,8 +66,7 @@ class NetworkConnectionAPIView(ListCreateAPIView):
         obj.is_approved = obj.network.is_public
 
 
-class NetworkUserDetailAPIView(ApiTransactionMixin,
-                               RetrieveDestroyAPIView):
+class NetworkConnectionDetailAPIView(RetrieveDestroyAPIView):
     serializer_class = NetworkConnectionAPISerializer
     permission_classes = (IsSafeOrUserActive,
                           NetworkUserDetailPermission)
@@ -87,31 +85,48 @@ class NetworkUserDetailAPIView(ApiTransactionMixin,
         return nc
 
 
-class NetworkAdminAPIView(ApiTransactionMixin,
-                          ListCreateAPIView):
+class NetworkModAPIView(ListCreateAPIView):
     serializer_class = NetworkAdminAPISerializer
-    permission_classes = (IsSafeOrUserActive,)
-    model = NetworkAdmin
+    permission_classes = (IsSafeOrUserActive,
+                          IsSafeOrNetworkUser,
+                          IsSafeOrNetworkAdmin,
+                          # IsSafeOrTargetUserIsMember,
+    )
+    model = Network
+    lookup_field = 'slug'
+
+    def get_network(self):
+        filtering = {self.lookup_field: self.kwargs.get(self.lookup_field)}
+        network = self.model.objects.filter(**filtering).get()
+        return network
+
+    def get_queryset(self):
+        return NetworkAdmin.objects.filter(network=self.get_network())
 
     def pre_save(self, obj):
-        assert obj.user, u'Invalid obj'
-        # set network of this NetworkAdmin obj
-        network_pk = self.kwargs.get('pk')
-        network = Network.objects.get(pk=network_pk)
+        network = self.get_network()
+        connection = NetworkConnection.approved.get_or_raise(user=obj.user,
+                                                             exc=Http404())
         obj.network = network
         obj.status = NetworkAdmin.MODERATOR
-        # by default this mod status is not approved
-        # since it is mod request
-        obj.is_approved = False
-        conn = NetworkConnection.objects.create(user=obj.user,
-                                                network=obj.network,
-                                                is_approved=False)
-        conn.save()
-        obj.connection = conn
+        obj.connection = connection
 
 
-class NetworkModsDetailAPIView(ApiTransactionMixin,
-                               RetrieveDestroyAPIView):
+class NetworkModDetailAPIView(RetrieveDestroyAPIView):
     serializer_class = NetworkAdminAPISerializer
-    permission_classes = (NetworkUserDetailPermission,)
-    model = NetworkAdmin
+    permission_classes = (IsSafeOrUserActive,
+                          NetworkModsDetailPermission,)
+    model = Network
+    lookup_field = 'slug'
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        slug = self.kwargs.get('slug')
+        user = User.actives.get_or_raise(username=username, exc=Http404())
+        network = Network.objects.get_or_raise(slug=slug, exc=Http404())
+        na = NetworkAdmin.objects.get_or_raise(
+            user=user,
+            network=network,
+            status=NetworkAdmin.MODERATOR,
+            exc=Http404())
+        return na

@@ -43,6 +43,28 @@ class IsSafeOrUserActive(BasePermission):
             return True
         return False
 
+class IsSafeOrNetworkUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.user and \
+            NetworkConnection.approved.filter(network=view.get_network(),
+                                              user=request.user).exists():
+            return True
+        return False
+
+
+class IsSafeOrNetworkAdmin(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.user and \
+                NetworkAdmin.objects.filter(network=view.get_network(),
+                                            status=NetworkAdmin.ADMIN,
+                                            user=request.user).exists():
+            return True
+        return False
+
 
 class IsSafeOrNoNetworkConnection(BasePermission):
     def has_permission(self, request, view):
@@ -104,30 +126,18 @@ class NetworkUserDetailPermission(BasePermission):
 
 class NetworkModsDetailPermission(BasePermission):
     def has_permission(self, request, view):
-    # supports get and delete requests
-        network_pk = request.parser_context.get("kwargs").get("pk")
-        network = Network.objects.get_or_raise(id=network_pk, exc=Http404())
+        # supports get and delete requests
         if request.method in SAFE_METHODS:
             return True
         elif request.method in ('DELETE',):
-            # requesting user must be authenticated
-            if not request.user and request.user.is_authenticated():
-                return False
-            # the mod in question
-            mod_pk = request.parser_context.get("kwargs").get("mod_pk")
-            mod = User.actives.get_or_raise(pk=mod_pk, exc=Http404())
-            # mod must really be a moderator of this network
-            NetworkAdmin.objects.get_or_raise(user=mod, network=network,
-                                              exc=Http404())
-            # requesting user must be active
-            requesting_user = User.actives.get_or_raise(pk=request.user.id,
-                                                        exc=Http404())
+            # get network admin
+            na = view.get_object()
             # if requesting user is admin of this network then allow this request
-            if network.check_ownership(user=requesting_user, admin=True):
+            if na.network.check_ownership(user=request.user):
                 return True
             # if requesting user is the mod himself
             # then allow this request to proceed
-            if mod.id == requesting_user.id:
+            if na.user.id == request.user.id:
                 return True
             return  False
         return False

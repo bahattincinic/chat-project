@@ -47,7 +47,6 @@ class NetworkTestCase(CommonTest, TestCase):
         connection = NetworkConnection.objects.get()
         self.assertEqual(connection.id, admin.connection.id)
 
-
     def test_retrieve_network_details(self):
         self.test_network_create()
         self.assertEqual(Network.objects.count(), 1)
@@ -146,7 +145,6 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertFalse(NetworkConnection.objects.filter(
             user=osman, network=network).exists())
 
-
     def test_network_connection_deletion_admin(self):
         self.test_network_connection_creation()
         self.session_login()
@@ -161,17 +159,140 @@ class NetworkTestCase(CommonTest, TestCase):
                               content_type='application/json')
         self.assertFalse(is_success(request.status_code))
 
-    def test_network_add_admin(self):
-        self.session_login()
-        self.test_network_create()
+    def test_network_add_mod(self):
+        self.test_network_connection_creation()
+        self.assertEqual(NetworkConnection.approved.count(), 2)
         network = Network.objects.get()
-        mod_url = reverse('network-mods', args=(network.id,))
-        response = self.c.get(path=mod_url,
-                              content_type='application/json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.data
-        self.assertEqual(data.get('count'), 1)
+        osman = User.actives.get(username='osman')
+        url = reverse('network-mods', args=(network.slug, ))
+        # get all mods for this network
+        res = self.c.get(path=url, content_type='application/json')
+        data = res.data
+        # no mods by default, only admin
+        self.assertEqual(data['count'], 1)
         self.assertEqual(len(data['results']), 1)
-        self.assertEqual(data['results'][0]['user'], self.u.id)
-        self.assertEqual(data['results'][0]['network'], network.id)
+        # appoint osman as mod
+        self.session_login()
+        res = self.c.post(path=url,
+                          data=simplejson.dumps({'user': osman.id}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        self.assertEqual(NetworkConnection.approved.count(), 2)
+        # only one admin exists
+        self.assertEqual(NetworkAdmin.objects.filter(status=NetworkAdmin.ADMIN).count(), 1)
+        # only one mode exists
+        self.assertEqual(NetworkAdmin.objects.filter(status=NetworkAdmin.MODERATOR).count(), 1)
+        mod = NetworkAdmin.objects.get(status=NetworkAdmin.MODERATOR)
+        adm = NetworkAdmin.objects.get(status=NetworkAdmin.ADMIN)
+        self.assertEqual(mod.user.id, osman.id)
+        self.assertEqual(adm.user.id, self.u.id)
+        self.session_logout()
+
+    def test_network_delete_mod_as_admin(self):
+        self.test_network_add_mod()
+        network = Network.objects.get()
+        self.assertEqual(NetworkConnection.objects.count(), 2)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        osman = User.actives.get(username='osman')
+        url = reverse('network-mods-detail', args=(network.slug, osman.username))
+        self.session_login()
+        res = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(NetworkAdmin.objects.count(), 1)
+        # no moderator left
+        self.assertFalse(NetworkAdmin.objects.filter(
+            status=NetworkAdmin.MODERATOR).exists())
+        self.assertEqual(NetworkConnection.approved.count(), 2)
+
+    def test_network_delete_mod_as_himself(self):
+        self.test_network_add_mod()
+        network = Network.objects.get()
+        self.assertEqual(NetworkConnection.objects.count(), 2)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        osman = User.actives.get(username='osman')
+        url = reverse('network-mods-detail', args=(network.slug, osman.username))
+        self.session_login_as('osman', '1q2w3e')
+        res = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(NetworkAdmin.objects.count(), 1)
+        # no moderator left
+        self.assertFalse(NetworkAdmin.objects.filter(
+            status=NetworkAdmin.MODERATOR).exists())
+        self.assertEqual(NetworkConnection.approved.count(), 2)
+
+    def test_network_delete_mod_fail_no_login(self):
+        self.test_network_add_mod()
+        network = Network.objects.get()
+        self.assertEqual(NetworkConnection.objects.count(), 2)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        osman = User.actives.get(username='osman')
+        # no login, try to delete
+        url = reverse('network-mods-detail', args=(network.slug, osman.username))
+        res = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(NetworkConnection.approved.count(), 2)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+
+    def test_network_delete_mod_invalid_login(self):
+        self.test_network_delete_mod_fail_no_login()
+        network = Network.objects.get()
+        osman = User.actives.get(username='osman')
+        url = reverse('network-mods-detail', args=(network.slug, osman.username))
+        kazim = User.objects.create(username='kazim')
+        kazim.set_password('1q2w3e')
+        kazim.save()
+        # login as kazim
+        self.session_login_as(kazim.username, '1q2w3e')
+        # no connection to network, try to delete
+        res = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(NetworkConnection.approved.count(), 2)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        # connect kazim to network
+        connect_url = reverse('network-users', args=(network.slug,))
+        res = self.c.post(path=connect_url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        # try to delete osman now
+        res = self.c.delete(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        # kazim tries to be mod all by himself, expected to fail with 403
+        add_mod_url = reverse('network-mods', args=(network.slug, ))
+        res = self.c.post(path=add_mod_url,
+                          data=simplejson.dumps({'user': kazim.id}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        # osman tries to make kazim as mod, expected to fail with 403
+        self.session_logout()
+        self.session_login_as('osman', '1q2w3e')
+        res = self.c.post(path=add_mod_url,
+                          data=simplejson.dumps({'user': kazim.id}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        # admin makes kazim a mod
+        self.session_logout()
+
+
+    def test_network_mod_delete(self):
+        self.test_network_delete_mod_invalid_login()
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 2)
+        self.session_login()
+        network = Network.objects.get()
+        add_mod_url = reverse('network-mods', args=(network.slug, ))
+        kazim = User.objects.get(username='kazim')
+        res = self.c.post(path=add_mod_url,
+                          data=simplejson.dumps({'user': kazim.id}),
+                          content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(NetworkConnection.approved.count(), 3)
+        self.assertEqual(NetworkAdmin.objects.count(), 3)
 
