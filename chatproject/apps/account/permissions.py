@@ -20,17 +20,6 @@ class UserDetailPermission(permissions.BasePermission):
             return True
 
 
-class UserCreatePermission(permissions.BasePermission):
-    """
-    User Register Permission
-    """
-    def has_permission(self, request, view):
-        if request.method == 'POST':
-            return request.user and request.user.is_anonymous()
-        else:
-            return False
-
-
 class UserChangePasswordPermission(permissions.BasePermission):
     """
     User Change Password
