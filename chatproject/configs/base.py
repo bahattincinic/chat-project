@@ -130,7 +130,7 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'account.authentication.ExpiringTokenAuthentication'
+        'auth.authentication.ExpiringTokenAuthentication'
     ),
     # Custom Exception Handler
     'EXCEPTION_HANDLER': 'api.exceptions.custom_exception_handler',
