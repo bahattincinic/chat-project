@@ -22,6 +22,17 @@ class AuthenticationTestCase(CommonTest, TestCase):
                               content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
+    def test_token_invalid_user_login(self):
+        """
+        user name or password is invalid
+        """
+        url = reverse('login-token')
+        payload = simplejson.dumps({'username': 'invalid',
+                                    'password': 'invalid'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_session_login(self):
         """
         Session Login
@@ -32,6 +43,17 @@ class AuthenticationTestCase(CommonTest, TestCase):
         request = self.c.post(path=url, data=payload,
                               content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_session_invalid_user_login(self):
+        """
+        user name or password is invalid
+        """
+        url = reverse('login-session')
+        payload = simplejson.dumps({'username': 'invalid',
+                                    'password': 'invalid'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_session_logout(self):
         """
@@ -67,6 +89,45 @@ class AuthenticationTestCase(CommonTest, TestCase):
         user = User.objects.filter(username='testaccount')
         self.assertEqual(True, user.exists())
 
+    def test_account_already_username_register(self):
+        """
+        user name is already in use
+        """
+        url = reverse('user-account-create')
+        payload = simplejson.dumps({'username': self.username,
+                                    'password': '123456'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        # not created
+        user = User.objects.filter(username='testaccount')
+        self.assertNotEqual(True, user.exists())
+
+    def test_account_already_email_register(self):
+        """
+        email is already in use
+        """
+        url = reverse('user-account-create')
+        payload = simplejson.dumps({'username': 'hed1e32',
+                                    'password': '123456',
+                                    'email': self.email})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        # not created
+        user = User.objects.filter(username='hed1e32')
+        self.assertNotEqual(True, user.exists())
+
+    def test_account_empty_username_register(self):
+        """
+        username can not be empty
+        """
+        url = reverse('user-account-create')
+        payload = simplejson.dumps({'password': '123456'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class UserAccountTestCase(CommonTest, TestCase):
 
@@ -79,6 +140,16 @@ class UserAccountTestCase(CommonTest, TestCase):
         request = self.c.post(path=url, data=payload,
                               content_type='application/json')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    def test_forgot_password_email_invalid(self):
+        """
+        email invalid
+        """
+        url = reverse('forgot-password')
+        payload = simplejson.dumps({'email': 'ffdf@fdf.com'})
+        request = self.c.post(path=url, data=payload,
+                              content_type='application/json')
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_new_password(self):
         """
@@ -111,6 +182,16 @@ class UserAccountTestCase(CommonTest, TestCase):
                              **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
+    def test_invalid_account_detail(self):
+        """
+        Username invalid
+        """
+        url = reverse('user-account-detail', args=['hededsfd'])
+        self.token_login()
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_account_delete(self):
         """
         User Account Delete
@@ -120,6 +201,17 @@ class UserAccountTestCase(CommonTest, TestCase):
         request = self.c.delete(path=url, content_type='application/json',
                                 **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_other_account_delete(self):
+        """
+        You can only delete itself
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-account-detail', args=[user.username])
+        self.token_login()
+        request = self.c.delete(path=url, content_type='application/json',
+                                **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_account_update(self):
         """
@@ -140,7 +232,7 @@ class UserAccountTestCase(CommonTest, TestCase):
         """
         User Account Password Update
         """
-        url = reverse('user-account-detail', args=[self.username])
+        url = reverse('user-change-password', args=[self.username])
         self.token_login()
         data = {'password': self.password, 'new_password': 'testtest',
                 'confirm_password': 'testtest'}
@@ -157,12 +249,22 @@ class UserFollowTestCase(CommonTest, TestCase):
 
     def test_account_self_follow(self):
         """
-        User can not follow self
+        user himself cannot follow
         """
         url = reverse('user-account-follow', args=[self.username])
         self.token_login()
         request = self.c.post(path=url, content_type='application/json',
                               **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_account_self_unfollow(self):
+        """
+        user himself cannot unfollow
+        """
+        url = reverse('user-account-follow', args=(self.u.username,))
+        self.token_login()
+        request = self.c.delete(path=url, content_type='application/json',
+                                **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_account_follow(self):
@@ -175,6 +277,26 @@ class UserFollowTestCase(CommonTest, TestCase):
         request = self.c.post(path=url, content_type='application/json',
                               **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+
+    def test_account_invalid_user_follow(self):
+        """
+        Invalid user can not be follow
+        """
+        url = reverse('user-account-follow', args=('invalid_user',))
+        self.token_login()
+        request = self.c.post(path=url, content_type='application/json',
+                              **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_account_invalid_user_unfollow(self):
+        """
+        Invalid user can not be unfollow
+        """
+        url = reverse('user-account-follow', args=('invalid_user',))
+        self.token_login()
+        request = self.c.delete(path=url, content_type='application/json',
+                                **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_account_unfollow(self):
         """
@@ -201,14 +323,14 @@ class UserFollowTestCase(CommonTest, TestCase):
         data = simplejson.loads(request.content)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
-                         Follow.objects.filter(follower=self.u).count())
+                         Follow.objects.filter(followee=self.u).count())
 
-    def test_account_following(self):
+    def test_account_followees(self):
         """
         User Followees
         """
         user = User.objects.create_user(username='hede', password='hede')
-        Follow.objects.create(followee=self.u, follower=user)
+        Follow.objects.create(follower=self.u, followee=user)
         url = reverse('user-account-followees', args=[self.u.username])
         self.token_login()
         request = self.c.get(path=url, content_type='application/json',
@@ -216,7 +338,7 @@ class UserFollowTestCase(CommonTest, TestCase):
         data = simplejson.loads(request.content)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
-                         Follow.objects.filter(followee=self.u).count())
+                         Follow.objects.filter(follower=self.u).count())
 
 
 class UserReportTestCase(CommonTest, TestCase):
@@ -233,6 +355,17 @@ class UserReportTestCase(CommonTest, TestCase):
                               data=data, **self.client_header)
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
 
+    def test_invalid_user_create_report(self):
+        """
+        invalid user Create Report
+        """
+        url = reverse('user-reports', args=['invalid_user'])
+        self.token_login()
+        data = simplejson.dumps({'text': 'Test'})
+        request = self.c.post(path=url, content_type='application/json',
+                              data=data, **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_report_list(self):
         """
         Report List
@@ -248,6 +381,17 @@ class UserReportTestCase(CommonTest, TestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(data.get("results")),
                          Report.objects.filter(offender=self.u).count())
+
+    def test_other_user_report_list(self):
+        """
+        Other User Reports List
+        """
+        user = User.objects.create_user(username='hede', password='hede')
+        url = reverse('user-reports', args=[user.username])
+        self.token_login()
+        request = self.c.get(path=url, content_type='application/json',
+                             **self.client_header)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_report_detail(self):
         """

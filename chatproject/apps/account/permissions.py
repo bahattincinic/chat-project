@@ -1,6 +1,6 @@
 from django.http.response import Http404
 from rest_framework import permissions
-from account.models import User, Follow
+from account.models import Follow, User
 
 
 class UserDetailPermission(permissions.BasePermission):
@@ -12,12 +12,8 @@ class UserDetailPermission(permissions.BasePermission):
         forbidden_methods = ('PUT', 'DELETE')
         if request.method in forbidden_methods:
             if request.user.is_authenticated():
-                username = request.parser_context.get("kwargs").get("username")
-                user = User.objects.get_or_raise(username=username,
-                                                 exc=Http404())
-                if request.user.username == user.username:
-                    return True
-                return False
+                user = view.get_object()
+                return request.user.username == user.username
             else:
                 return False
         else:
@@ -30,9 +26,7 @@ class UserCreatePermission(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         if request.method == 'POST':
-            if request.user and request.user.is_anonymous():
-                return True
-            return False
+            return request.user and request.user.is_anonymous()
         else:
             return False
 
@@ -42,11 +36,10 @@ class UserChangePasswordPermission(permissions.BasePermission):
     User Change Password
     """
     def has_permission(self, request, view):
-        if request.method == 'PATCH':
-            if request.user.is_authenticated():
-                return True
-            else:
-                return False
+        if request.method == 'PUT':
+            user = view.get_object()
+            r_user = request.user
+            return user.id == r_user.id
         else:
             return True
 
@@ -56,13 +49,8 @@ class FollowRelationPermissions(permissions.BasePermission):
     User Followees, Followers Permission
     """
     def has_permission(self, request, view):
-        username = request.parser_context.get("kwargs").get("username")
-        user = User.objects.get_or_raise(username=username, exc=Http404())
         if request.method == 'GET':
-            # not authenticated
-            if request.user.is_anonymous():
-                return False
-            # not only me
+            user = view.get_object(queryset=view.queryset)
             if request.user.username != user.username:
                 return False
             return True
@@ -95,15 +83,9 @@ class UserCreateReportPermission(permissions.BasePermission):
         username = request.parser_context.get("kwargs").get("username")
         user = User.objects.get_or_raise(username=username, exc=Http404())
         if request.method == 'POST':
-            if request.user.is_authenticated() and request.user.id != user.id:
-                return True
-            else:
-                return False
+            return request.user.id != user.id
         if request.method == 'GET':
-            if request.user.is_authenticated() and request.user.id == user.id:
-                return True
-            else:
-                return False
+            return request.user.id == user.id
         return True
 
 
@@ -112,11 +94,8 @@ class UserReportDetailPermission(permissions.BasePermission):
     User Report Detail Permission
     """
     def has_permission(self, request, view):
-        username = request.parser_context.get("kwargs").get("username")
-        user = User.objects.get_or_raise(username=username, exc=Http404())
+        user = view.get_object(queryset=view.queryset)
+        r_user = request.user
         if request.method == 'GET':
-            if request.user.is_authenticated() and request.user.id == user.id:
-                return True
-            else:
-                return False
+            return request.user.is_authenticated() and r_user.id == user.id
         return True
