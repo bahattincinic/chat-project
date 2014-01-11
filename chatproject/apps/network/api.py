@@ -89,9 +89,7 @@ class NetworkModAPIView(ListCreateAPIView):
     serializer_class = NetworkAdminAPISerializer
     permission_classes = (IsSafeOrUserActive,
                           IsSafeOrNetworkUser,
-                          IsSafeOrNetworkAdmin,
-                          # IsSafeOrTargetUserIsMember,
-    )
+                          IsSafeOrNetworkAdmin)
     model = Network
     lookup_field = 'slug'
 
