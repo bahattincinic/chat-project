@@ -42,20 +42,3 @@ class FilteringMixin(object):
         when creating a QuerySet
         """
         return QuerySet(self.model, using=self._db).filter(**self.clause)
-
-
-class ApiTransactionMixin(object):
-    """
-    Method transaction management
-    """
-    @method_decorator(transaction.atomic)
-    def post(self, *args, **kwargs):
-        return super(ApiTransactionMixin, self).post(*args, **kwargs)
-
-    @method_decorator(transaction.atomic)
-    def put(self, *args, **kwargs):
-        return super(ApiTransactionMixin, self).put(*args, **kwargs)
-
-    @method_decorator(transaction.atomic)
-    def delete(self, *args, **kwargs):
-        return super(ApiTransactionMixin, self).delete(*args, **kwargs)
