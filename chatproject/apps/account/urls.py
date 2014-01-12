@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, url, include
 from . import api
+from chat.urls import chat_v1
 from auth.api import AccountCreate
 
 account_v1 = patterns('',
@@ -19,6 +20,7 @@ account_v1 = patterns('',
             name='user-change-password'),
         url(r'^$', api.AccountDetail.as_view(),
             name='user-account-detail'),
+        url(r'^sessions/', include(chat_v1), name="account-sessions")
         )
     ))
 )
