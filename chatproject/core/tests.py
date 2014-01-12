@@ -25,7 +25,10 @@ class CommonTest(object):
     def session_login(self):
         self.c.login(username=self.username, password=self.password)
 
-    def sessiong_logout(self):
+    def session_login_as(self, username, password):
+        self.c.login(username=username, password=password)
+
+    def session_logout(self):
         self.c.logout()
 
     def token_login(self):

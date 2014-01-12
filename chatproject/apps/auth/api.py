@@ -20,11 +20,10 @@ from actstream.models import action, Action
 from account.models import User
 from . import serializers
 from . import permissions
-from core.mixins import ApiTransactionMixin
 from account.serializers import UserDetailSerializer
 
 
-class ObtainExpiringAuthToken(ApiTransactionMixin, ObtainAuthToken):
+class ObtainExpiringAuthToken(ObtainAuthToken):
     def post(self, request):
         serializer = self.serializer_class(data=request.DATA)
         if serializer.is_valid():
@@ -43,7 +42,7 @@ class ObtainExpiringAuthToken(ApiTransactionMixin, ObtainAuthToken):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SessionAuthentication(ApiTransactionMixin, APIView):
+class SessionAuthentication(APIView):
     serializer_class = AuthTokenSerializer
     permission_classes = (AllowAny,)
     model = User
@@ -59,7 +58,7 @@ class SessionAuthentication(ApiTransactionMixin, APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SessionLogout(ApiTransactionMixin, APIView):
+class SessionLogout(APIView):
     permission_classes = (IsAuthenticated,)
     model = User
 
@@ -70,7 +69,7 @@ class SessionLogout(ApiTransactionMixin, APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class TokenLogout(ApiTransactionMixin, APIView):
+class TokenLogout(APIView):
     permission_classes = (IsAuthenticated,)
     model = User
 
@@ -85,7 +84,7 @@ class TokenLogout(ApiTransactionMixin, APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class ForgotPassword(ApiTransactionMixin, generics.UpdateAPIView):
+class ForgotPassword(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.ForgotMyPasswordSerializer
@@ -112,7 +111,7 @@ class ForgotPassword(ApiTransactionMixin, generics.UpdateAPIView):
                   from_email=settings.DEFAULT_FROM_EMAIL)
 
 
-class ForgotUsername(ApiTransactionMixin, generics.UpdateAPIView):
+class ForgotUsername(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.ForgotMyPasswordSerializer
@@ -135,7 +134,7 @@ class ForgotUsername(ApiTransactionMixin, generics.UpdateAPIView):
                   from_email=settings.DEFAULT_FROM_EMAIL)
 
 
-class ForgotNewPassword(ApiTransactionMixin, generics.UpdateAPIView):
+class ForgotNewPassword(generics.UpdateAPIView):
     permission_classes = (AllowAny,)
     model = User
     serializer_class = serializers.NewPasswordSerializer
@@ -149,7 +148,7 @@ class ForgotNewPassword(ApiTransactionMixin, generics.UpdateAPIView):
                     level=Action.INFO)
 
 
-class AccountCreate(ApiTransactionMixin, generics.CreateAPIView):
+class AccountCreate(generics.CreateAPIView):
     permission_classes = (permissions.UserCreatePermission,)
     model = User
     serializer_class = serializers.UserRegister

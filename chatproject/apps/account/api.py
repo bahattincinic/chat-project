@@ -10,10 +10,9 @@ from account.models import User, Follow, Report
 from . import serializers
 from . import permissions
 from core.generics import CreateDestroyAPIView
-from core.mixins import ApiTransactionMixin
 
 
-class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
+class AccountDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.UserDetailPermission, )
     model = User
     serializer_class = serializers.UserDetailSerializer
@@ -44,7 +43,7 @@ class AccountDetail(ApiTransactionMixin, generics.RetrieveUpdateDestroyAPIView):
         action.send(obj, verb=User.verbs.get('delete'))
 
 
-class AccountChangePassword(ApiTransactionMixin, generics.UpdateAPIView):
+class AccountChangePassword(generics.UpdateAPIView):
     model = User
     serializer_class = serializers.UserChangePasswordSerializer
     permission_classes = (IsAuthenticated,
@@ -90,7 +89,7 @@ class AccountFollowees(generics.ListAPIView):
         return user.followees()
 
 
-class AccountFollow(ApiTransactionMixin, CreateDestroyAPIView):
+class AccountFollow(CreateDestroyAPIView):
     """
     User Follow, UnFollow
     /account/bahattincinic/follow/ -> (post)
@@ -125,7 +124,7 @@ class AccountFollow(ApiTransactionMixin, CreateDestroyAPIView):
                     follower=obj.follower.username)
 
 
-class AccountReportList(ApiTransactionMixin, generics.ListCreateAPIView):
+class AccountReportList(generics.ListCreateAPIView):
     """
     Account Report Create
     """

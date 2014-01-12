@@ -2,7 +2,7 @@
 from django.http.response import Http404
 from rest_framework.permissions import BasePermission
 from account.models import User
-from network.models import Network, NetworkConnection
+from network.models import Network, NetworkConnection, NetworkAdmin
 
 SAFE_METHODS = ('GET', 'HEAD')
 
@@ -10,8 +10,7 @@ SAFE_METHODS = ('GET', 'HEAD')
 class NetworkDetailPermission(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
-            pk = request.parser_context.get("kwargs").get("pk")
-            network = Network.objects.get_or_raise(pk=pk, exc=Http404())
+            network = view.get_object()
             if network.is_public:
                 return True
             else:
@@ -23,9 +22,10 @@ class NetworkDetailPermission(BasePermission):
                     return True
                 return False
         elif request.method in ('PUT', 'PATCH', 'DELETE'):
+            network = view.get_object()
             if request.user and \
                     request.user.is_authenticated() and \
-                    Network.check_ownership(request.user):
+                    network.check_ownership(request.user):
                 return True
             else:
                 return False
@@ -33,28 +33,111 @@ class NetworkDetailPermission(BasePermission):
             return False
 
 
-class NetworkListCreatePermission(BasePermission):
+class IsSafeOrUserActive(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-
-        if request.method == 'POST' and \
-                request.user and \
+        elif request.user and \
                 request.user.is_authenticated() and \
                 User.actives.filter(id=request.user.id).exists():
-            # TODO: maybe check for throttling as well
+            return True
+        return False
+
+class IsSafeOrNetworkUser(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.user and \
+            NetworkConnection.approved.filter(network=view.get_network(),
+                                              user=request.user).exists():
             return True
         return False
 
 
-class NetworkConnectionPermission(BasePermission):
+class IsSafeOrNetworkAdmin(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-
-        if request.mothod in ('POST',) and \
-                request.user and \
-                request.user.is_authenticated() and \
-                User.actives.filter(id=request.user.id):
+        elif request.user and \
+                NetworkAdmin.objects.filter(network=view.get_network(),
+                                            status=NetworkAdmin.ADMIN,
+                                            user=request.user).exists():
             return True
+        return False
+
+
+class IsSafeOrNoNetworkConnection(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method in ('POST',):
+            network = view.get_network()
+            return not NetworkConnection.objects.filter(
+                network=network,
+                user=request.user).exists()
+        return False
+
+
+class NetworkAdminPermission(BasePermission):
+    def has_permission(self, request, view):
+        # everybody can view network mods
+        if request.method in SAFE_METHODS:
+            return True
+
+        # only admin can assign new mods
+        if request.method in ('POST',) and \
+                request.user and \
+                request.user.is_authenticated():
+            pk = request.parser_context.get("kwargs").get("pk")
+            network = Network.objects.get_or_raise(pk=pk, exc=Http404())
+            if network.check_ownership(user=request.user):
+                return True
+        return False
+
+
+class NetworkUserDetailPermission(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method in ('DELETE',):
+            # get network connection
+            nc = view.get_object()
+            # requesting user must be admin or mod of the network
+            # or requesting user id and user_id must be same
+            user = nc.user
+            username = user.username
+            # requesting user must be active
+            requesting_user = User.actives.get_or_raise(pk=request.user.id, exc=Http404())
+            # approved connection of this user and network must already exists
+            if not NetworkConnection.approved.filter(user=user,
+                                                     network=nc.network).exists():
+                raise Http404()
+            # if requesting user has privilege on this network then we allow request
+            if nc.network.check_ownership(user=request.user):
+                return True
+            # or it must be same user leaving the network
+            if requesting_user.username == username:
+                return True
+            # else requesting user cannot remove this network connection
+            return False
+        # no other operation supported at this moment
+        return False
+
+
+class NetworkModsDetailPermission(BasePermission):
+    def has_permission(self, request, view):
+        # supports get and delete requests
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method in ('DELETE',):
+            # get network admin
+            na = view.get_object()
+            # if requesting user is admin of this network then allow this request
+            if na.network.check_ownership(user=request.user):
+                return True
+            # if requesting user is the mod himself
+            # then allow this request to proceed
+            if na.user.id == request.user.id:
+                return True
+            return  False
         return False

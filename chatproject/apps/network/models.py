@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from account.models import User
 from django_extensions.db.fields import AutoSlugField
-from core.managers import FilteringManager
+from core.managers import FilteringManager, CommonManager
 
 
 class Network(models.Model):
@@ -27,24 +27,38 @@ class Network(models.Model):
         return self.name
 
     def check_ownership(self, user):
-        assert isinstance(User, user)
-        assert User.actives.filter(id=user.id)
-        return NetworkAdmin.objects.filter(user=user, network=self).exists()
+        """
+        Checks if user is creator and admin of this network
+        """
+        assert isinstance(user, User)
+        assert User.actives.filter(id=user.id).exists()
+        admin = NetworkAdmin.objects.get(network=self, status=NetworkAdmin.ADMIN).user
+        return admin.id == user.id
 
 
 class NetworkAdmin(models.Model):
-    user = models.ForeignKey(User)
-    network = models.ForeignKey(Network)
-    created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
-
-    MODERATOR = 'MOD'
+    """
+    Administration rights
+    if ADMIN then creator of this network
+    if MODERATOR then user appointed by admin
+    """
+    # type of this connection
     ADMIN = 'ADM'
+    MODERATOR = 'MOD'
     TYPE_CHOICES = ((MODERATOR, 'Moderator'), (ADMIN, 'Admin'))
-    status = models.CharField(_('Type'), choices=TYPE_CHOICES, max_length=15)
+    status = models.CharField(_('Type'), choices=TYPE_CHOICES, max_length=4)
+    # which user
+    user = models.ForeignKey(User)
+    # which network
+    network = models.ForeignKey(Network, related_name='admin_set')
+    created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
+    connection = models.OneToOneField('NetworkConnection')
 
     verbs = {
         'assigned': 'Network admin assigned',
     }
+
+    objects = CommonManager()
 
     class Meta:
         db_table = 'network_admin'
@@ -60,16 +74,17 @@ class NetworkConnection(models.Model):
     network = models.ForeignKey(Network, related_name='connection_set')
     created_at = models.DateTimeField(_('Created Date'), auto_now_add=True)
     is_approved = models.BooleanField(_('Is Approved'))
-    # objects
-    objects = models.Manager()
+    # managers
     approved = FilteringManager(is_approved=True)
+    objects = models.Manager()
 
     class Meta:
         db_table = 'network_connection'
 
     def __unicode__(self):
-        return "connection for %s(%s) to %s" % (self.user.username,
-                                                self.user.id, self.network.name)
+        return "%s NetworkConnection '%s' to '%s'" % ('Approved' if self.is_approved else 'Awaiting',
+                                                      self.user.username,
+                                                      self.network.name)
 
     @staticmethod
     def check_membership(user, network):
