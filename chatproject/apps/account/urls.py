@@ -6,6 +6,7 @@ from auth.api import AccountCreate
 account_v1 = patterns('',
     url(r'^$', AccountCreate.as_view(), name='user-account-create'),
     url(r'^(?P<username>[A-Za-z0-9-_]+)/', include(patterns('',
+        url(r'^sessions/', include(chat_v1)),
         url(r'^followers/$', api.AccountFollowers.as_view(),
             name='user-account-followers'),
         url(r'^follows/$', api.AccountFollowees.as_view(),
@@ -19,8 +20,7 @@ account_v1 = patterns('',
         url(r'^change-password/$', api.AccountChangePassword.as_view(),
             name='user-change-password'),
         url(r'^$', api.AccountDetail.as_view(),
-            name='user-account-detail'),
-        url(r'^sessions/', include(chat_v1), name="account-sessions")
+            name='user-account-detail')
         )
     ))
 )

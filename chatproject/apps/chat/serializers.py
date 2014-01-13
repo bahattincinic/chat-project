@@ -19,8 +19,8 @@ class SessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatSession
+        fields = ('target', 'anon',)
         read_only_fields = ('uuid',)
-        exclude = ('id', 'created_at', 'last_message_at',)
 
 
 class MessageSerializer(serializers.ModelSerializer):

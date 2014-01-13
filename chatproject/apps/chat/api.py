@@ -9,7 +9,7 @@ from chat.models import ChatSession, AnonUser, ChatMessage
 from utils import SAFE_METHODS
 
 
-class SessionAPIView(generics.ListAPIView):
+class SessionAPIView(generics.ListCreateAPIView):
     serializer_class = serializers.SessionSerializer
     permission_classes = (permissions.IsPostOrActiveAuthenticated,)
     model = ChatSession
@@ -25,7 +25,8 @@ class SessionAPIView(generics.ListAPIView):
                                            exc=Http404())
         obj.target = target
 
-    def pos_save(self):
+
+    def post_save(self, obj, created=False):
         # TODO: redis/nodejs baglantisi ve log
         pass
 
@@ -33,7 +34,7 @@ class SessionAPIView(generics.ListAPIView):
 class SessionDetailAPIView(generics.RetrieveAPIView):
     model = ChatSession
     serializer_class = serializers.SessionSerializer
-    permission_classes = (permissions.IsPostOrActiveAuthenticated,)
+    permission_classes = (permissions.IsRequestingUserMatchesUsername,)
     lookup_field = 'uuid'
 
 

@@ -18,8 +18,8 @@ class IsPostOrActiveAuthenticated(BasePermission):
 class IsRequestingUserMatchesUsername(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
-            url_username = view.kwargs.get('username')
-            user = User.actives.get_or_raise(username=url_username,
+            username = view.kwargs.get('username')
+            user = User.actives.get_or_raise(username=username,
                                              exc=Http404())
             if request.user.id == user.id:
                 return True

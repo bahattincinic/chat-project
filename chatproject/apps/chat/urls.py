@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import patterns, url
 from . import api
-from .validators import uuid_re_string
+from .validators import uuid_re_string, uuid_re_url
 
 chat_v1 = patterns('',
    url(r'^$', api.SessionAPIView.as_view(), name='session'),
-   url(uuid_re_string, api.SessionDetailAPIView.as_view(),
+   url(r'%s/$' % uuid_re_url, api.SessionDetailAPIView.as_view(),
        name='session-detail'),
+   # url(r'^$', api.SessionMessageAPIView.as_view(), name='session-messages'),
 )
