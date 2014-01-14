@@ -15,13 +15,28 @@ class IsPostOrActiveAuthenticated(BasePermission):
         return True
 
 
-class IsRequestingUserMatchesUsername(BasePermission):
+class IsPostOrRequestingUserMatchesUsername(BasePermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             username = view.kwargs.get('username')
             user = User.actives.get_or_raise(username=username,
                                              exc=Http404())
             if request.user.id == user.id:
+                return True
+            return False
+        return True
+
+
+class IsRequestingUserDiffThanUrl(BasePermission):
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        elif request.method in ('POST',) and \
+                request.user and \
+                request.user.is_authenticated():
+            username = view.kwargs.get('username')
+            user = User.actives.get_or_raise(username=username, exc=Http404())
+            if request.user.id != user.id:
                 return True
             return False
         return True

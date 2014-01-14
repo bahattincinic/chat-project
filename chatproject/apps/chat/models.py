@@ -4,6 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.utils import timezone
 from account.models import User
+from core.managers import CommonManager
 from .validators import validate_uuid
 
 
@@ -82,6 +83,8 @@ class ChatSession(models.Model):
     STATUS_CHOICES = ((ACTIVE, 'Active'), (PASSIVE, 'Passive'))
     status = models.CharField(_('Status'), choices=STATUS_CHOICES,
                               max_length=20, default=ACTIVE)
+
+    objects = CommonManager()
 
     class Meta:
         db_table = 'chat_session'

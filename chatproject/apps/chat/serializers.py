@@ -28,7 +28,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        exclude = ('id', 'direction', 'created_at', 'device',)
+        fields = ('content', 'session')
+        # exclude = ('id', 'direction', 'created_at', 'device',)
 
 
 class SessionMessageSerializer(serializers.ModelSerializer):

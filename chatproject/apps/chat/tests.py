@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.core.urlresolvers import reverse
 from rest_framework import status
+import simplejson
 
 from account.models import User
 from chat.models import ChatSession, AnonUser
@@ -30,7 +31,7 @@ class ChatTestCase(CommonTest, TestCase):
         # checks
         self.assertIsNotNone(session.uuid)
 
-    def a_test_get_unauthorized_session_details(self):
+    def test_get_unauthorized_session_details(self):
         self.test_create_chat_session()
         balkan = User.objects.get(username='balkan')
         session = ChatSession.objects.get()
@@ -49,9 +50,28 @@ class ChatTestCase(CommonTest, TestCase):
         url = reverse('session-detail', args=(balkan.username, session.uuid))
         # retrieve session details
         res = self.c.get(path=url, content_type='application/json')
+        data = res.data
+        self.assertTrue(data.get('uuid'), session.uuid)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-    def test_send_message(self):
-        # we created a session with user balkan
-        # now send messages with created anon user
-        pass
+    def test_open_session_to_self(self):
+        balkan = User.objects.create(username='balkan')
+        balkan.set_password('1q2w3e')
+        balkan.save()
+        # get session
+        url = reverse('session', args=(balkan.username,))
+        # login as balkan
+        self.assertTrue(self.session_login_as(balkan.username, '1q2w3e'))
+        res = self.c.post(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_message(self):
+        self.test_create_chat_session()
+        balkan = User.objects.get(username='balkan')
+        session = ChatSession.objects.get()
+        url = reverse('session-messages', args=(balkan.username, session.uuid))
+        res = self.c.post(path=url, content_type='application/json',
+                          data=simplejson.dumps({'content': 'text message'}))
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        print res
+
