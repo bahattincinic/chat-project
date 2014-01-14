@@ -25,7 +25,6 @@ class SessionAPIView(generics.ListCreateAPIView):
                                            exc=Http404())
         obj.target = target
 
-
     def post_save(self, obj, created=False):
         # TODO: redis/nodejs baglantisi ve log
         pass
@@ -34,7 +33,10 @@ class SessionAPIView(generics.ListCreateAPIView):
 class SessionDetailAPIView(generics.RetrieveAPIView):
     model = ChatSession
     serializer_class = serializers.SessionSerializer
-    permission_classes = (permissions.IsRequestingUserMatchesUsername,)
+    permission_classes = (
+        permissions.IsPostOrActiveAuthenticated,
+        permissions.IsRequestingUserMatchesUsername,
+    )
     lookup_field = 'uuid'
 
 

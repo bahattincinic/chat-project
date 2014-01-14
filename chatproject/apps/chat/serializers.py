@@ -19,7 +19,7 @@ class SessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatSession
-        fields = ('target', 'anon',)
+        fields = ('target', 'anon', 'uuid')
         read_only_fields = ('uuid',)
 
 
