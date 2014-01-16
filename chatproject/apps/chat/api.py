@@ -61,6 +61,14 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
         session = ChatSession.objects.get_or_raise(uuid=uuid,
                                                    target=user,
                                                    exc=Http404())
+        requesting_user = self.request.user
+        if isinstance(requesting_user, User) and \
+                requesting_user.is_active and \
+                requesting_user.id == user.id:
+            obj.direction = ChatMessage.TO_ANON
+        else:
+            obj.direction = ChatMessage.TO_USER
+
         obj.session = session
 
     def get_serializer_class(self):

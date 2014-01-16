@@ -4,7 +4,7 @@ from rest_framework import status
 import simplejson
 
 from account.models import User
-from chat.models import ChatSession, AnonUser
+from chat.models import ChatSession, AnonUser, ChatMessage
 from core.tests import CommonTest
 
 
@@ -65,13 +65,34 @@ class ChatTestCase(CommonTest, TestCase):
         res = self.c.post(path=url, content_type='application/json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_message(self):
+    def test_message_to_target_from_anon(self):
         self.test_create_chat_session()
         balkan = User.objects.get(username='balkan')
+        balkan.set_password('1q2w3e')
+        balkan.save()
         session = ChatSession.objects.get()
         url = reverse('session-messages', args=(balkan.username, session.uuid))
         res = self.c.post(path=url, content_type='application/json',
                           data=simplejson.dumps({'content': 'text message'}))
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        print res
+        self.assertTrue(ChatMessage.objects.count(), 1)
+        message = ChatMessage.objects.get()
+        self.assertEquals(message.direction, ChatMessage.TO_USER)
 
+    def test_message_to_anon_from_user(self):
+        self.test_message_to_target_from_anon()
+        content = 'reply message'
+        session = ChatSession.objects.get()
+        balkan = User.objects.get(username='balkan')
+        # login as balkan
+        self.assertTrue(self.session_login_as('balkan', '1q2w3e'))
+        url = reverse('session-messages', args=(balkan.username, session.uuid))
+        res = self.c.post(path=url, content_type='application/json',
+                          data=simplejson.dumps({'content': content}))
+        self.assertTrue(res.status_code, status.HTTP_201_CREATED)
+        session = ChatSession.objects.get()
+        self.assertEquals(session.message_set.count(), 2)
+        self.assertEquals(ChatMessage.objects.count(), 2)
+        new_message = ChatMessage.objects.order_by('-created_at')[0]
+        self.assertEquals(new_message.direction, ChatMessage.TO_ANON)
+        self.assertEquals(new_message.content, content)

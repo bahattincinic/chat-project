@@ -98,7 +98,7 @@ class ChatSession(models.Model):
 
 
 class ChatMessage(models.Model):
-    session = models.ForeignKey(ChatSession)
+    session = models.ForeignKey(ChatSession, related_name='message_set')
 
     TO_USER = 'TO_USR'
     TO_ANON = 'TO_ANON'
