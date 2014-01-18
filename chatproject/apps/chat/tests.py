@@ -96,3 +96,53 @@ class ChatTestCase(CommonTest, TestCase):
         new_message = ChatMessage.objects.order_by('-created_at')[0]
         self.assertEquals(new_message.direction, ChatMessage.TO_ANON)
         self.assertEquals(new_message.content, content)
+        self.session_logout()
+
+    def test_session_get_detailed_transcript(self):
+        self.test_message_to_anon_from_user()
+        balkan = User.objects.get(username='balkan')
+        session = ChatSession.objects.get()
+        self.session_login_as('balkan', '1q2w3e')
+        url = '%s?detail=yes' % reverse('session', args=(balkan.username,))
+        res = self.c.get(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.data
+        self.assertEqual(data.get('count'), 1)
+        results = data.get('results')[0]
+        message_set = results.get('message_set')
+        self.assertEqual(len(message_set), 2)
+        # TODO: call me maybe?
+        self.session_logout()
+
+    def test_get_multiple_session_detailed_transcript(self):
+        self.test_message_to_anon_from_user()
+        # create a second session with user balkan
+        balkan = User.objects.get(username='balkan')
+        old_session = ChatSession.objects.get()
+        url = reverse('session', args=(balkan.username,))
+        res = self.c.post(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # now we have 2 sessions
+        self.assertEqual(ChatSession.objects.count(), 2)
+        # and 2 anon users
+        self.assertEqual(AnonUser.objects.count(), 2)
+        # get latest session
+        session = ChatSession.objects.filter().order_by('-created_at')[0]
+        # compare with the old session
+        self.assertNotEqual(old_session.uuid, session.uuid)
+        self.assertNotEqual(old_session.anon.id, session.anon.id)
+        self.assertNotEqual(old_session.anon.username, session.anon.username)
+        # get
+        self.session_login_as('balkan', '1q2w3e')
+        url = '%s?detail=yes' % reverse('session', args=(balkan.username,))
+        res = self.c.get(path=url, content_type='application/json')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        data = res.data
+        # in total 2 sessions for balkan
+        self.assertEqual(data.get('count'), 2)
+        results = data.get('results')
+        self.assertEqual(len(results), 2)
+
+
+
+

@@ -90,9 +90,9 @@ class ChatSession(models.Model):
         db_table = 'chat_session'
 
     def __unicode__(self):
-        return "ChatSession with  %s (%s) " \
-               "as target an %s(%s) as anon user " \
-               "created_at %s" % (self.target.username, self.target.id,
+        return "ChatSession with %s (%s)'target' " \
+               "and %s(%s)'anon' " \
+               "at %s" % (self.target.username, self.target.id,
                                   self.anon.username, self.anon.id,
                                   self.created_at)
 

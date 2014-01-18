@@ -4,7 +4,6 @@ from django.http.response import Http404
 from rest_framework import generics
 from . import serializers
 from . import permissions
-from rest_framework.permissions import AllowAny
 from account.models import User
 from chat.models import ChatSession, AnonUser, ChatMessage
 from utils import SAFE_METHODS
@@ -17,6 +16,13 @@ class SessionAPIView(generics.ListCreateAPIView):
         permissions.IsRequestingUserDiffThanUrl,
     )
     model = ChatSession
+
+    def get_serializer_class(self):
+        # detail query param returns session with all its messages
+        detail = self.request.QUERY_PARAMS.get('detail')
+        if detail == 'yes':
+            return serializers.SessionMessageSerializer
+        return serializers.SessionSerializer
 
     def get_queryset(self):
         return ChatSession.objects.filter(target=self.request.user)
