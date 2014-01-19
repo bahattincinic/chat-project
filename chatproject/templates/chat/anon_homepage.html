@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block body %}
+<!-- Login / Register -->
+<div class="row-welcome content-welcome">
+    <div class="row-body">
+        <div class="welcome-inner">
+            <div class="welcome-message">
+                <div class="welcome-title">
+                    Welcome
+                </div>
+                <div class="welcome-desc">
+                    to our anonym chat network
+                </div>
+                <div class="welcome-about">
+                    share your memories, connect with others, make new friends.
+                </div>
+            </div>
+            <div class="welcome-inputs">
+                <form action="" method="POST" autocomplete="off">
+                    <input type="text" id="short" name="username" placeholder="Username" />
+                    <input type="password" id="short" name="password" placeholder="Password" />
+                    <input type="text" id="short" name="email" placeholder="Email" />
+                    <button type="submit" name="register"  class="register-button">Register</button>
+                </form>
+                <br />
+                <form action="" method="POST" autocomplete="off">
+                    <div class="notification-box box-transparent notification-box-transparent">
+                        <h5>Error</h5>
+                        <p>Invalid username or password.</p>
+                        <a href="#" class="notification-close notification-close-transparent close-transparent">x</a>
+                    </div>
+                    <input type="text" id="short" name="username" placeholder="Username or email" />
+                    <input type="password" id="short" name="password" placeholder="Password" />
+                    <button type="submit" name="login" class="login-button">Login</button>
+                    <span class="forgot-password">
+                        <a href="javascript:void(0)">Forgot your password?</a>
+                    </span>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

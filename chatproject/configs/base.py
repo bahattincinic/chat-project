@@ -179,7 +179,26 @@ EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
+########## STATIC FILE CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
+STATIC_ROOT = os.path.normpath(os.path.join(BASE_DIR, 'static'))
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = '/static/'
+
+# See:https://docs.djangoproject.com/en/dev/ref/contrib
+#       /staticfiles/#std:setting-STATICFILES_DIRS
+STATICFILES_DIRS = (
+    os.path.normpath(os.path.join(BASE_DIR, 'chat_static')),
+)
+
+# See: https://docs.djangoproject.com/en/dev/ref/contrib
+#       /staticfiles/#staticfiles-finders
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+########## END STATIC FILE CONFIGURATION
 
 # Devices
 DESKTOP = 'desktop'
