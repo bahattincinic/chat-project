@@ -67,7 +67,7 @@ AUTH_USER_MODEL = 'account.User'
 # APP CONFIGURATION
 DJANGO_APPS = (
     # Default Django apps:
-    'django.contrib.auth',
+    #'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',
@@ -85,7 +85,8 @@ LOCAL_APPS = (
     'account',
     'api',
     'chat',
-    'network'
+    'network',
+    'page'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

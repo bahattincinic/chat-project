@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import datetime
 
 from django.utils.timezone import utc
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.conf import settings
@@ -13,7 +13,7 @@ from core.managers import CommonManager, FilteringManager
 from .validators import validate_username
 
 
-class User(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser):
     username = models.CharField(_('username'), max_length=25, unique=True,
         help_text=_('Required. 30 characters or fewer. Letters, numbers and '
                     '@/./+/-/_ characters'),

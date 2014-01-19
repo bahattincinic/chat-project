@@ -1,0 +1,68 @@
+{% load staticfiles %}
+{% load i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>{% block title %}{% endblock title %}</title>
+<link href="{% static "style/style.css" %}" rel="stylesheet" type="text/css" />
+<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
+<script type="text/javascript" src="{% static "js/jquery.js" %}"></script>
+<script type="text/javascript" src="{% static "js/underscore.js" %}"></script>
+<script type="text/javascript" src="{% static "js/knockout.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular.js" %}"></script>
+<script type="text/javascript" src="{% static "js/jquery.tipsy.js" %}"></script>
+<script type="text/javascript" src="{% static "js/jquery.timeago.js" %}"></script>
+<script type="text/javascript" src="{% static "js/functions.js" %}"></script>
+{% block head %}{% endblock head %}
+</head>
+<body>
+
+<!-- Header -->
+<div class="topbar">
+    <div class="header">
+        <a href="javascript:void(0)"><div class="logo"></div><div class="logo-small"></div></a>
+        <div class="search-input">
+            <input type="text" id="search" placeholder="search people, hashtags" x-webkit-speech="x-webkit-speech" onwebkitspeechchange="liveSearch();">
+        </div>
+        <a href="javascript:void(0)"><div class="menu_btn" title="Register"><img src="images/register.png" /></div></a>
+        <a href="#"><div class="menu_visitor">Hello <strong>Visitor</strong></div></a>
+    </div>
+    <div class="search-container"></div>
+</div>
+
+<div class="topbar_margin"></div>
+
+
+{% block body %}
+
+{% endblock body %}
+
+
+<!-- Footer -->
+<div class="row-body">
+    <div class="footer">
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="javascript:void(0)">Terms of Use</a> -
+                <a href="javascript:void(0)">Privacy Policy</a> -
+                <a href="javascript:void(0)">Disclaimer</a> -
+                <a href="javascript:void(0)">Contact</a> -
+                <a href="javascript:void(0)">About</a>
+            </div>
+            <div class="footer-languages">
+                Language:
+                <a href="javascript:void(0)">English</a> -
+                <a href="javascript:void(0)">Netherlands</a> -
+                <a href="javascript:void(0)">Romanian</a>
+            </div>
+            <div class="footer-languages">
+                Copyright &copy; 2014 . All rights reserved
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
