@@ -43,3 +43,6 @@ jquery_jquery.hotkeys_bootstrap*
 # Vagrant
 Vagrantfile
 .vagrant
+
+# Django Static folder
+static/
