@@ -54,7 +54,7 @@ class NetworkConnectionAPIView(ListCreateAPIView):
 
     def get_network(self):
         filtering = {self.lookup_field: self.kwargs.get(self.lookup_field)}
-        network = self.model.objects.filter(**filtering).get()
+        network = self.model.objects.get_or_raise(exc=Http404(), **filtering)
         return network
 
     def get_queryset(self):
@@ -95,7 +95,7 @@ class NetworkModAPIView(ListCreateAPIView):
 
     def get_network(self):
         filtering = {self.lookup_field: self.kwargs.get(self.lookup_field)}
-        network = self.model.objects.filter(**filtering).get()
+        network = self.model.objects.get_or_raise(exc=Http404(), **filtering)
         return network
 
     def get_queryset(self):

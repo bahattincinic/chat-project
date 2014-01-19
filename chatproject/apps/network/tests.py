@@ -23,7 +23,7 @@ class NetworkTestCase(CommonTest, TestCase):
         """
         Network Create
         """
-        self.session_login()
+        self.assertTrue(self.session_login())
         # now create a network
         create_url = reverse('network-lists')
         network_name = 'Metro Last Light'
@@ -64,7 +64,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_network_update_byid_fail(self):
-        self.session_login()
+        self.assertTrue(self.session_login())
         create_url = reverse('network-lists')
         self.test_network_create()
         self.assertEqual(1, Network.objects.all().count())
@@ -77,7 +77,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertFalse(is_success(request.status_code))
 
     def test_network_connection(self):
-        self.session_login()
+        self.assertTrue(self.session_login())
         self.test_network_create()
         # make sure network admin and network connection are created along
         # with network instance
@@ -90,7 +90,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(NetworkConnection.objects.all().count(), 0)
 
     def test_network_connection_creation(self):
-        self.session_login()
+        self.assertTrue(self.session_login())
         self.test_network_create()
         network = Network.objects.get()
         url = reverse('network-users', args=(network.slug,))
@@ -109,7 +109,7 @@ class NetworkTestCase(CommonTest, TestCase):
         osman = User.objects.create(username=username)
         osman.set_password(password)
         osman.save()
-        self.session_login_as(username, password)
+        self.assertTrue(self.session_login_as(username, password))
         # now add osman to network
         res = self.c.post(path=url, data={},
                           content_type='application/json')
@@ -126,7 +126,7 @@ class NetworkTestCase(CommonTest, TestCase):
     def test_network_connection_get_delete(self):
         self.test_network_connection_creation()
         self.session_logout()
-        self.session_login_as('osman', '1q2w3e')
+        self.assertTrue(self.session_login_as('osman', '1q2w3e'))
         network = Network.objects.get()
         osman = User.objects.get(username='osman')
         url = reverse('network-users-detail', args=(network.slug, osman.username))
@@ -147,7 +147,7 @@ class NetworkTestCase(CommonTest, TestCase):
 
     def test_network_connection_deletion_admin(self):
         self.test_network_connection_creation()
-        self.session_login()
+        self.assertTrue(self.session_login())
         network = Network.objects.get()
         url = reverse('network-users', args=(network.slug,))
 
@@ -172,7 +172,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(data['count'], 1)
         self.assertEqual(len(data['results']), 1)
         # appoint osman as mod
-        self.session_login()
+        self.assertTrue(self.session_login())
         res = self.c.post(path=url,
                           data=simplejson.dumps({'user': osman.id}),
                           content_type='application/json')
@@ -196,7 +196,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(NetworkAdmin.objects.count(), 2)
         osman = User.actives.get(username='osman')
         url = reverse('network-mods-detail', args=(network.slug, osman.username))
-        self.session_login()
+        self.assertTrue(self.session_login())
         res = self.c.delete(path=url, content_type='application/json')
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(NetworkAdmin.objects.count(), 1)
@@ -212,7 +212,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(NetworkAdmin.objects.count(), 2)
         osman = User.actives.get(username='osman')
         url = reverse('network-mods-detail', args=(network.slug, osman.username))
-        self.session_login_as('osman', '1q2w3e')
+        self.assertTrue(self.session_login_as('osman', '1q2w3e'))
         res = self.c.delete(path=url, content_type='application/json')
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(NetworkAdmin.objects.count(), 1)
@@ -243,7 +243,7 @@ class NetworkTestCase(CommonTest, TestCase):
         kazim.set_password('1q2w3e')
         kazim.save()
         # login as kazim
-        self.session_login_as(kazim.username, '1q2w3e')
+        self.assertTrue(self.session_login_as(kazim.username, '1q2w3e'))
         # no connection to network, try to delete
         res = self.c.delete(path=url, content_type='application/json')
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
@@ -270,7 +270,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.assertEqual(NetworkAdmin.objects.count(), 2)
         # osman tries to make kazim as mod, expected to fail with 403
         self.session_logout()
-        self.session_login_as('osman', '1q2w3e')
+        self.assertTrue(self.session_login_as('osman', '1q2w3e'))
         res = self.c.post(path=add_mod_url,
                           data=simplejson.dumps({'user': kazim.id}),
                           content_type='application/json')
@@ -285,7 +285,7 @@ class NetworkTestCase(CommonTest, TestCase):
         self.test_network_delete_mod_invalid_login()
         self.assertEqual(NetworkConnection.approved.count(), 3)
         self.assertEqual(NetworkAdmin.objects.count(), 2)
-        self.session_login()
+        self.assertTrue(self.session_login())
         network = Network.objects.get()
         add_mod_url = reverse('network-mods', args=(network.slug, ))
         kazim = User.objects.get(username='kazim')

@@ -23,10 +23,10 @@ class CommonTest(object):
                                           email=self.email)
 
     def session_login(self):
-        self.c.login(username=self.username, password=self.password)
+        return self.c.login(username=self.username, password=self.password)
 
     def session_login_as(self, username, password):
-        self.c.login(username=username, password=password)
+        return self.c.login(username=username, password=password)
 
     def session_logout(self):
         self.c.logout()
