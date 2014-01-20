@@ -22,7 +22,7 @@
 <!-- Header -->
 <div class="topbar">
     <div class="header">
-        <a href="javascript:void(0)"><div class="logo"></div><div class="logo-small"></div></a>
+        <a href="{% url 'homepage' %}"><div class="logo"></div><div class="logo-small"></div></a>
         <div class="search-input">
             <input type="text" id="search" placeholder="search people, hashtags" x-webkit-speech="x-webkit-speech" onwebkitspeechchange="liveSearch();">
         </div>
@@ -63,11 +63,9 @@
     <div class="footer">
         <div class="footer-container">
             <div class="footer-links">
-                <a href="javascript:void(0)">Terms of Use</a> -
-                <a href="javascript:void(0)">Privacy Policy</a> -
-                <a href="javascript:void(0)">Disclaimer</a> -
-                <a href="javascript:void(0)">Contact</a> -
-                <a href="javascript:void(0)">About</a>
+                {% for page in pages %}
+                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a> -
+                {% endfor %}
             </div>
             <div class="footer-languages">
                 Language:
