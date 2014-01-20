@@ -1,5 +1,8 @@
 from configs.base import *
 
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
 LOGGING = {
    'version': 1,
    'disable_existing_loggers': False,
