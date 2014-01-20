@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% block title %}{{ object.name }} | The Chat{% endblock %}
+
 {% block body %}
 <div class="row-body content-page">
     <div class="nine columns" id="messages">
@@ -21,7 +23,11 @@
             <div class="sidebar-header">Pages</div>
             {% for page in pages  %}
                 <div class="sidebar-link">
-                <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a>
+                {% if page.id == object.id %}
+                    <a href="{% url 'page-detail' page.slug %}"><strong>{{ page.name }}</strong></a>
+                {% else %}
+                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
