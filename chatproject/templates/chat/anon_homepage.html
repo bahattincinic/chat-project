@@ -1,10 +1,63 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 
 {% block title %}Home Page | The Chat{% endblock %}
 
+{% block head %}
+<script type="text/javascript">
+var authApp = angular.module('authApp', ['ngAnimate', 'ngRoute', 'ngResource']);
+
+/* Login Controller */
+authApp.controller('loginController' ,['$scope', '$http', function($scope, $http) {
+    // Form Fields
+    $scope.form = {'username': '', 'password': ''};
+    // Login Process
+    $scope.process = function(){
+        $http({
+            method: 'POST',
+            url: '{% url 'login-session' %}',
+            data: angular.toJson($scope.form),
+            headers: { 'Content-Type': 'application/json' }
+        }).success(function(data) {
+            location.reload();
+        }).error(function(data){
+            $scope.isError = true;
+        });
+    };
+}]);
+
+/* Register Controller */
+authApp.controller('registerController', ['$scope', '$http', function($scope, $http) {
+    // Form Fields
+    $scope.form = {'username': '', 'password': '', 'email': ''};
+    // Login Process
+    $scope.process = function(){
+        $http({
+            method: 'POST',
+            url: '{% url 'user-account-create' %}',
+            data: angular.toJson($scope.form),
+            headers: { 'Content-Type': 'application/json' }
+        }).success(function(data) {
+            $scope.errorType = "Success";
+            $scope.isError = true;
+            $scope.errorMessage = 'Registration process is successful';
+        }).error(function(data){
+            $scope.errorType = "Error";
+            $scope.isError = true;
+            var errors = [];
+            angular.forEach(data, function(value, key){
+              this.push(key + ': ' + value[0]);
+            }, errors);
+            $scope.errorMessage = errors;
+        });
+    };
+}]);
+</script>
+{% endblock %}
+
 {% block body %}
 <!-- Login / Register -->
-<div class="row-welcome content-welcome">
+<div class="row-welcome content-welcome" ng-app="authApp">
     <div class="row-body">
         <div class="welcome-inner">
             <div class="welcome-message">
@@ -19,22 +72,27 @@
                 </div>
             </div>
             <div class="welcome-inputs">
-                <form action="" method="POST" autocomplete="off">
-                    <input type="text" id="short" name="username" placeholder="Username" />
-                    <input type="password" id="short" name="password" placeholder="Password" />
-                    <input type="text" id="short" name="email" placeholder="Email" />
-                    <button type="submit" name="register"  class="register-button">Register</button>
+                <form action="" method="POST" autocomplete="off" ng-controller="registerController">
+                    <div class="notification-box box-transparent notification-box-transparent" ng-show="isError">
+                        <h5 ng-bind="errorType"></h5>
+                        <p ng-bind="errorMessage"></p>
+                        <a href="javascript:void(0)" class="notification-close notification-close-transparent" ng-click="isError=false">x</a>
+                    </div>
+                    <input type="text" id="short" ng-model="form.username" name="username" placeholder="Username" />
+                    <input type="password" id="short" ng-model="form.password" name="password" placeholder="Password" />
+                    <input type="text" id="short" ng-model="form.email" name="email" placeholder="Email (optional)" />
+                    <button type="submit" name="register" ng-click="process()" class="register-button">Register</button>
                 </form>
                 <br />
-                <form action="" method="POST" autocomplete="off">
-                    <div class="notification-box box-transparent notification-box-transparent">
+                <form action="" method="POST" autocomplete="off" ng-controller="loginController">
+                    <div class="notification-box box-transparent notification-box-transparent" ng-show="isError">
                         <h5>Error</h5>
                         <p>Invalid username or password.</p>
-                        <a href="#" class="notification-close notification-close-transparent close-transparent">x</a>
+                        <a href="javascript:void(0)" class="notification-close notification-close-transparent" ng-click="isError=false">x</a>
                     </div>
-                    <input type="text" id="short" name="username" placeholder="Username or email" />
-                    <input type="password" id="short" name="password" placeholder="Password" />
-                    <button type="submit" name="login" class="login-button">Login</button>
+                    <input type="text" id="short" ng-model="form.username" name="username" placeholder="Username" />
+                    <input type="password" id="short" ng-model="form.password" name="password" placeholder="Password" />
+                    <button type="submit" name="login" ng-click="process()" class="login-button">Login</button>
                     <span class="forgot-password">
                         <a href="javascript:void(0)">Forgot your password?</a>
                     </span>
@@ -42,5 +100,43 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Shuffle -->
+<div class="welcome-full">
+	<div class="row-body">
+		<div class="welcome-inner">
+			<div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+            <div class="welcome-user">
+                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
+            </div>
+		</div>
+	</div>
 </div>
 {% endblock body %}

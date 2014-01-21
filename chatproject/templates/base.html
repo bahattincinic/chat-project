@@ -12,6 +12,9 @@
 <script type="text/javascript" src="{% static "js/underscore.js" %}"></script>
 <script type="text/javascript" src="{% static "js/knockout.js" %}"></script>
 <script type="text/javascript" src="{% static "js/angular.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-animate.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-route.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-resource.js" %}"></script>
 <script type="text/javascript" src="{% static "js/jquery.tipsy.js" %}"></script>
 <script type="text/javascript" src="{% static "js/jquery.timeago.js" %}"></script>
 <script type="text/javascript" src="{% static "js/functions.js" %}"></script>
@@ -64,7 +67,8 @@
         <div class="footer-container">
             <div class="footer-links">
                 {% for page in pages %}
-                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a> -
+                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a>
+                    <span class="page-seperator">-</span>
                 {% endfor %}
             </div>
             <div class="footer-languages">
