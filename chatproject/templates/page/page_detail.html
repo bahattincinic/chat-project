@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ object.name }} | The Chat{% endblock %}
+
+{% block body %}
+<div class="row-body content-page">
+    <div class="nine columns" id="messages">
+        <div class="page-container">
+        <div class="page-content">
+        <div class="page-header"><strong>{{ object.name }}</strong></div>
+            <div class="page-inner">
+                <div class="row">
+                    {{ object.description }}
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="three columns">
+        <div class="sidebar-container">
+        <div class="sidebar-content">
+            <div class="sidebar-header">Pages</div>
+            {% for page in pages  %}
+                <div class="sidebar-link">
+                {% if page.id == object.id %}
+                    <a href="{% url 'page-detail' page.slug %}"><strong>{{ page.name }}</strong></a>
+                {% else %}
+                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
