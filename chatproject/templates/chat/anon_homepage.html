@@ -39,6 +39,9 @@ authApp.controller('registerController', ['$scope', '$http', function($scope, $h
             headers: { 'Content-Type': 'application/json' }
         }).success(function(data) {
             $scope.errorType = "Success";
+            $scope.form.email = '';
+            $scope.form.username = '';
+            $scope.form.password = '';
             $scope.isError = true;
             $scope.errorMessage = 'Registration process is successful';
         }).error(function(data){
