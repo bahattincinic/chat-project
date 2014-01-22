@@ -64,7 +64,6 @@ THIRD_PARTY_APPS = (
     'django_extensions',
     'rest_framework',
     'djcelery',
-    'django_static'
 )
 
 # Apps specific for this project go here.
