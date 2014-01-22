@@ -3,64 +3,9 @@
 
 {% block title %}Home Page | The Chat{% endblock %}
 
-{% block head %}
-<script type="text/javascript">
-var authApp = angular.module('authApp', ['ngAnimate', 'ngRoute', 'ngResource']);
-
-/* Login Controller */
-authApp.controller('loginController' ,['$scope', '$http', function($scope, $http) {
-    // Form Fields
-    $scope.form = {'username': '', 'password': ''};
-    // Login Process
-    $scope.process = function(){
-        $http({
-            method: 'POST',
-            url: '{% url 'login-session' %}',
-            data: angular.toJson($scope.form),
-            headers: { 'Content-Type': 'application/json' }
-        }).success(function(data) {
-            location.reload();
-        }).error(function(data){
-            $scope.isError = true;
-        });
-    };
-}]);
-
-/* Register Controller */
-authApp.controller('registerController', ['$scope', '$http', function($scope, $http) {
-    // Form Fields
-    $scope.form = {'username': '', 'password': '', 'email': ''};
-    // Login Process
-    $scope.process = function(){
-        $http({
-            method: 'POST',
-            url: '{% url 'user-account-create' %}',
-            data: angular.toJson($scope.form),
-            headers: { 'Content-Type': 'application/json' }
-        }).success(function(data) {
-            $scope.errorType = "Success";
-            $scope.form.email = '';
-            $scope.form.username = '';
-            $scope.form.password = '';
-            $scope.isError = true;
-            $scope.errorMessage = 'Registration process is successful';
-        }).error(function(data){
-            $scope.errorType = "Error";
-            $scope.isError = true;
-            var errors = [];
-            angular.forEach(data, function(value, key){
-              this.push(key + ': ' + value[0]);
-            }, errors);
-            $scope.errorMessage = errors;
-        });
-    };
-}]);
-</script>
-{% endblock %}
-
 {% block body %}
 <!-- Login / Register -->
-<div class="row-welcome content-welcome" ng-app="authApp">
+<div class="row-welcome content-welcome">
     <div class="row-body">
         <div class="welcome-inner">
             <div class="welcome-message">
