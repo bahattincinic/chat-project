@@ -768,15 +768,28 @@ CLOSURE_COMMAND_TEMPLATE = "java -jar %(jarfile)s "
 def _run_closure_compiler(jscode):
     cmd = CLOSURE_COMMAND_TEMPLATE % {'jarfile': settings.DJANGO_STATIC_CLOSURE_COMPILER}
     proc = Popen(cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
+    print cmd
     try:
+
         (stdoutdata, stderrdata) = proc.communicate(jscode)
+        print 'after comm'
+        # print stdoutdata
     except OSError, msg: # pragma: no cover
         # see comment on OSErrors inside _run_yui_compressor()
         stderrdata = \
           "OSError: %s. Try again by making a small change and reload" % msg
+        raise
     if stderrdata:
         return "/* ERRORS WHEN RUNNING CLOSURE COMPILER\n" + stderrdata + '\n*/\n' + jscode
+    else:
+        print 'no stderrdata'
 
+    print stdoutdata
+
+    with open('/tmp/hede.js', 'w+') as f:
+        f.write(stdoutdata)
+        print 'writing to file'
+        f.flush()
     return stdoutdata
 
 YUI_COMMAND_TEMPLATE = "java -jar %(jarfile)s --type=%(type)s"
