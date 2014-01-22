@@ -50,6 +50,9 @@ settings.DJANGO_STATIC_MEDIA_URL_ALWAYS = \
 
 settings.DJANGO_STATIC_MEDIA_ROOTS = getattr(settings, "DJANGO_STATIC_MEDIA_ROOTS",
                                [settings.MEDIA_ROOT])
+# custom settings
+settings.DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS = getattr(settings, "DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS", False)
+settings.DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL = getattr(settings, "DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL", "WHITESPACE_ONLY")
 
 if sys.platform == "win32":
     _CAN_SYMLINK = False
@@ -764,32 +767,43 @@ def optimize(content, type_):
     else:
         raise ValueError("Invalid type %r" % type_)
 
-CLOSURE_COMMAND_TEMPLATE = "java -jar %(jarfile)s "
+CLOSURE_COMMAND_TEMPLATE = "java -jar %(jarfile)s --compilation_level %(compilation_level)s"
 def _run_closure_compiler(jscode):
-    cmd = CLOSURE_COMMAND_TEMPLATE % {'jarfile': settings.DJANGO_STATIC_CLOSURE_COMPILER}
+    os_error = False
+    cmd = CLOSURE_COMMAND_TEMPLATE % {'jarfile': settings.DJANGO_STATIC_CLOSURE_COMPILER,
+                                      'compilation_level': settings.DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL}
     proc = Popen(cmd, shell=True, stdout=PIPE, stdin=PIPE, stderr=PIPE)
-    print cmd
     try:
-
         (stdoutdata, stderrdata) = proc.communicate(jscode)
-        print 'after comm'
-        # print stdoutdata
     except OSError, msg: # pragma: no cover
         # see comment on OSErrors inside _run_yui_compressor()
+        os_error = True
         stderrdata = \
           "OSError: %s. Try again by making a small change and reload" % msg
-        raise
+
     if stderrdata:
-        return "/* ERRORS WHEN RUNNING CLOSURE COMPILER\n" + stderrdata + '\n*/\n' + jscode
-    else:
-        print 'no stderrdata'
+        error_str = "/* ERRORS WHEN RUNNING CLOSURE COMPILER\n" + stderrdata + '\n*/\n' + jscode
+        if os_error or not settings.DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS:
+            return error_str
 
-    print stdoutdata
+        try:
+            # means at least a warning occurred
+            # check for error count
+            _errs = stderrdata.split('\n')
+            errs = [x for x in _errs if x][-1]
+            # errs = '0 error(s), 11 warning(s)'
+            error_count = int(errs.split(' ')[0])
+            warning_count = int(errs.split(' ')[2])
+            result = {'error': error_count, 'warning': warning_count}
+            # TODO: send this to somewhere else
+            # "Closure compilation done, errors: %(error)s, warnings: %(warning)s" % result
+            if error_count == 0:
+                # 'no errors, ignore warnings'
+                return stdoutdata
+        except:
+            return error_str
+        return error_str
 
-    with open('/tmp/hede.js', 'w+') as f:
-        f.write(stdoutdata)
-        print 'writing to file'
-        f.flush()
     return stdoutdata
 
 YUI_COMMAND_TEMPLATE = "java -jar %(jarfile)s --type=%(type)s"
