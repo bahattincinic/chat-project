@@ -42,7 +42,7 @@
                     <input type="password" id="short" ng-model="form.password" name="password" placeholder="Password" />
                     <button type="submit" name="login" ng-click="process()" class="login-button">Login</button>
                     <span class="forgot-password">
-                        <a href="javascript:void(0)">Forgot your password?</a>
+                        <a href="{% url 'forgot-my-password' %}">Forgot your password?</a>
                     </span>
                 </form>
             </div>

@@ -30,11 +30,11 @@ angular.module('authApp').controller('registerController', ['$scope', 'authServi
         }, function(data){
             $scope.errorType = "Error";
             $scope.isError = true;
-            var errors = []
+            var errors = [];
             angular.forEach(data.data, function(value, key){
               this.push(key + ': ' + value[0]);
             }, errors);
-            $scope.errorMessage = errors
+            $scope.errorMessage = errors;
         });
     };
 }]);
@@ -45,6 +45,49 @@ angular.module('authApp').controller('logoutController', ['$scope', 'authService
     $scope.process = function(){
         authService.logout(function(){
             location.reload();
+        });
+    };
+}]);
+
+// Forgot Password Controller
+angular.module('authApp').controller('forgotPasswordController', ['$scope', 'authService', function($scope, authService) {
+    $scope.title = 'Forgot my Password';
+    $scope.p_type = 'password';
+    $scope.form = {'email': ''};
+
+    // change Forgot type
+    $scope.changeProcess = function(p_type){
+        if(p_type=='password'){
+            $scope.title = 'Forgot my Password';
+            $scope.p_type = 'password';
+        }else if(p_type=='username'){
+            $scope.title = 'Forgot my Username';
+            $scope.p_type = 'username';
+        }
+    };
+
+    //pending request
+    $scope.process = function(){
+        var api_method;
+        if($scope.p_type == 'password'){
+            api_method = authService.forgot_password;
+        }else{
+            api_method = authService.forgot_username;
+        }
+        api_method($scope.form, function(data){
+            $scope.isMessage = true;
+            $scope.isSuccess = true;
+            $scope.errorTitle = 'Success';
+            $scope.erorrMessage = $scope.form.email + ' mail send';
+        }, function(data){
+            $scope.isMessage = true;
+            $scope.isError = true;
+            $scope.errorTitle = 'Error';
+            var errors = [];
+            angular.forEach(data.data, function(value, key){
+              this.push(key + ': ' + value[0]);
+            }, errors);
+            $scope.erorrMessage = errors;
         });
     };
 }]);
