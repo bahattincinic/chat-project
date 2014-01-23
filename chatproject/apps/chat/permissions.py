@@ -2,7 +2,7 @@
 from django.http.response import Http404
 from rest_framework.permissions import BasePermission
 from account.models import User
-from utils import SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS
 
 
 class IsPostOrActiveAuthenticated(BasePermission):

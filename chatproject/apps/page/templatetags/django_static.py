@@ -32,13 +32,6 @@ try:
 except ImportError:
     jsmin = None
 
-################################################################################
-# The reason we're setting all of these into `settings` is so that in the code
-# we can do things like `if settings.DJANGO_STATIC:` rather than the verbose
-# and ugly `getattr(settings, 'DJANGO_STATIC')`.
-# And the reason why these aren't set as constants variables is to make the code
-# much easier to test because in the unit tests we can then do
-# settings.DJANGO_STATIC_SAVE_PREFIX = '/tmp/test' and stuff like that.
 settings.DJANGO_STATIC_USE_SYMLINK = getattr(settings, "DJANGO_STATIC_USE_SYMLINK", True)
 settings.DJANGO_STATIC = getattr(settings, 'DJANGO_STATIC', False)
 settings.DJANGO_STATIC_SAVE_PREFIX = getattr(settings, 'DJANGO_STATIC_SAVE_PREFIX', '')
@@ -50,7 +43,7 @@ settings.DJANGO_STATIC_MEDIA_URL_ALWAYS = \
 
 settings.DJANGO_STATIC_MEDIA_ROOTS = getattr(settings, "DJANGO_STATIC_MEDIA_ROOTS",
                                [settings.MEDIA_ROOT])
-# custom settings
+# balkan: custom settings
 settings.DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS = getattr(settings, "DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS", False)
 settings.DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL = getattr(settings, "DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL", "WHITESPACE_ONLY")
 
@@ -59,14 +52,8 @@ if sys.platform == "win32":
 else:
     _CAN_SYMLINK = settings.DJANGO_STATIC_USE_SYMLINK
 
-# Wheree the mapping filename -> annotated_filename is kept
+# Where the mapping filename -> annotated_filename is kept
 _FILE_MAP = {}
-
-## These two methods are put here if someone wants to access the django_static
-## functionality from code rather than from a django template
-## E.g.
-##   from django_static import slimfile
-##   print slimfile('/css/foo.js')
 
 def slimfile(filename):
     return _static_file(filename,
