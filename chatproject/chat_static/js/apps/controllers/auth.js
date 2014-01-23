@@ -1,7 +1,8 @@
 'use strict';
 
 /* Login Controller */
-angular.module('authApp').controller('loginController' ,['$scope', 'authService', function($scope, authService) {
+angular.module('authApp').controller('loginController' ,[
+    '$scope', 'authService', function($scope, authService) {
     // Form Fields
     $scope.form = {'username': '', 'password': ''};
     // Login Process
@@ -15,7 +16,8 @@ angular.module('authApp').controller('loginController' ,['$scope', 'authService'
 }]);
 
 /* Register Controller */
-angular.module('authApp').controller('registerController', ['$scope', 'authService', function($scope, authService) {
+angular.module('authApp').controller('registerController',[
+    '$scope', 'authService', '$rootScope', function($scope, authService, $rootScope) {
     // Form Fields
     $scope.form = {'username': '', 'password': '', 'email': ''};
     // Login Process
@@ -30,17 +32,14 @@ angular.module('authApp').controller('registerController', ['$scope', 'authServi
         }, function(data){
             $scope.errorType = "Error";
             $scope.isError = true;
-            var errors = [];
-            angular.forEach(data.data, function(value, key){
-              this.push(key + ': ' + value[0]);
-            }, errors);
-            $scope.errorMessage = errors;
+            $scope.errorMessage = $rootScope.ErrorRenderer(data.data);
         });
     };
 }]);
 
 // Logout Controller
-angular.module('authApp').controller('logoutController', ['$scope', 'authService', function($scope, authService) {
+angular.module('authApp').controller('logoutController', [
+    '$scope', 'authService', function($scope, authService) {
     // logout process
     $scope.process = function(){
         authService.logout(function(){
@@ -50,7 +49,8 @@ angular.module('authApp').controller('logoutController', ['$scope', 'authService
 }]);
 
 // Forgot Password Controller
-angular.module('authApp').controller('forgotPasswordController', ['$scope', 'authService', function($scope, authService) {
+angular.module('authApp').controller('forgotPasswordController', [
+    '$scope', 'authService', '$rootScope', function($scope, authService, $rootScope) {
     $scope.title = 'Forgot my Password';
     $scope.p_type = 'password';
     $scope.form = {'email': ''};
@@ -65,7 +65,6 @@ angular.module('authApp').controller('forgotPasswordController', ['$scope', 'aut
             $scope.p_type = 'username';
         }
     };
-
     //pending request
     $scope.process = function(){
         var api_method;
@@ -83,11 +82,39 @@ angular.module('authApp').controller('forgotPasswordController', ['$scope', 'aut
             $scope.isMessage = true;
             $scope.isError = true;
             $scope.errorTitle = 'Error';
-            var errors = [];
-            angular.forEach(data.data, function(value, key){
-              this.push(key + ': ' + value[0]);
-            }, errors);
-            $scope.erorrMessage = errors;
+            $scope.erorrMessage = $rootScope.ErrorRenderer(data.data);
         });
+    };
+}]);
+
+// New Password
+angular.module('authApp').controller('newPasswordController', [
+    '$scope', 'authService', '$rootScope', function($scope, authService, $rootScope) {
+    $scope.form = {'email': '', 'secret_key': '', 'new_password': '', 'confirm_password': ''};
+    $scope.process = function(){
+        if($scope.form.new_password != '' &&
+            $scope.form.confirm_password != '' &&
+            $scope.form.new_password == $scope.form.confirm_password){
+            authService.new_password($scope.form, function(data){
+                $scope.isMessage = true;
+                $scope.isSuccess = true;
+                $scope.errorTitle = 'Success';
+                $scope.erorrMessage = 'Changed Password';
+                setInterval(function(){
+                   window.location = '/';
+                }, 1500);
+            }, function(data){
+                $scope.isMessage = true;
+                $scope.isError = true;
+                $scope.errorTitle = 'Error';
+                $scope.erorrMessage = $rootScope.ErrorRenderer(data.data);
+            });
+        }else{
+            $scope.isSuccess = false;
+            $scope.isError = true;
+            $scope.errorTitle = 'Error';
+            $scope.isMessage = true;
+            $scope.erorrMessage = 'passwords did not match';
+        }
     };
 }]);

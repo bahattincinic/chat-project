@@ -19,6 +19,10 @@ angular.module('authApp').factory('authService', function($http) {
         forgot_username: function(payload, successCallback, errorCallback){
             payload = angular.toJson(payload);
             $http.put('/api/v1/auth/forgot/username/', payload).then(successCallback, errorCallback)
+        },
+        new_password: function(payload, successCallback, errorCallback){
+            payload = angular.toJson(payload);
+            $http.put('/api/v1/auth/forgot/new-password/', payload).then(successCallback, errorCallback)
         }
     }
 });

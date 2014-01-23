@@ -19,6 +19,7 @@
 <script type="text/javascript" src="{% static "js/jquery.timeago.js" %}"></script>
 <script type="text/javascript" src="{% static "js/functions.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/apps.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/utils.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/resources.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/controllers/auth.js" %}"></script>
 {% block head %}{% endblock head %}
@@ -34,8 +35,14 @@
         </div>
 
         {% if request.user.is_anonymous %}
-            <a href="javascript:void(0)"><div class="menu_btn" title="Register"><img src="{% static "images/register.png" %}" /></div></a>
-            <a href="#"><div class="menu_visitor">Hello <strong>Visitor</strong></div></a>
+            <a href="{% url 'homepage' %}">
+                <div class="menu_btn" title="Register">
+                    <img src="{% static "images/register.png" %}" />
+                </div>
+            </a>
+            <a href="{% url 'homepage' %}">
+                <div class="menu_visitor">Hello <strong>Visitor</strong></div>
+            </a>
         {% endif %}
 
         {% if request.user.is_authenticated %}
