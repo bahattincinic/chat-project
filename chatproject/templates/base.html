@@ -9,17 +9,19 @@
 <title>{% block title %}{% endblock title %}</title>
 <link href="{% static "style/style.css" %}" rel="stylesheet" type="text/css" />
 <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
-{% staticall %}
+
+{% slimall %}
 <script type="text/javascript" src="{% static "js/knockout.js" %}"></script>
-<script type="text/javascript" src="{% static "js/angular.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-resource.min.js" %}"></script>
 <script type="text/javascript" src="{% static "js/angular-animate.min.js" %}"></script>
 <script type="text/javascript" src="{% static "js/angular-route.min.js" %}"></script>
-<script type="text/javascript" src="{% static "js/angular-resource.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/apps.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/utils.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/resources.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/controllers/auth.js" %}"></script>
-{% endstaticall %}
+{% endslimall %}
+
 {% block head %}{% endblock head %}
 </head>
 <body ng-app="mainApp">
