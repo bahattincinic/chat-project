@@ -6,7 +6,7 @@ from . import serializers
 from . import permissions
 from account.models import User
 from chat.models import ChatSession, AnonUser, ChatMessage
-from utils import SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS
 
 
 class SessionAPIView(generics.ListCreateAPIView):

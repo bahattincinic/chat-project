@@ -1,13 +1,3 @@
-"""
-Django settings for chatproject project.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/1.6/topics/settings/
-
-For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.6/ref/settings/
-"""
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import sys
@@ -15,12 +5,11 @@ import djcelery
 
 djcelery.setup_loader()
 
+PROJECT_NAME = 'chat'
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
-# CONFIG = os.path.join(BASE_DIR, 'configs')
 sys.path.insert(1, APPS)
 sys.path.insert(2, BASE_DIR)
-# sys.path.insert(3, CONFIG)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -30,8 +19,7 @@ SECRET_KEY = 'xv-#91!%mv!(m0yba%t0^1t683mvwj_c!5d1z--^8!2x5z(6ss'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
 # TEMPLATE CONFIGURATION
 # See:
@@ -76,7 +64,7 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     'django_extensions',
     'rest_framework',
-    'djcelery'
+    'djcelery',
 )
 
 # Apps specific for this project go here.
@@ -217,3 +205,15 @@ API_VERSION = 'v1'
 API_ALLOWED_FORMATS = ['json']
 # 15 days
 API_TOKEN_TTL = 15
+
+# DJANGO-STATIC config
+DJANGO_STATIC = True
+DJANGO_STATIC_SAVE_PREFIX = "/tmp/cache"
+DJANGO_STATIC_NAME_PREFIX = "/cache"
+DJANGO_STATIC_MEDIA_ROOTS = (BASE_DIR,)
+# WHITESPACE_ONLY, SIMPLE_OPTIMIZATIONS, ADVANCED_OPTIMIZATIONS
+# wh: 308k, simple: 260k, advanced: 224k ERRORS!!
+DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL = 'SIMPLE_OPTIMIZATIONS'
+DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS = True
+DJANGO_STATIC_CLOSURE_COMPILER = '%s/../deploy/compiler.jar' % BASE_DIR
+DJANGO_STATIC_FILENAME_GENERATOR = 'utils.gen'
