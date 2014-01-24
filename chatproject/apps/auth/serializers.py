@@ -78,9 +78,7 @@ class UserRegister(serializers.ModelSerializer):
                 raise serializers.ValidationError('E-Mail this already exists')
         return attrs
 
-    def get_fields(self, *args, **kwargs):
-        # encrypted password field clear
-        fields = super(UserRegister, self).get_fields(*args, **kwargs)
-        # fields pop
-        fields.pop('password')
-        return fields
+    def restore_object(self, attrs, instance=None):
+        instance = super(UserRegister, self).restore_object(attrs, instance)
+        self.fields.pop('password')
+        return instance
