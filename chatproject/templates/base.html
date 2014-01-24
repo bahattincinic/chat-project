@@ -10,30 +10,44 @@
 <link href="{% static "style/style.css" %}" rel="stylesheet" type="text/css" />
 <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0" />
 {% slimall %}
-<script type="text/javascript" src="{% static "js/underscore.js" %}"></script>
 <script type="text/javascript" src="{% static "js/knockout.js" %}"></script>
 <script type="text/javascript" src="{% static "js/angular.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-animate.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-route.min.js" %}"></script>
+<script type="text/javascript" src="{% static "js/angular-resource.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/apps.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/utils.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/resources.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/controllers/auth.js" %}"></script>
 {% endslimall %}
 {% block head %}{% endblock head %}
 </head>
-<body>
+<body ng-app="mainApp">
 
 <!-- Header -->
 <div class="topbar">
     <div class="header">
-        <a href="javascript:void(0)"><div class="logo"></div><div class="logo-small"></div></a>
+        <a href="{% url 'homepage' %}"><div class="logo"></div><div class="logo-small"></div></a>
         <div class="search-input">
             <input type="text" id="search" placeholder="search people, hashtags" x-webkit-speech="x-webkit-speech" onwebkitspeechchange="liveSearch();">
         </div>
 
         {% if request.user.is_anonymous %}
-            <a href="javascript:void(0)"><div class="menu_btn" title="Register"><img src="{% static "images/register.png" %}" /></div></a>
-            <a href="#"><div class="menu_visitor">Hello <strong>Visitor</strong></div></a>
+            <a href="{% url 'homepage' %}">
+                <div class="menu_btn" title="Register">
+                    <img src="{% static "images/register.png" %}" />
+                </div>
+            </a>
+            <a href="{% url 'homepage' %}">
+                <div class="menu_visitor">Hello <strong>Visitor</strong></div>
+            </a>
         {% endif %}
 
         {% if request.user.is_authenticated %}
-            <a href="javascript:void(0)">
-                <div class="menu_btn" title="Log Out"><img src="{% static "images/logout.png" %}"></div>
+            <a href="javascript:void(0)" ng-controller="logoutController">
+                <div class="menu_btn" title="Log Out">
+                    <img ng-click="process()" src="{% static "images/logout.png" %}">
+                </div>
             </a>
             <a href="javascript:void(0)">
                 <div class="menu">
@@ -62,11 +76,10 @@
     <div class="footer">
         <div class="footer-container">
             <div class="footer-links">
-                <a href="javascript:void(0)">Terms of Use</a> -
-                <a href="javascript:void(0)">Privacy Policy</a> -
-                <a href="javascript:void(0)">Disclaimer</a> -
-                <a href="javascript:void(0)">Contact</a> -
-                <a href="javascript:void(0)">About</a>
+                {% for page in pages %}
+                   <a href="{% url 'page-detail' page.slug %}">{{ page.name }}</a>
+                    <span class="page-seperator">-</span>
+                {% endfor %}
             </div>
             <div class="footer-languages">
                 Language:

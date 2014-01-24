@@ -2376,3 +2376,7 @@ background-size: 25px;
 	display: none;
 	}
 }
+
+.page-seperator:last-child{
+	display:none;
+}
