@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}{{ request.user.username }} | The Chat{% endblock %}
+
+{% block body %}
+<div class="row-body content-profile">
+
+         <!-- Cover/Profile Bar -->
+         <div class="twelve columns">
+            <div class="cover-container">
+               <div class="cover-content">
+                  <div class="cover-image"
+                       style="background-position: center; background-image: url(/media/cover/{{ request.user.background }})">
+                  </div>
+                  <div class="cover-description">
+                     <div class="cover-avatar-content">
+                        <div class="cover-avatar">
+                           <span id="avatar3pricop">
+                           <img src="/media/avatar/{{ request.user.avatar }}" />
+                           </span>
+                        </div>
+                     </div>
+                     <div class="cover-description-content">
+                        <span id="author3pricop"></span>
+                        <span id="time3pricop"></span>
+                        <div class="cover-username">
+                           <a href="javascript:void(0)">{{ request.user.username }}</a>
+                        </div>
+                        <div class="cover-description-buttons">
+                           <div id="subscribe3"></div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <!-- Comments -->
+         <div class="nine columns" id="messages">
+            <div class="message-container" id="message1282">
+               <div class="message-content">
+                  <div class="message-divider"></div>
+                  <div class="message-replies">
+                     <div class="message-actions">
+                        <div class="message-actions-content" id="message-action1282">
+                           <div class="message-replies-content" id="comments-list1282">
+                              <!-- Comment Box -->
+                           	  <div class="message-comment-box-container" style="padding-left:0px">
+                           	      <div class="message-reply-avatar">
+                           	          <a href="javascript:void(0)">
+                           	              <img src="images/comment_avatar.jpeg" />
+                           	          </a>
+                           	      </div>
+                           	      <div class="message-comment-box-form">
+                           	          <textarea placeholder="Comment..." onclick="showButton(1282)" class="comment-reply-textarea"></textarea>
+                           	      </div>
+                           	      <div class="comment-btn" id="comment_btn_1282">
+                           	          <a onclick="postComment(1282)">Send</a>
+                           	      </div>
+                           	      <div class="delete_preloader" id="post_comment_1282"></div>
+                           	  </div>
+
+                              <!-- Comment -->
+                              <div class="message-reply-container" id="comment4230">
+                                 <div class="message-reply-avatar">
+                                    <a href="javascript:void(0)">
+                                    <img src="images/comment_avatar.jpeg" /></a>
+                                 </div>
+                                 <div class="message-reply-message">
+                                    <span class="message-reply-author">
+                                    <a href="javascript:void(0)">Anon-153sghls</a>
+                                    </span>: Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                                    <div class="message-time">
+                                       <div class="timeago" title="2013-12-07T16:52:51-06:00">
+                                          2013-12-07T16:52:51-06:00
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                              <!-- Commnet -->
+                              <div class="message-reply-container" id="comment4230">
+                                 <div class="message-reply-avatar">
+                                    <a href="javascript:void(0)">
+                                    <img src="images/avatar.png" /></a>
+                                 </div>
+                                 <div class="message-reply-message">
+                                    <span class="message-reply-author">
+                                    <a href="javascript:void(0)">Pricop Alexandru</a>
+                                    </span>: Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                                    <div class="message-time">
+                                       <div class="timeago" title="2013-12-07T16:52:51-06:00">
+                                          2013-12-07T16:52:51-06:00
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div id="profile-card"></div>
+         </div>
+
+         <!-- About -->
+         <div class="three columns">
+            <div class="sidebar-container widget-about">
+               <div class="sidebar-content">
+                  <div class="sidebar-header">About</div>
+                  <div class="sidebar-list">
+                  	Location: <strong>Bocsa, Caras-Severin</strong>
+                  </div>
+                  <div class="sidebar-list">
+                  	Follows: <strong><a href="javascript:void(0)">16 people</strong></a>
+                  </div>
+                  <div class="sidebar-list">
+                  	Follows By: <strong><a href="javascript:void(0)">1158 people</strong></a>
+                  </div>
+                  <div class="sidebar-list">
+                  	Facebook: <strong><a href="javascript:void(0)" target="_blank" rel="nofllow">View Profile</a></strong>
+                  </div>
+                  <div class="sidebar-list">
+                  	Google+: <strong><a href="javascript:void(0)" target="_blank" rel="nofllow">View Profile</a></strong>
+                  </div>
+                  <div class="sidebar-list">
+                  	Twitter: <strong><a href="javascript:void(0)" target="_blank" rel="nofllow">View Profile</a></strong>
+                  </div>
+                  <div class="sidebar-list">
+                  	Bio: Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+                  	sed diam nonummy nibh euismod tincidunt ut laoreet dolore
+                  	magna aliquam erat volutpat
+                  </div>
+               </div>
+            </div>
+         </div>
+
+      </div>
+{% endblock %}

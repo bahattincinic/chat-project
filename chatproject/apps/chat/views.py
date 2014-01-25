@@ -12,5 +12,5 @@ class HomePageView(TemplateView):
     def get_template_names(self):
         user = self.request.user
         if user.is_authenticated():
-            return "chat/auth_homepage.html"
+            return "account/auth_profile.html"
         return "chat/anon_homepage.html"

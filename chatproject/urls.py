@@ -1,4 +1,5 @@
 from django.conf.urls import patterns, include, url
+from django.conf import settings
 from chat.views import HomePageView
 from auth.views import ForgotPassword, NewPasswordView
 
@@ -11,3 +12,10 @@ urlpatterns = patterns('',
     url(r'^api/', include('api.urls')),
     url(r'^page/', include('page.urls')),
 )
+
+
+if settings.DEBUG:
+    # static files (images, css, javascript, etc.)
+    urlpatterns += patterns('',
+        url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {
+        'document_root': settings.MEDIA_ROOT}, name="media"))

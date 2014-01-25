@@ -27,9 +27,11 @@ class User(AbstractBaseUser):
                                 null=True, blank=True)
     # TODO: /media/avatar/bahattincinic/hede.png seklinde olucak
     avatar = models.ImageField(_('Avatar'), upload_to='avatar/',
-                               null=True, blank=True)
+                               null=True, blank=True,
+                               default='default.png')
     background = models.ImageField(_('Backgroud'), upload_to='background/',
-                                   null=True, blank=True)
+                                   null=True, blank=True,
+                                   default='default.png')
     is_sound_enabled = models.BooleanField(_('Chat Sound'), default=True)
     bio = models.CharField(_('Biography'), max_length=255,
                            null=True, blank=True)
