@@ -384,6 +384,7 @@ top: 0;
 padding-top: 166px;
 width: 100%;
 cursor: pointer;
+background-position: center;
 }
 .cover-image img {
 width: 100%;
@@ -675,7 +676,6 @@ margin-top: 2px;
 }
 .comment-btn {
 float: right;
-display: none;
 }
 .comment-btn a {
 float: right;

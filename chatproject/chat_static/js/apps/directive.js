@@ -1,8 +1,10 @@
-angular.module('mainApp').directive('backImg', function(){
+angular.module('mainApp').directive('backgroundImage', function(){
     return function(scope, element, attrs){
-        var url = attrs.backImg;
+        // string to scope instange
+        var url = scope.$eval(attrs.backgroundImage);
         element.css({
-            'background-image': 'url(' + url +')'
+            'background-image': 'url(' + url + ')',
+            'background-size' : 'cover'
         });
     };
 });

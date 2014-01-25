@@ -2,6 +2,7 @@ from django.conf.urls import patterns, include, url
 from django.conf import settings
 from chat.views import HomePageView
 from auth.views import ForgotPassword, NewPasswordView
+from account.views import AnonUserProfile
 
 urlpatterns = patterns('',
     url(r'^$', HomePageView.as_view(), name='homepage'),
@@ -11,6 +12,8 @@ urlpatterns = patterns('',
         name='new-password'),
     url(r'^api/', include('api.urls')),
     url(r'^page/', include('page.urls')),
+    url(r'^(?P<username>[-_\w]+)/$', AnonUserProfile.as_view(),
+        name='anon-profile')
 )
 
 
