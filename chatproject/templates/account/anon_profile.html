@@ -10,12 +10,12 @@
          <div class="twelve columns">
             <div class="cover-container">
                <div class="cover-content">
-                  <div class="cover-image" background-image="user.background" ng-init="user.background='/media/cover/{{ object.background }}'">
+                  <div class="cover-image" background-image="user.background" ng-init="user.background='/media/cover/{{ object.background|default:"default.png" }}'">
                   </div>
                   <div class="cover-description">
                      <div class="cover-avatar-content">
                         <div class="cover-avatar">
-                           <span ng-init="user.avatar='/media/avatar/{{ object.avatar }}'">
+                           <span ng-init="user.avatar='/media/avatar/{{ object.avatar|default:"default.png" }}'">
                             <img ng-src="{[{ user.avatar }]}" />
                            </span>
                         </div>
