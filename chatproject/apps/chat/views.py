@@ -14,3 +14,4 @@ class HomePageView(TemplateView):
         if user.is_authenticated():
             return "chat/auth_homepage.html"
         return "chat/anon_homepage.html"
+

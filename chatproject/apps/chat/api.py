@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import redis
 from django.http.response import Http404
 from rest_framework import generics
 from . import serializers
@@ -16,6 +17,10 @@ class SessionAPIView(generics.ListCreateAPIView):
         permissions.IsRequestingUserDiffThanUrl,
     )
     model = ChatSession
+
+    def __init__(self):
+        print self.__class__.__name__
+        super(SessionAPIView,self).__init__()
 
     def get_serializer_class(self):
         # detail query param returns session with all its messages
@@ -37,7 +42,9 @@ class SessionAPIView(generics.ListCreateAPIView):
 
     def post_save(self, obj, created=False):
         # TODO: redis/nodejs baglantisi ve log
-        pass
+        r = redis.StrictRedis()
+        res = r.publish("session_%s" % obj.target.username, obj.uuid)
+        print res
 
 
 class SessionDetailAPIView(generics.RetrieveAPIView):
@@ -76,6 +83,12 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
             obj.direction = ChatMessage.TO_USER
 
         obj.session = session
+
+    def post_save(self, obj, created=False):
+        r = redis.StrictRedis()
+        uuid = self.kwargs.get('uuid')
+        res = r.publish("session_%s" % uuid, obj.content)
+        print res
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:

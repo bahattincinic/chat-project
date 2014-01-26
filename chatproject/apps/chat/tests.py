@@ -17,6 +17,7 @@ class ChatTestCase(CommonTest, TestCase):
         self.assertTrue(User.actives.filter(username='balkan').exists())
         # now create a session with user
         url = reverse('session', args=(balkan.username,))
+        print url
         res = self.c.post(path=url, content_type='application/json')
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         # count check
@@ -72,6 +73,7 @@ class ChatTestCase(CommonTest, TestCase):
         balkan.save()
         session = ChatSession.objects.get()
         url = reverse('session-messages', args=(balkan.username, session.uuid))
+        print url
         res = self.c.post(path=url, content_type='application/json',
                           data=simplejson.dumps({'content': 'text message'}))
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block head %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+<script type="text/javascript" src="{% static "js/socket.io.js" %}"></script>
+<script ></script>
+<script type="text/javascript">
+// using jQuery
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Django csrf stuff
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+function sameOrigin(url) {
+    // test that a given url is a same-origin URL
+    // url could be relative or scheme relative or absolute
+    var host = document.location.host; // host + port
+    var protocol = document.location.protocol;
+    var sr_origin = '//' + host;
+    var origin = protocol + sr_origin;
+    // Allow absolute or scheme relative URLs to same origin
+    return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+        (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+        // or any other URL that isn't scheme relative or absolute i.e relative.
+        !(/^(\/\/|http:|https:).*/.test(url));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
+{% if request.user.is_authenticated %}
+var socket = io.connect('http://linux:8080');
+var username = '{{ request.user.username }}';
+socket.on('session_' + username, function(data) {
+    console.log('new session: ' + data);
+    var channel = 'session_' + data;
+    console.log('subsc to:' + channel);
+    socket.on(channel, function(data){
+        console.log('received from session: ' + data);
+        vm.messages.push(data);
+    });
+});
+{% endif %}
+
+var vm = {
+    messages: ko.observableArray([]),
+    session: ko.observable({}),
+    uuid: function() {
+        return vm.session().uuid;
+    },
+    newsession: function() {
+        console.log('create new session' + vm.url);
+        $.post(vm.url, function(data) {
+            console.log(data);
+            vm.session(data);
+            var channel = 'session_' + vm.uuid();
+            console.log(channel);
+            socket.on(channel, function(data) {
+                console.log('received from node:' + data);
+            });
+        }, 'json');
+    },
+    messagetext: ko.observable(),
+    {% if request.user.username == 'balkan' %}
+    url: '/api/v1/account/osman/sessions/',
+    target: 'osman',
+    {% else %}
+    url: '/api/v1/account/balkan/sessions/',
+    target: 'balkan',
+    {% endif %}
+    sendmessage: function() {
+        var url = vm.url + vm.uuid() + '/messages/';
+        $.post(url, {'content': vm.messagetext()}).done(function(data){console.log(data);});
+    }
+};
+
+$(function() {ko.applyBindings(vm);});
+</script>
+{% endblock head %}
+
+{% block body %}
+
+{% if request.user.is_authenticated %}
+<button data-bind='click: newsession'>create session with <span data-bind='text: target'></span></button>
+<div class='listmessages' data-bind='foreach: messages'>
+    <span data-bind='text: $data'></span>
+    <br>
+</div>
+
+<div class='sendmessage' data-bind='visible: vm.uuid()'>
+    <label for='text'></label>
+    <input id='text' data-bind='value: messagetext'></input>
+    <button data-bind='click: sendmessage'>Send</button>
+</div>
+{% else %}
+<span>not authenticated</span>
+{% endif %}
+
+{% endblock body %}
+
+
