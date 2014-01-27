@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import redis
+from rest_framework.renderers import JSONRenderer
 from django.http.response import Http404
 from rest_framework import generics
 from . import serializers
@@ -8,6 +9,7 @@ from . import permissions
 from account.models import User
 from chat.models import ChatSession, AnonUser, ChatMessage
 from rest_framework.permissions import SAFE_METHODS
+from chat.serializers import SessionSerializer, MessageSerializer
 
 
 class SessionAPIView(generics.ListCreateAPIView):
@@ -41,9 +43,11 @@ class SessionAPIView(generics.ListCreateAPIView):
         obj.target = target
 
     def post_save(self, obj, created=False):
-        # TODO: redis/nodejs baglantisi ve log
+        serializer = SessionSerializer(obj)
+        data = JSONRenderer().render(serializer.data)
+        print data
         r = redis.StrictRedis()
-        res = r.publish("session_%s" % obj.target.username, obj.uuid)
+        res = r.publish("session_%s" % obj.target.username, data)
         print res
 
 
@@ -85,9 +89,12 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
         obj.session = session
 
     def post_save(self, obj, created=False):
+        serializer = MessageSerializer(obj)
+        data = JSONRenderer().render(serializer.data)
+        print data
         r = redis.StrictRedis()
         uuid = self.kwargs.get('uuid')
-        res = r.publish("session_%s" % uuid, obj.content)
+        res = r.publish("session_%s" % uuid, data)
         print res
 
     def get_serializer_class(self):

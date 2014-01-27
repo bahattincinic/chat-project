@@ -6,7 +6,6 @@
 <script type="text/javascript" src="{% static "js/socket.io.js" %}"></script>
 <script ></script>
 <script type="text/javascript">
-// using jQuery
 function getCookie(name) {
     var cookieValue = null;
     if (document.cookie && document.cookie != '') {
@@ -54,13 +53,13 @@ $.ajaxSetup({
 {% if request.user.is_authenticated %}
 var socket = io.connect('http://linux:8080');
 var username = '{{ request.user.username }}';
-socket.on('session_' + username, function(data) {
-    console.log('new session: ' + data);
-    var channel = 'session_' + data;
-    console.log('subsc to:' + channel);
+
+socket.on('session_' + username, function(session) {
+    // set session to ko
+    vm.session(JSON.parse(session));
+    var channel = 'session_' + vm.session().uuid;
     socket.on(channel, function(data){
-        console.log('received from session: ' + data);
-        vm.messages.push(data);
+        vm.messages.push(JSON.parse(data));
     });
 });
 {% endif %}
@@ -72,14 +71,13 @@ var vm = {
         return vm.session().uuid;
     },
     newsession: function() {
-        console.log('create new session' + vm.url);
         $.post(vm.url, function(data) {
-            console.log(data);
             vm.session(data);
             var channel = 'session_' + vm.uuid();
-            console.log(channel);
+            // listen newly opened private channel
             socket.on(channel, function(data) {
-                console.log('received from node:' + data);
+                var message = JSON.parse(data);
+                vm.messages.push(message);
             });
         }, 'json');
     },
@@ -92,7 +90,11 @@ var vm = {
     target: 'balkan',
     {% endif %}
     sendmessage: function() {
-        var url = vm.url + vm.uuid() + '/messages/';
+        if (!vm.uuid()) {
+            console.log('errror, no session set!');
+            return false;
+        }
+        var url = '/api/v1/account/' + vm.session().target.username + '/sessions/' + vm.uuid() + '/messages/';
         $.post(url, {'content': vm.messagetext()}).done(function(data){console.log(data);});
     }
 };
@@ -105,13 +107,15 @@ $(function() {ko.applyBindings(vm);});
 
 {% if request.user.is_authenticated %}
 <button data-bind='click: newsession'>create session with <span data-bind='text: target'></span></button>
-<div class='listmessages' data-bind='foreach: messages'>
-    <span data-bind='text: $data'></span>
+{# list messages #}
+<div class='listmessages' data-bind="foreach: messages">
+    <span data-bind='text: $index'></span>
+    <span>DIR: <span data-bind='text: direction'></span></span>
+    <span>content: <span data-bind='text: content'></span></span>
     <br>
 </div>
 
 <div class='sendmessage' data-bind='visible: vm.uuid()'>
-    <label for='text'></label>
     <input id='text' data-bind='value: messagetext'></input>
     <button data-bind='click: sendmessage'>Send</button>
 </div>
