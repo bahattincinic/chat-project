@@ -12,6 +12,8 @@ class AnonUserProfile(DetailView):
         return User.actives.all()
 
     def get_template_names(self):
-        if self.request.user.is_authenticated():
+        auth_user = self.request.user
+        username = self.kwargs.get('username')
+        if auth_user.is_authenticated() and auth_user.username == username:
             return 'account/auth_profile.html'
         return 'account/anon_profile.html'
