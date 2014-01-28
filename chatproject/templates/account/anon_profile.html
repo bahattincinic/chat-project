@@ -26,9 +26,17 @@
                         <div class="cover-username" ng-init="user.username='{{ object.username }}'">
                            <a href="javascript:void(0)" ng-bind="user.username"></a>
                         </div>
-                        <div class="cover-description-buttons">
-                           <div id="subscribe3"></div>
-                        </div>
+                         <!-- Follow -->
+                         <div ng-init="user.follow.status=false" ng-show="user.follow.visibility" class="cover-description-buttons">
+                                 <div id="subscribe31">
+                                     <div class="follow">
+                                        <span  ng-class="{'subscribe': !user.follow.state, 'unsubscribe': user.follow.state}"></span>
+                                         <span class="follow_text" ng-bind="user.follow.text"></span>
+                                     </div>
+                                     <div class="subscribe_btn">
+                                 </div>
+                             </div>
+                         </div>
                      </div>
                   </div>
                </div>

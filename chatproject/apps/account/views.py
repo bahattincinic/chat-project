@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.views.generic.detail import DetailView
 from .models import User
+from page.models import Page
 
 
 class AnonUserProfile(DetailView):
@@ -10,6 +11,11 @@ class AnonUserProfile(DetailView):
 
     def get_queryset(self):
         return User.actives.all()
+
+    def get_context_data(self, **kwargs):
+        context = super(AnonUserProfile, self).get_context_data(**kwargs)
+        context['pages'] = Page.actives.all()
+        return context
 
     def get_template_names(self):
         auth_user = self.request.user
