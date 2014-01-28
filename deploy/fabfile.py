@@ -215,37 +215,34 @@ class DeployTask(BaseTask):
         run('sync')
 
     def src(self):
+        def suffix():
+            # branch suffix *_140128_22_30
+            return datetime.now().strftime("%y%m%e_%H_%M")
+
         try:
-            import random
-            import string
-
-            source_tree_base = '/tmp/%s__%s' % (self.ini['project_appname'],
-                                                datetime.utcnow().replace(tzinfo=pytz.utc).date())
-            rnd = ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(3))
-            source_tree = "%s_%s" % (source_tree_base, rnd)
-
-            print green('git repo:%s' % self.ini['project_source_repo'])
-
             with cd("/tmp"):
                 if exists(self.ini["project_appname"]):
-                    print yellow('remove old %s' % self.ini["project_appname"])
+                    print yellow('remove old clone: %s' % self.ini["project_appname"])
                     run('rm -rf %s' % self.ini["project_appname"])
 
-                run('git clone  -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
+                run('git clone -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
 
             production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
             with cd(production_src):
                 if exists(self.ini['project_appname']):
-                    print yellow('production_src %s exists..' % self.ini['project_appname'])
+                    print yellow('production_src %s exists, removing..' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
 
+            deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
+            deploy_clone_dir = "/%s" % deploy_clone
             with cd("/tmp"):
-                run('cp -rf %s %s' % (self.ini["project_appname"], production_src))
+                run('cp -rf %s %s' % (self.ini["project_appname"], production_src + deploy_clone_dir))
 
-            with cd("production_src"):
-                run("mv %s %s")
+            # link prod
+            with cd(production_src):
+                run('ln -s %s %s' % (deploy_clone, self.ini['project_appname']))
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
