@@ -155,6 +155,16 @@ class BaseTask:
             with prefix('source %s' % (target + '/bin/activate')):
                 return run('python manage.py %s' % command)
 
+    def production_src(self):
+        assert self.ini['projects_root']
+        assert self.ini['project_address']
+        return self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
+
+    def parse_validate_output(self, out):
+        parsed = out.split(' ')
+        assert len(parsed) == 3
+        assert str(parsed[0]) == "0"
+
 
 class DeployTask(BaseTask):
     """ helper class for task:deploy """
@@ -190,6 +200,12 @@ class DeployTask(BaseTask):
                 run('rm %s' % self.target)
             run('ln -s %s %s' % (self.original, self.target))
 
+    def validate_prod(self):
+        # prod validate
+        with cd(self.production_src()):
+            self.parse_validate_output(self.run_management_command('validate'))
+
+
     def cleanup(self):
         try:
             os.removedirs(self.out)
@@ -197,8 +213,7 @@ class DeployTask(BaseTask):
             pass
 
     def collectstatic(self):
-        production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
-        manage_dir = "%s/%s" % (production_src, self.ini['project_appname'])
+        manage_dir = "%s/%s" % (self.production_src(), self.ini['project_appname'])
         with cd(manage_dir):
             self.run_management_command("collectstatic --noinput")
 
@@ -228,6 +243,8 @@ class DeployTask(BaseTask):
             return datetime.now().strftime("%y%m%e_%H_%M")
 
         try:
+            deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
+            deploy_clone_dir = "/%s" % deploy_clone
             with cd("/tmp"):
                 if exists(self.ini["project_appname"]):
                     print yellow('remove old clone: %s' % self.ini["project_appname"])
@@ -236,25 +253,14 @@ class DeployTask(BaseTask):
                 run('git clone -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
+                # move fresh clone to prod src dir
+                run('cp -rf %s %s' % (self.ini["project_appname"], self.production_src() + deploy_clone_dir))
 
-            production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
-            with cd(production_src):
+            with cd(self.production_src()):
                 if exists(self.ini['project_appname']):
                     print yellow('production_src %s exists, removing..' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
-
-            deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
-            deploy_clone_dir = "/%s" % deploy_clone
-            with cd("/tmp"):
-                run('cp -rf %s %s' % (self.ini["project_appname"], production_src + deploy_clone_dir))
-
-            # validate
-            with cd(production_src):
-                output = self.run_management_command(command="validate", branch=deploy_clone)
-                pass
-
-            # link prod
-            with cd(production_src):
+                # link tree
                 run('ln -s %s %s' % (deploy_clone, self.ini['project_appname']))
         except KeyError:
             print yellow(
@@ -418,7 +424,6 @@ def deploy(branch_name):
     obj = DeployTask()
     if obj.load_legend(branch_name):
         try:
-
             obj.check_dir()
             obj.render()
             obj.files()
@@ -426,6 +431,7 @@ def deploy(branch_name):
             obj.venv()
             obj.link_settings()
             obj.collectstatic()
+            obj.validate_prod()
             obj.reload()
             obj.render_tasks()
             obj.reload_search()
