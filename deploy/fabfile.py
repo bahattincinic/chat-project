@@ -5,7 +5,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, Context
-from fabric.api import run, env, cd, task, prefix, sudo
+from fabric.api import run, env, cd, task, prefix, sudo, local
 from fabric.colors import (green, red, cyan, magenta, yellow)
 from fabric.contrib.files import exists
 from fabric.network import disconnect_all
@@ -109,8 +109,6 @@ class BaseTask:
             os.remove(target_filename)
             os.chdir('..')
 
-
-
     def render_task(self, task, template, avail):
         """ Renders a supervisor task from 'tasks' """
         managed = True if task['name'] in avail else False
@@ -144,14 +142,18 @@ class BaseTask:
             print red(e.message)
             raise e
 
-    def run_management_command(self, command):
+    def run_management_command(self, command, branch=None):
         # runs a management command inside project dir
         target = self.ini['projects_root'] + '/' + self.ini[
             'project_address'] + '/venv'
+
+        if not branch:
+            branch = self.ini['project_appname']
+
         with cd(self.ini['projects_root'] + '/' +
-                self.ini['project_address'] + '/src/' + self.ini['project_appname']):
+                self.ini['project_address'] + '/src/' + branch):
             with prefix('source %s' % (target + '/bin/activate')):
-                run('python manage.py %s' % command)
+                return run('python manage.py %s' % command)
 
 
 class DeployTask(BaseTask):
@@ -197,7 +199,6 @@ class DeployTask(BaseTask):
     def collectstatic(self):
         production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
         manage_dir = "%s/%s" % (production_src, self.ini['project_appname'])
-        print red(manage_dir)
         with cd(manage_dir):
             self.run_management_command("collectstatic --noinput")
 
@@ -246,6 +247,11 @@ class DeployTask(BaseTask):
             deploy_clone_dir = "/%s" % deploy_clone
             with cd("/tmp"):
                 run('cp -rf %s %s' % (self.ini["project_appname"], production_src + deploy_clone_dir))
+
+            # validate
+            with cd(production_src):
+                output = self.run_management_command(command="validate", branch=deploy_clone)
+                pass
 
             # link prod
             with cd(production_src):
@@ -339,6 +345,9 @@ class DeployTask(BaseTask):
         for d in dirs:
             run('mkdir -p %s' % d)
 
+    def validate(self):
+        pass
+
     def render(self):
         print green('render start')
         try:
@@ -404,12 +413,12 @@ class DeployTask(BaseTask):
             print yellow("will reload/update search index")
             self.run_management_command("update_index")
 
-
 @task
 def deploy(branch_name):
     obj = DeployTask()
     if obj.load_legend(branch_name):
         try:
+
             obj.check_dir()
             obj.render()
             obj.files()
@@ -424,7 +433,8 @@ def deploy(branch_name):
         except:
             raise
         finally:
-            os.system("rm -rfv out")
+            # os.system("rm -rfv out")
+            local('rm -rfv out')
             disconnect_all()
     else:
         print red('legend.txt is required and does not exists',
