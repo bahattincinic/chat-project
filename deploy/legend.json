@@ -17,6 +17,8 @@
 
     "tasks" : [],
 
+    "keep_last_src_tree_count": 10,
+
     "settings": {
         "active_setting": "prod",
         "overwrite_settings": true

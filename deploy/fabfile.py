@@ -73,6 +73,9 @@ class BaseTask:
             with open('legend.json', 'r') as f:
                 self.ini = json.loads(f.read())
                 self.ini["project_branch"] = branch_name
+            if self.ini['keep_last_src_tree_count'] and self.ini['keep_last_src_tree_count'] < 2:
+                raise ImproperlyConfigured('number of backup src tree extemely low,'
+                                           ' increase that number bitch!')
             return True
         except IOError:
             return False
@@ -237,6 +240,14 @@ class DeployTask(BaseTask):
         self.run_management_command("compile_pyc")
         run('sync')
 
+    def discard_old_trees(self):
+        with cd(self.production_src()):
+            output = run('find  . -type d -iname "%s_*" | sort' % self.ini['project_appname'])
+            dirs = [x.strip('\r')[2:] for x in output.split('\n')]
+            for x in range(len(dirs) - self.ini.get('keep_last_src_tree_count', 10)):
+                print yellow("removing old source tree: %s" % dirs[x])
+                run('rm -rf %s' % dirs[x])
+
     def src(self):
         def suffix():
             # branch suffix *_140128_22_30
@@ -258,7 +269,7 @@ class DeployTask(BaseTask):
 
             with cd(self.production_src()):
                 if exists(self.ini['project_appname']):
-                    print yellow('production_src %s exists, removing..' % self.ini['project_appname'])
+                    print yellow('remove old link %s' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
                 # link tree
                 run('ln -s %s %s' % (deploy_clone, self.ini['project_appname']))
@@ -427,6 +438,7 @@ def deploy(branch_name):
             obj.check_dir()
             obj.render()
             obj.files()
+            obj.discard_old_trees()
             obj.src()
             obj.venv()
             obj.link_settings()
