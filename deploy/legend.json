@@ -12,7 +12,7 @@
     "overwrite_conf": true,
 
     "use_ssl": false,
-    "use_django_static": false,
+    "use_django_static": true,
     "update_haystack_index": false,
 
     "tasks" : [],

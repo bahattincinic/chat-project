@@ -194,6 +194,13 @@ class DeployTask(BaseTask):
         except:
             pass
 
+    def collectstatic(self):
+        production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
+        manage_dir = "%s/%s" % (production_src, self.ini['project_appname'])
+        print red(manage_dir)
+        with cd(manage_dir):
+            self.run_management_command("collectstatic --noinput")
+
     def reload(self):
         print cyan('reload app server')
         self.vassals = self.ini['projects_root'] + '/vassals'
@@ -409,6 +416,7 @@ def deploy(branch_name):
             obj.src()
             obj.venv()
             obj.link_settings()
+            obj.collectstatic()
             obj.reload()
             obj.render_tasks()
             obj.reload_search()
