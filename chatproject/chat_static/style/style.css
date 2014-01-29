@@ -1264,7 +1264,7 @@ box-shadow: #40568a 0px 1px 5px inset;
 float: right;
 }
 .chat-container {
-height: 410px;
+max-height: 410px;
 padding: 0 10px;
 overflow: auto;
 }

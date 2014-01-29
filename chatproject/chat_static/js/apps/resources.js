@@ -26,3 +26,8 @@ angular.module('authApp').factory('authService', function($http) {
         }
     }
 });
+
+// Chat Resource
+angular.module('chatApp').factory('chatService', function($http) {
+  return {};
+});

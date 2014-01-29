@@ -35,174 +35,50 @@
          </div>
 </div>
 
-<div class="row-body content-messages">
+<div class="row-body content-messages" ng-controller="userChatController">
     <div class="chat_list two columns">
         <div class="sidebar-container">
         <div class="sidebar-content">
             <div class="sidebar-header">Chat List</div>
-                <div class="sidebar-link">
-                    <a href="#"><strong>Anon-112erfd</strong></a>
-                </div>
+            <div class="sidebar-link" ng-repeat="item in session_list">
+                <a href="javascript:void(0)" ng-click="sessionChangeStatus($event, item)">
+                    <strong>{[{ item.user.username }]}</strong>
+                </a>
+            </div>
         </div>
         </div>
     </div>
 
     <div class="nine columns" id="messages">
         <div class="message-container">
-                        <div class="message-content">
-                            <div class="message-form-header">
-                                <div class="message-form-user"><img src="http://phpdolphin.com/demo/themes/dolphin/images/icons/chat.png"></div>
-                                <span class="chat-username">Angelina Jolie</span><span class="blocked-button"><a onclick="doBlock(32, 1)" title="Block Angelina Jolie">Block</a></span>
-                                <div class="message-loader" style="display: none"><img src="http://phpdolphin.com/demo/themes/dolphin/images/preloader.gif"></div>
-                            </div>
-                            <div class="chat-container">
-                                <div class="load-more-chat"><a onclick="loadChat(32, '', '', 8157, 1)">View more conversations</a></div>
-                <div class="message-reply-container" id="chat8157">
-                    <a onclick="delete_the(8157, 2)" title="Delete this message"><div class="delete_btn"></div></a>
+        <div class="message-content">
+            <div class="message-form-header" style="height: 17px;">
+                <div class="message-form-user"><img src="{% static "images/chat.png" %}"></div>
+                <span class="chat-username" ng-bind="active_session.user.username"></span>
+                <span class="blocked-button" ng-click="blockSession()" ng-show="active_session.user"><a>Block</a></span>
+            </div>
+            <div class="chat-container">
+                <div class="message-reply-container" ng-repeat="item in active_session.message">
                     <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
+                        <a href="javascript:void(0)">
+                            <img ng-src="/media/avatar/{[{ item.user.avatar }]}">
+                        </a>
                     </div>
                     <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: ordaminsin?
+                        <span class="message-reply-author">
+                        <a href="javascript:void(0)">{[{ item.user.username }]}</a></span>: {[{ item.message }]}
                         <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:37:56-06:00">8 hours ago</div>
+                            <div class="timeago">{[{ item.created_at }]}</div>
                         </div>
                     </div>
-                    <div class="delete_preloader" id="del_chat_8157"></div>
-
                 </div>
-                <div class="message-reply-container" id="chat8158">
-                    <a onclick="delete_the(8158, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asdadad
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:02-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8158"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8159">
-                    <a onclick="delete_the(8159, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asfafa
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:03-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8159"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8160">
-                    <a onclick="delete_the(8160, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asd
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:03-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8160"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8161">
-                    <a onclick="delete_the(8161, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asd
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:03-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8161"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8162">
-                    <a onclick="delete_the(8162, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asd
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:04-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8162"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8163">
-                    <a onclick="delete_the(8163, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asd
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:04-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8163"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8164">
-                    <a onclick="delete_the(8164, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: asd
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:04-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8164"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8165">
-                    <a onclick="delete_the(8165, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: ad
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:05-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8165"></div>
-
-                </div>
-                <div class="message-reply-container" id="chat8166">
-                    <a onclick="delete_the(8166, 2)" title="Delete this message"><div class="delete_btn"></div></a>
-                    <div class="message-reply-avatar">
-                        <a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero"><img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a"></a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author"><a href="http://phpdolphin.com/demo/index.php?a=profile&amp;u=ilksero">ilksero</a></span>: ad
-                        <div class="message-time">
-                            <div class="timeago" title="2014-01-28T05:38:05-06:00">8 hours ago</div>
-                        </div>
-                    </div>
-                    <div class="delete_preloader" id="del_chat_8166"></div>
-
-                </div>
-                            </div>
-                            <div class="message-divider"></div>
-
-                            <div class="chat-form-inner"><input id="chat" class="chat-user32" placeholder="Write a message..." name="chat"></div>
-                        </div>
-                    </div><audio id="soundNewChat"><source src="http://phpdolphin.com/demo/themes/dolphin/sounds/soundChat.ogg" type="audio/ogg"><source src="http://phpdolphin.com/demo/themes/dolphin/sounds/soundChat.mp3" type="audio/mpeg"><source src="http://phpdolphin.com/demo/themes/dolphin/sounds/soundChat.wav" type="audio/wav"></audio>
+            </div>
+            <div class="message-divider"></div>
+            <div class="chat-form-inner" ng-show="active_session.user">
+                <input id="chat" class="chat-user32" placeholder="Write a message..." name="chat">
+            </div>
+        </div>
+        </div>
     </div>
 </div>
 {% endblock %}
