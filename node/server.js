@@ -17,6 +17,10 @@ io.sockets.on('connection', function(socket) {
         console.log('new message on session, channel:' + channel + ' message: ' + message);
         socket.emit(channel, message);
     });
+
+    socket.on('disconnect', function () {
+        console.log("Socket disconnected");
+    }); 
 });
 
 // io.sockets.on('connection', function (socket) {
