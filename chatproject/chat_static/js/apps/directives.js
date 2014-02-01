@@ -8,3 +8,14 @@ angular.module('mainApp').directive('backgroundImage', function(){
         });
     };
 });
+
+
+angular.module('chatApp').directive('comment', function(){
+    return {
+        restrict: 'E',
+        scope: {
+            instance: '=instance'
+        },
+        templateUrl: '/static/js/apps/views/comment.html'
+    };
+});

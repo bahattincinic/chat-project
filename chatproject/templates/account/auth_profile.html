@@ -42,7 +42,7 @@
             <div class="sidebar-header">Chat List</div>
             <div class="sidebar-link" ng-repeat="item in session_list">
                 <a href="javascript:void(0)" ng-click="sessionChangeStatus($event, item)">
-                    <strong>{[{ item.user.username }]}</strong>
+                    <strong>{[{ item.anon.username }]}</strong>
                 </a>
             </div>
         </div>
@@ -54,28 +54,17 @@
         <div class="message-content">
             <div class="message-form-header" style="height: 17px;">
                 <div class="message-form-user"><img src="{% static "images/chat.png" %}"></div>
-                <span class="chat-username" ng-bind="active_session.user.username"></span>
+                <span class="chat-username" ng-bind="active_session.anon.username"></span>
                 <span class="blocked-button" ng-click="blockSession()" ng-show="active_session.user"><a>Block</a></span>
             </div>
             <div class="chat-container">
-                <div class="message-reply-container" ng-repeat="item in active_session.message">
-                    <div class="message-reply-avatar">
-                        <a href="javascript:void(0)">
-                            <img ng-src="/media/avatar/{[{ item.user.avatar }]}">
-                        </a>
-                    </div>
-                    <div class="message-reply-message">
-                        <span class="message-reply-author">
-                        <a href="javascript:void(0)">{[{ item.user.username }]}</a></span>: {[{ item.message }]}
-                        <div class="message-time">
-                            <div class="timeago">{[{ item.created_at }]}</div>
-                        </div>
-                    </div>
-                </div>
+                <comment instance="active_session.messages"></comment>
             </div>
             <div class="message-divider"></div>
-            <div class="chat-form-inner" ng-show="active_session.user">
-                <input id="chat" class="chat-user32" placeholder="Write a message..." name="chat">
+            <div class="chat-form-inner" ng-show="active_session.anon">
+                <form ng-submit="createMessage()">
+                    <input id="chat" class="chat-user32" ng-model="content.content" placeholder="Write a message..." name="chat">
+                </form>
             </div>
         </div>
         </div>

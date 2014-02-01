@@ -25,11 +25,13 @@ class SessionSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     session = SessionSerializer(read_only=True)
+    created_at = serializers.DateTimeField(read_only=True,
+                                           format='%d-%m-%Y %H:%M',)
 
     class Meta:
         model = ChatMessage
-        fields = ('content', 'session')
-        # exclude = ('id', 'direction', 'created_at', 'device',)
+        fields = ('content', 'session', 'direction', 'created_at')
+        read_only_fields = ('direction',)
 
 
 class SessionMessageSerializer(serializers.ModelSerializer):
@@ -37,5 +39,5 @@ class SessionMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatSession
-        exclude = ('id', 'created_at', 'last_message_at', 'uuid')
+        exclude = ('id', 'last_message_at', 'uuid', 'created_at')
         read_only_fields = ('uuid',)

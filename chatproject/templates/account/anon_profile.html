@@ -4,7 +4,7 @@
 {% block title %}{{ object.username }} | The Chat{% endblock %}
 
 {% block body %}
-<div class="row-body content-profile">
+<div class="row-body content-profile" ng-controller="anonChatController">
 
          <!-- Cover/Profile Bar -->
          <div class="twelve columns">
@@ -60,13 +60,15 @@
                            	          </a>
                            	      </div>
                            	      <div class="message-comment-box-form">
-                           	          <textarea placeholder="Comment..." onclick="showButton(1282)" class="comment-reply-textarea"></textarea>
+                                      <form ng-submit="createMessage()">
+                           	          <input type="text" placeholder="Comment..." class="comment-reply-textarea" ng-model="content.content" />
+                                      </form>
                            	      </div>
-                           	      <div class="comment-btn" id="comment_btn_1282">
-                           	          <a>Send</a>
-                           	      </div>
+
                            	      <div class="delete_preloader" id="post_comment_1282"></div>
                            	  </div>
+                              <!-- Comment -->
+                              <comment instance="messages"></comment>
                            </div>
                         </div>
                      </div>

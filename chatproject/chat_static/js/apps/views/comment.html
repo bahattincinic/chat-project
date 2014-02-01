@@ -1,0 +1,25 @@
+<div class="message-reply-container" ng-repeat="item in instance">
+   <div class="message-reply-avatar" ng-switch="item.direction">
+      <a href="javascript:void(0)" ng-switch-when="TO_USR">
+         <img ng-src="/static/images/comment_avatar.jpeg" />
+      </a>
+       <a href="javascript:void(0)" ng-switch-when="TO_ANON">
+         <img ng-src="/media/avatar/{[{ item.session.target.avatar }]}" />
+      </a>
+   </div>
+   <div class="message-reply-message">
+      <span class="message-reply-author" ng-switch="item.direction">
+        <a href="javascript:void(0)" ng-switch-when="TO_USR">
+            {[{ item.session.anon.username }]}
+        </a>
+        <a href="javascript:void(0)" ng-switch-when="TO_ANON">
+            {[{ item.session.target.username }]}
+        </a>
+      </span>: <span ng-bind='item.content'></span>
+      <div class="message-time">
+         <div class="timeago">
+            <span ng-bind='item.created_at'></span>
+         </div>
+      </div>
+   </div>
+</div>
