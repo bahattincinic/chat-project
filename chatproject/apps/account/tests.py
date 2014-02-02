@@ -59,6 +59,8 @@ class UserAccountTestCase(CommonTest, TestCase):
         self.token_login()
         data = UserDetailSerializer(instance=self.u).data
         data['gender'] = User.MALE
+        data.pop('background')
+        data.pop('avatar')
         request = self.c.put(path=url, data=simplejson.dumps(data),
                              content_type='application/json',
                              **self.client_header)
