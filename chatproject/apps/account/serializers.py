@@ -27,6 +27,8 @@ class UserDetailSerializer(BaseUserSerializer):
     """
     User Detail, User Profile Update Serializer
     """
+    avatar = serializers.ImageField(required=False)
+    background = serializers.ImageField(required=False)
 
     def validate(self, attrs):
         user = self.context['view'].request.user

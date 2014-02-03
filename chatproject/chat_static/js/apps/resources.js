@@ -26,3 +26,43 @@ angular.module('authApp').factory('authService', function($http) {
         }
     }
 });
+
+// Node Resource
+angular.module('mainApp').factory('socket', function ($rootScope) {
+  var socket = io.connect('http://localhost:8080');
+  return {
+    on: function (eventName, callback) {
+      socket.on(eventName, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          callback.apply(socket, args);
+        });
+      });
+    },
+    emit: function (eventName, data, callback) {
+      socket.emit(eventName, data, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          if (callback) {
+            callback.apply(socket, args);
+          }
+        });
+      })
+    }
+  };
+});
+
+// Chat Resource
+angular.module('chatApp').factory('chatService', function($http){
+    return {
+        session: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/sessions/';
+            $http.post(url).then(successCallback, errorCallback)
+        },
+        message: function(payload, username, uuid , successCallback, errorCallback){
+            payload = angular.toJson(payload);
+            var url = '/api/v1/account/' + username + '/sessions/' + uuid + '/messages/';
+            $http.post(url, payload).then(successCallback, errorCallback)
+        }
+    }
+});

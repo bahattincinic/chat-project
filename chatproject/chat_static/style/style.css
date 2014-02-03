@@ -384,6 +384,7 @@ top: 0;
 padding-top: 166px;
 width: 100%;
 cursor: pointer;
+background-position: center;
 }
 .cover-image img {
 width: 100%;
@@ -675,7 +676,6 @@ margin-top: 2px;
 }
 .comment-btn {
 float: right;
-display: none;
 }
 .comment-btn a {
 float: right;
@@ -793,35 +793,62 @@ background-size: 17px;
 background: url('../images/icons/download_a.png');
 background-size: 17px;
 }
-.subscribe_btn {
-border: 1px solid #BFBFBF;
-background-color: #fff;
-background-image: url(../images/icons/subscribe.png);
-background-size: 25px;
-background-position: center;
-color: #6B6B6B;
-border-radius: 3px;
-width: 25px;
-height: 25px;
-float: right;
-cursor: pointer;
-margin-left: 5px;
+.follow {
+    border: 1px solid #BFBFBF;
+    background-color: #fff;
+    background-size: 25px;
+    background-position: center;
+    color: #6B6B6B;
+    border-radius: 3px;
+    width: 70px;
+    height: 30px;
+    float: right;
+    cursor: pointer;
+    margin-left: 5px;
 }
-.subscribe_btn:hover {
-box-shadow: 0px 1px 1px #CCC;
-background-image: url(../images/icons/subscribe_h.png);
+.follow:hover {
+    box-shadow: 0px 1px 1px #CCC;
 }
-.subscribe_btn:active, .subscribe_btn:focus {
-background-image: url(../images/icons/subscribe_h.png);
-box-shadow: #CCC 0px 1px 5px inset;
-border-color: #AAA;
+.follow:active, .subscribe_btn:focus {
+    box-shadow: #CCC 0px 1px 5px inset;
+    border-color: #AAA;
 }
+
+.subscribe {
+    float: left;
+    background-image: url(../images/icons/subscribe.png);
+    background-size: 25px;
+    width: 25px;
+    height: 25px;
+}
+.subscribe:hover, .subscribe:active {
+    float: left;
+    background-image: url(../images/icons/subscribe_h.png);
+    background-size: 25px;
+    width: 25px;
+    height: 25px;
+}
+
 .unsubscribe {
-background-image: url(../images/icons/unsubscribe.png);
+    float: left;
+    background-image: url(../images/icons/unsubscribe.png);
+    background-size: 25px;
+    width: 25px;
+    height: 25px;
 }
 .unsubscribe:hover, .unsubscribe:active {
-background-image: url(../images/icons/unsubscribe_h.png);
+    float: left;
+    background-image: url(../images/icons/unsubscribe_h.png);
+    background-size: 25px;
+    width: 25px;
+    height: 25px;
 }
+.follow_text{
+    float: right;
+    padding-top: 6px;
+    padding-right: 3px;
+}
+
 .sub-loading {
 border: 1px solid #BFBFBF;
 background-color: #fff;
@@ -1237,7 +1264,7 @@ box-shadow: #40568a 0px 1px 5px inset;
 float: right;
 }
 .chat-container {
-height: 410px;
+max-height: 410px;
 padding: 0 10px;
 overflow: auto;
 }
@@ -2169,6 +2196,12 @@ background: rgba(0, 0, 0, .62) url('../images/icons/close_h.png') no-repeat cent
 background-size: 25px;
 }
 
+
+.chat_list {
+    margin-left: 11px;
+    width: 23% !important;
+}
+
 @media only screen and (max-device-width: 1002px), only screen and (device-width: 1024px) and (device-height: 1002px), only screen and (width: 1280px) and (orientation: landscape), only screen and (device-width: 1002px), only screen and (max-width: 1002px) {
 	.row-body {
 	border: 0;
@@ -2375,6 +2408,10 @@ background-size: 25px;
 	.welcome-user:last-child {
 	display: none;
 	}
+    .chat_list {
+    width: 99% !important;
+    margin-left: 0px;
+    }
 }
 
 .page-seperator:last-child{
