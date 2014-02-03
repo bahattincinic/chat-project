@@ -1,9 +1,11 @@
 import os
 import simplejson as json
+import pytz
+from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, Context
-from fabric.api import run, env, cd, task, prefix, sudo
+from fabric.api import run, env, cd, task, prefix, sudo, local
 from fabric.colors import (green, red, cyan, magenta, yellow)
 from fabric.contrib.files import exists
 from fabric.network import disconnect_all
@@ -71,6 +73,9 @@ class BaseTask:
             with open('legend.json', 'r') as f:
                 self.ini = json.loads(f.read())
                 self.ini["project_branch"] = branch_name
+            if self.ini['keep_last_src_tree_count'] and self.ini['keep_last_src_tree_count'] < 2:
+                raise ImproperlyConfigured('number of backup src tree extemely low,'
+                                           ' increase that number bitch!')
             return True
         except IOError:
             return False
@@ -107,8 +112,6 @@ class BaseTask:
             os.remove(target_filename)
             os.chdir('..')
 
-
-
     def render_task(self, task, template, avail):
         """ Renders a supervisor task from 'tasks' """
         managed = True if task['name'] in avail else False
@@ -142,14 +145,28 @@ class BaseTask:
             print red(e.message)
             raise e
 
-    def run_management_command(self, command):
+    def run_management_command(self, command, branch=None):
         # runs a management command inside project dir
         target = self.ini['projects_root'] + '/' + self.ini[
             'project_address'] + '/venv'
+
+        if not branch:
+            branch = self.ini['project_appname']
+
         with cd(self.ini['projects_root'] + '/' +
-                self.ini['project_address'] + '/src/' + self.ini['project_appname']):
+                self.ini['project_address'] + '/src/' + branch):
             with prefix('source %s' % (target + '/bin/activate')):
-                run('python manage.py %s' % command)
+                return run('python manage.py %s' % command)
+
+    def production_src(self):
+        assert self.ini['projects_root']
+        assert self.ini['project_address']
+        return self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
+
+    def parse_validate_output(self, out):
+        parsed = out.split(' ')
+        assert len(parsed) == 3
+        assert str(parsed[0]) == "0"
 
 
 class DeployTask(BaseTask):
@@ -186,11 +203,22 @@ class DeployTask(BaseTask):
                 run('rm %s' % self.target)
             run('ln -s %s %s' % (self.original, self.target))
 
+    def validate_prod(self):
+        # prod validate
+        with cd(self.production_src()):
+            self.parse_validate_output(self.run_management_command('validate'))
+
+
     def cleanup(self):
         try:
             os.removedirs(self.out)
         except:
             pass
+
+    def collectstatic(self):
+        manage_dir = "%s/%s" % (self.production_src(), self.ini['project_appname'])
+        with cd(manage_dir):
+            self.run_management_command("collectstatic --noinput")
 
     def reload(self):
         print cyan('reload app server')
@@ -212,24 +240,39 @@ class DeployTask(BaseTask):
         self.run_management_command("compile_pyc")
         run('sync')
 
+    def discard_old_trees(self):
+        with cd(self.production_src()):
+            output = run('find  . -type d -iname "%s_*" | sort' % self.ini['project_appname'])
+            dirs = [x.strip('\r')[2:] for x in output.split('\n')]
+            for x in range(len(dirs) - self.ini.get('keep_last_src_tree_count', 10)):
+                print yellow("removing old source tree: %s" % dirs[x])
+                run('rm -rf %s' % dirs[x])
+
     def src(self):
+        def suffix():
+            # branch suffix *_140128_22_30
+            return datetime.now().strftime("%y%m%e_%H_%M")
+
         try:
-            source_tree = '/tmp/%s' % self.ini['project_appname']
-            print green('git repo:%s' % self.ini['project_source_repo'])
-            if exists(source_tree):
-                print yellow('already exists, removing old pull')
-                run('rm -rf %s' % source_tree)
+            deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
+            deploy_clone_dir = "/%s" % deploy_clone
             with cd("/tmp"):
-                run('git clone  -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
+                if exists(self.ini["project_appname"]):
+                    print yellow('remove old clone: %s' % self.ini["project_appname"])
+                    run('rm -rf %s' % self.ini["project_appname"])
+
+                run('git clone -b %s %s' % (self.ini["project_branch"], self.ini['project_source_repo']))
                 with cd(self.ini['project_appname']):
                     run('rm -rf .git .gitignore')
+                # move fresh clone to prod src dir
+                run('cp -rf %s %s' % (self.ini["project_appname"], self.production_src() + deploy_clone_dir))
 
-            production_src = self.ini['projects_root'] + '/' + self.ini['project_address'] + '/src'
-            with cd(production_src):
+            with cd(self.production_src()):
                 if exists(self.ini['project_appname']):
-                    print yellow('production_src %s exists..' % self.ini['project_appname'])
+                    print yellow('remove old link %s' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
-            run('cp -rf %s %s' % (source_tree, production_src))
+                # link tree
+                run('ln -s %s %s' % (deploy_clone, self.ini['project_appname']))
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
@@ -319,6 +362,9 @@ class DeployTask(BaseTask):
         for d in dirs:
             run('mkdir -p %s' % d)
 
+    def validate(self):
+        pass
+
     def render(self):
         print green('render start')
         try:
@@ -384,7 +430,6 @@ class DeployTask(BaseTask):
             print yellow("will reload/update search index")
             self.run_management_command("update_index")
 
-
 @task
 def deploy(branch_name):
     obj = DeployTask()
@@ -393,9 +438,12 @@ def deploy(branch_name):
             obj.check_dir()
             obj.render()
             obj.files()
+            obj.discard_old_trees()
             obj.src()
             obj.venv()
             obj.link_settings()
+            obj.collectstatic()
+            obj.validate_prod()
             obj.reload()
             obj.render_tasks()
             obj.reload_search()
@@ -403,7 +451,8 @@ def deploy(branch_name):
         except:
             raise
         finally:
-            os.system("rm -rfv out")
+            # os.system("rm -rfv out")
+            local('rm -rfv out')
             disconnect_all()
     else:
         print red('legend.txt is required and does not exists',
