@@ -132,7 +132,7 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
         r = redis.StrictRedis()
         uuid = self.kwargs.get('uuid')
         print "publish message"
-        res = r.publish("session_%s" % uuid, data)
+        res = r.publish("message_%s" % uuid, data)
         print res
 
     def get_serializer_class(self):

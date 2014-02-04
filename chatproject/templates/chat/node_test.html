@@ -58,7 +58,7 @@ socket.on('session_' + username, function(session) {
     // set session to ko
     var session = JSON.parse(session);
     vm.sessions.push(session);
-    var channel = 'session_' + session.uuid;
+    var channel = 'message_' + session.uuid;
     console.log('register to ' + channel);
 
     // listen for messages on channel requested
@@ -82,7 +82,7 @@ var vm = {
         // first connect to node
         $.post(vm.url, function(session) {
             vm.sessions.push(session);
-            var channel = 'session_' + session.uuid;
+            var channel = 'message_' + session.uuid;
             console.log('register to ' + channel);
 
             // listen for messages on out session

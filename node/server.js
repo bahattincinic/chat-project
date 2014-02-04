@@ -15,8 +15,8 @@ io.configure(function() {
 subscriber = redis.createClient();
 var spattern = "session_*";
 subscriber.psubscribe(spattern);
-// var mpattern = "message_*";
-// subscriber.psubscribe(mpattern);
+var mpattern = "message_*";
+subscriber.psubscribe(mpattern);
 updater = redis.createClient();
 
 var all_sockets = [];
@@ -27,18 +27,13 @@ io.sockets.on('connection', function(socket) {
     subscriber.on('pmessage', function(pattern, channel, message) {
         // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
 
-        // if (pattern == spattern) {
-        //     console.log('sess pattern');
-        //     // socket.join(channel);
-        //     socket.emit(channel, message);
-        // } else {
-        //     var room_n = "session_" + channel.slice(8);
-        //     console.log('m pattern: ' + room_n);
-        //     // io.sockets.in(room_n).emit('message', message);
-        //     socket.broadcast.to(room_n).emit('message', data)
-        // }
+        if (pattern == spattern) {
+            console.log('session username:' + socket.username + ' id: ' + socket.id);
+        } else if (pattern == mpattern){
+            console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
+        }
+
         socket.emit(channel, message);
-        // socket.emit('room', channel);
     });
 
     socket.on('disconnect', function () {
