@@ -66,3 +66,21 @@ angular.module('chatApp').factory('chatService', function($http){
         }
     }
 });
+
+// User Service
+angular.module('chatApp').factory('accountService', function($http){
+    return {
+        check_follow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.get(url).success(successCallback, errorCallback);
+        },
+        follow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.post(url).success(successCallback, errorCallback);
+        },
+        unfollow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.delete(url).success(successCallback, errorCallback);
+        }
+    }
+});

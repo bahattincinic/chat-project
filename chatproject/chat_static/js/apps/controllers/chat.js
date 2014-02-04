@@ -41,12 +41,12 @@ angular.module('chatApp').controller('userChatController' ,[
 
 
 angular.module('chatApp').controller('anonChatController',[
-    '$scope', 'socket', 'chatService', function($scope, socket, chatService) {
+    '$scope', 'socket', 'chatService', 'accountService', function($scope, socket, chatService, accountService) {
     // messages
     $scope.messages = [];
     // input
     $scope.content = {'content': ''};
-    // Session new message
+    // New Session
     $scope.createSession = function(){
         if(!$scope.session &&  $scope.content.content != ''){
             chatService.session($scope.user.username, function(data){
@@ -58,6 +58,7 @@ angular.module('chatApp').controller('anonChatController',[
             });
         }
     };
+    // New Message
     $scope.createMessage = function(){
         if($scope.session && $scope.content.content != ''){
             chatService.message($scope.content,
@@ -70,4 +71,35 @@ angular.module('chatApp').controller('anonChatController',[
             $scope.createSession();
         }
     };
+    // check follow state
+    $scope.checkFollowState = function(state){
+        $scope.user.follow = { visibility: state, text: '', state: false };
+        if(state){
+            accountService.check_follow($scope.user.username, function(data){
+               if(data.count > 0){
+                    $scope.user.follow.text = 'Un Follow';
+                    $scope.user.follow.state = true;
+               }else{
+                    $scope.user.follow.text = 'Follow';
+                    $scope.user.follow.state = false;
+               }
+            });
+        }
+    };
+    // Follow
+    $scope.do_follow = function(){
+       if($scope.user.follow.state){
+        // unfollow - DELETE
+        accountService.unfollow($scope.user.username, function(){
+            $scope.user.follow.state = false;
+            $scope.user.follow.text = 'Follow';
+        });
+       }else{
+        // follow - POST
+        accountService.follow($scope.user.username, function(){
+            $scope.user.follow.state = true;
+            $scope.user.follow.text = 'Un Follow';
+        });
+       }
+    }
 }]);

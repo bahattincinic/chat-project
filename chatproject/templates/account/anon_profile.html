@@ -27,11 +27,12 @@
                            <a href="javascript:void(0)" ng-bind="user.username"></a>
                         </div>
                          <!-- Follow -->
-                         <div ng-init="user.follow.status=false" ng-show="user.follow.visibility" class="cover-description-buttons">
+                         <div ng-init="checkFollowState({% if request.user.is_authenticated %}true{% else %}false{% endif %})"
+                              ng-show="user.follow.visibility" class="cover-description-buttons">
                                  <div id="subscribe31">
-                                     <div class="follow">
+                                     <div class="follow" ng-click="do_follow()">
                                         <span  ng-class="{'subscribe': !user.follow.state, 'unsubscribe': user.follow.state}"></span>
-                                         <span class="follow_text" ng-bind="user.follow.text"></span>
+                                        <span class="follow_text" ng-bind="user.follow.text"></span>
                                      </div>
                                      <div class="subscribe_btn">
                                  </div>
