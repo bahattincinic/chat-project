@@ -4,7 +4,6 @@
 {% block head %}
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
 <script type="text/javascript" src="{% static "js/socket.io.js" %}"></script>
-<script ></script>
 <script type="text/javascript">
 function getCookie(name) {
     var cookieValue = null;
@@ -46,42 +45,64 @@ $.ajaxSetup({
             // Send the token to same-origin, relative URLs only.
             // Send the token only if the method warrants CSRF protection
             // Using the CSRFToken value acquired earlier
+            console.log('beforeSend');
             xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
         }
     }
 });
 {% if request.user.is_authenticated %}
-var socket = io.connect('http://linux:8080');
+var socket = io.connect('http://l:8080');
 var username = '{{ request.user.username }}';
-
+socket.emit('active_connection', {username: username});
 socket.on('session_' + username, function(session) {
     // set session to ko
-    vm.session(JSON.parse(session));
-    var channel = 'session_' + vm.session().uuid;
-    socket.on(channel, function(data){
+    var session = JSON.parse(session);
+    vm.sessions.push(session);
+    var channel = 'session_' + session.uuid;
+    console.log('register to ' + channel);
+
+    // listen for messages on channel requested
+    socket.on(channel, function(data) {
         vm.messages.push(JSON.parse(data));
     });
+
+    // listen for disconnect event for this channel
+    socket.on('disconnected_' + session.uuid, function(data) {
+        console.log('disconnect received on channel, anon left');
+    });
 });
+
 {% endif %}
 
 var vm = {
     messages: ko.observableArray([]),
-    session: ko.observable({}),
-    uuid: function() {
-        return vm.session().uuid;
-    },
+    sessions: ko.observableArray([]),
     newsession: function() {
-        $.post(vm.url, function(data) {
-            vm.session(data);
-            var channel = 'session_' + vm.uuid();
-            // listen newly opened private channel
+        // first connect to node
+        $.post(vm.url, function(session) {
+            vm.sessions.push(session);
+            var channel = 'session_' + session.uuid;
+            console.log('register to ' + channel);
+
+            // listen for messages on out session
             socket.on(channel, function(data) {
                 var message = JSON.parse(data);
                 vm.messages.push(message);
             });
+
+            // listen for disconnected event for the session we created
+            socket.on('disconnected_' + session.uuid, function(data) {
+                console.log('disconnect received, we disconnected');
+            });
         }, 'json');
+    // });
     },
     messagetext: ko.observable(),
+    {% if request.user.is_authenticated %}
+    active_sessions_url: '/api/v1/account/{{request.user.username}}/sessions/active/',
+    {% else %}
+    active_sessions_url: null,
+    {% endif %}
     {% if request.user.username == 'balkan' %}
     url: '/api/v1/account/osman/sessions/',
     target: 'osman',
@@ -89,35 +110,82 @@ var vm = {
     url: '/api/v1/account/balkan/sessions/',
     target: 'balkan',
     {% endif %}
-    sendmessage: function() {
-        if (!vm.uuid()) {
-            console.log('errror, no session set!');
-            return false;
-        }
-        var url = '/api/v1/account/' + vm.session().target.username + '/sessions/' + vm.uuid() + '/messages/';
-        $.post(url, {'content': vm.messagetext()}).done(function(data){console.log(data);});
+    sendmessage: function(form) {
+        // console.log(form);
+        var context = ko.contextFor(form);
+        var data = context.$data;
+        var target_username = data.target.username;
+        var uuid = data.uuid;
+
+        // console.log(context);
+        var url = '/api/v1/account/' + target_username + '/sessions/' + uuid + '/messages/';
+        console.log(url);
+        $.post(url, {'content': vm.messagetext()}).done(
+            function(data){ console.log(data);}
+
+        );
+    },
+    closesession: function(form) {
+        var context = ko.contextFor(form);
+        var data = context.$data;
+        var target_username = data.target.username;
+        var uuid = data.uuid;
+        console.log('close: ' + uuid);
+        socket.emit('disconnected_' + uuid,
+            {'user': "{{ request.user.username }}"}
+        );
     }
 };
 
-$(function() {ko.applyBindings(vm);});
+$(function() {
+    ko.applyBindings(vm);
+    // get active sessions from rest
+    // $.get(vm.active_sessions_url, function(data) {
+    //     // TODO: data.count > pagination.count ??
+    //     if (data.count > 0) {
+    //         console.log(data.count + 'number of active sessions found!');
+    //         // embed sessions
+    //         data.results.forEach(function(x){
+    //             console.log('adding session with uuid ' + x.uuid);
+    //             vm.sessions.push(x);
+    //             var channel = 'session_' + x.uuid;
+    //             // listen sessions
+    //             socket.on(channel, function(data) {
+    //                 vm.messages.push(JSON.parse(data));
+    //             });
+    //         });
+    //     }
+
+    // });
+});
 </script>
 {% endblock head %}
 
 {% block body %}
 
 {% if request.user.is_authenticated %}
-<button data-bind='click: newsession'>create session with <span data-bind='text: target'></span></button>
+<button data-bind='click: newsession, hasFocus: true'>create session with <span data-bind='text: target'></span></button>
+{# list sessions #}
+<legend>Sessions: </legend>
+<div class='listsessions' data-bind="foreach: sessions">
+    <form data-bind='submit: vm.sendmessage'>
+        <span data-bind="text: $index"></span>
+        <span data-bind='text: uuid'></span>
+        <input id='text' data-bind='value: vm.messagetext'>
+        <button type='submit'>Submit</button>
+    </form>
+    <form data-bind='submit: vm.closesession'>
+        <button type='submit'>Close</button>
+    </form>
+</div>
+
 {# list messages #}
+<legend>Messages: </legend>
 <div class='listmessages' data-bind="foreach: messages">
     <span data-bind='text: $index'></span>
     <span>DIR: <span data-bind='text: direction'></span></span>
     <span>content: <span data-bind='text: content'></span></span>
     <br>
-</div>
-
-<div class='sendmessage' data-bind='visible: vm.uuid()'>
-    <input id='text' data-bind='value: messagetext'></input>
-    <button data-bind='click: sendmessage'>Send</button>
 </div>
 {% else %}
 <span>not authenticated</span>

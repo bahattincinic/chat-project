@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import redis
+from redis.exceptions import WatchError
 from rest_framework.renderers import JSONRenderer
 from django.http.response import Http404
 from rest_framework import generics
@@ -8,8 +9,28 @@ from . import serializers
 from . import permissions
 from account.models import User
 from chat.models import ChatSession, AnonUser, ChatMessage
-from rest_framework.permissions import SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, AllowAny
 from chat.serializers import SessionSerializer, MessageSerializer
+
+
+class ActiveSessionAPIView(generics.ListAPIView):
+    serializer_class = SessionSerializer
+    permission_classes = (
+        permissions.IsPostOrActiveAuthenticated,
+        permissions.IsRequestingUserDiffThanUrl,
+    )
+    model = ChatSession
+
+    def get_queryset(self):
+        # get session uuids from redis
+        r = redis.StrictRedis()
+        username = self.kwargs.get('username')
+        session_key = "sessions_%s" % username
+        members = r.smembers(session_key)
+        print members
+        sessions = ChatSession.objects.filter(target__username=username, uuid__in=members)
+        print sessions
+        return sessions
 
 
 class SessionAPIView(generics.ListCreateAPIView):
@@ -43,10 +64,26 @@ class SessionAPIView(generics.ListCreateAPIView):
         obj.target = target
 
     def post_save(self, obj, created=False):
+        target_username = obj.target.username
         serializer = SessionSerializer(obj)
         data = JSONRenderer().render(serializer.data)
         print data
         r = redis.StrictRedis()
+        # ensures that connection will be returned to pool
+        # when context exists
+        with r.pipeline() as pipe:
+            while 1:
+                try:
+                    user_sessions_set = "sessions_%s" % target_username
+                    # watch this user's sessions
+                    pipe.watch(user_sessions_set)
+                    # enter multi
+                    pipe.multi()
+                    pipe.sadd(user_sessions_set, obj.uuid)
+                    pipe.execute()
+                    break
+                except WatchError:
+                    continue
         res = r.publish("session_%s" % obj.target.username, data)
         print res
 
@@ -94,6 +131,7 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
         print data
         r = redis.StrictRedis()
         uuid = self.kwargs.get('uuid')
+        print "publish message"
         res = r.publish("session_%s" % uuid, data)
         print res
 

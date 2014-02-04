@@ -2,6 +2,7 @@ from configs.base import *
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+DJANGO_STATIC = False
 
 LOGGING = {
    'version': 1,
