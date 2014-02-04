@@ -25,7 +25,8 @@ io.sockets.on('connection', function(socket) {
     console.log('active sockets len now: ' + all_sockets.length);
 
     subscriber.on('pmessage', function(pattern, channel, message) {
-        console.log('new message, channel:' + channel + ' pattern: ' + pattern);
+        // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
+
         // if (pattern == spattern) {
         //     console.log('sess pattern');
         //     // socket.join(channel);
@@ -65,6 +66,17 @@ io.sockets.on('connection', function(socket) {
             } else {
                 console.log('remaining sockets exists for user ' + socket.username);
             }
+        }
+    });
+
+    socket.on('user_disconnected', function(data) {
+        console.log("disconnected: " + data.user + " ses" + data.uuid);
+        console.log('socket id: ' + socket.id + " socket user: " + socket.username);
+        if (data.uuid) {
+            // inform other party about desertion
+            console.log('emit on: ' + 'disconnected_' + data.uuid);
+            // socket.emit('disconnected_' + data.uuid, data);
+            io.sockets.emit('disconnected_' + data.uuid, data);
         }
     });
 

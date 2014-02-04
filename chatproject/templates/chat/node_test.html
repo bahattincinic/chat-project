@@ -67,6 +67,7 @@ socket.on('session_' + username, function(session) {
     });
 
     // listen for disconnect event for this channel
+    console.log('listening disconnected event:  ' + 'disconnected_' + session.uuid);
     socket.on('disconnected_' + session.uuid, function(data) {
         console.log('disconnect received on channel, anon left');
     });
@@ -91,6 +92,7 @@ var vm = {
             });
 
             // listen for disconnected event for the session we created
+            console.log('listening disconnected event:  ' + 'disconnected_' + session.uuid);
             socket.on('disconnected_' + session.uuid, function(data) {
                 console.log('disconnect received, we disconnected');
             });
@@ -117,12 +119,10 @@ var vm = {
         var target_username = data.target.username;
         var uuid = data.uuid;
 
-        // console.log(context);
         var url = '/api/v1/account/' + target_username + '/sessions/' + uuid + '/messages/';
         console.log(url);
         $.post(url, {'content': vm.messagetext()}).done(
             function(data){ console.log(data);}
-
         );
     },
     closesession: function(form) {
@@ -130,9 +130,12 @@ var vm = {
         var data = context.$data;
         var target_username = data.target.username;
         var uuid = data.uuid;
-        console.log('close: ' + uuid);
-        socket.emit('disconnected_' + uuid,
-            {'user': "{{ request.user.username }}"}
+        console.log('close: ' + uuid + " socket " + socket.id);
+        socket.emit('user_disconnected',
+            {
+                'user': "{{ request.user.username }}",
+                'uuid': uuid,
+            }
         );
     }
 };
