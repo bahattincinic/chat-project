@@ -22,15 +22,34 @@ updater = redis.createClient();
 var all_sockets = [];
 io.sockets.on('connection', function(socket) {
     all_sockets.push(socket);
-    console.log('active sockets len now: ' + all_sockets.length);
+//    console.log('active sockets len now: ' + all_sockets.length);
 
     subscriber.on('pmessage', function(pattern, channel, message) {
         // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
-
         if (pattern == spattern) {
+            // this is session creation
             console.log('session username:' + socket.username + ' id: ' + socket.id);
-        } else if (pattern == mpattern){
+            var session = JSON.parse(message);
+            console.log(session.uuid);
+            if (socket.sessions) {
+                console.log('add to session array');
+                socket.sessions.push(message);
+            } else {
+                console.log('create new session array');
+                socket.sessions = [session.uuid];
+            }
+//            printAllSockets();
+        } else if (pattern == mpattern) {
+            // this is message notification
             console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
+            var m = JSON.parse(message);
+            console.log('message dir: ' + m.direction);
+            if (m.direction == 'TO_ANON') {
+                // update user
+                console.dir(m);
+                console.log('will update ' + m.session.target.username);
+                update_user(m.session.target.username);
+            }
         }
 
         socket.emit(channel, message);
@@ -41,7 +60,7 @@ io.sockets.on('connection', function(socket) {
         console.log("Socket disconnected: " + i);
         console.log('user disconnected: ' + socket.username);
         all_sockets.splice(i, 1); // remove element
-        console.log('active sockets len now: ' + all_sockets.length);
+//        console.log('active sockets len now: ' + all_sockets.length);
         // search for socket username
         if (socket.username) {
             // any client left for this user?
@@ -59,7 +78,7 @@ io.sockets.on('connection', function(socket) {
                 // inform all users and anon that this user really disconnected
                 io.sockets.emit('disconnected_' + socket.username);
             } else {
-                console.log('remaining sockets exists for user ' + socket.username);
+                console.log('remaining sockets does exists for user ' + socket.username);
             }
         }
     });
@@ -68,10 +87,24 @@ io.sockets.on('connection', function(socket) {
         console.log("disconnected: " + data.user + " ses" + data.uuid);
         console.log('socket id: ' + socket.id + " socket user: " + socket.username);
         if (data.uuid) {
-            // inform other party about desertion
-            console.log('emit on: ' + 'disconnected_' + data.uuid);
-            // socket.emit('disconnected_' + data.uuid, data);
-            io.sockets.emit('disconnected_' + data.uuid, data);
+            // find parties to inform
+            var pending_notification = [];
+            _.filter(all_sockets, function(i) {
+                if (i.sessions && _.contains(i.sessions, data.uuid)) {
+                    console.log('socket with session: ' + i.id);
+                    pending_notification.push(i);
+                }
+            });
+
+            // inform all parties
+            if (pending_notification.length > 0) {
+                pending_notification.forEach(function (socket) {
+                    socket.emit('disconnected_' + data.uuid, data);
+                });
+            }
+
+            // reset pending notification
+            pending_notification.length = 0;
         }
     });
 
@@ -79,17 +112,29 @@ io.sockets.on('connection', function(socket) {
         if (data.username) {
             socket.username = data.username;
             console.log('new user: ' + data.username);
-            // redis conn
-            var score = parseInt(moment().format('YYMMDDHHmm'));
-            var args = ["active_connections", score, socket.username];
-            var multi = updater.multi();
-            multi.zadd(args);
-            multi.exec(function(err, response) {
-                if (err) throw err;
-                console.log(response);
-            });
+            update_user(data.username);
         } else {
             console.log('no username in hear');
         }
     });
 });
+
+
+function update_user(username) {
+    // redis conn
+    var score = parseInt(moment().format('YYMMDDHHmm'));
+    var args = ["active_connections", score, username];
+    var multi = updater.multi();
+    multi.zadd(args);
+    multi.exec(function(err, response) {
+        if (err) throw err;
+        console.log(response);
+    });
+}
+
+function printAllSockets() {
+    console.log('print all sockets');
+    all_sockets.forEach(function(socket) {
+        console.dir(socket);
+    });
+}
