@@ -21,8 +21,8 @@ updater = redis.createClient();
 
 var all_sockets = [];
 io.sockets.on('connection', function(socket) {
+    console.log('on connection');
     all_sockets.push(socket);
-//    console.log('active sockets len now: ' + all_sockets.length);
 
     subscriber.on('pmessage', function(pattern, channel, message) {
         // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
@@ -35,7 +35,7 @@ io.sockets.on('connection', function(socket) {
                 console.log('add to session array');
                 socket.sessions.push(message);
             } else {
-                console.log('create new session array');
+                console.log('create new sessions array');
                 socket.sessions = [session.uuid];
             }
 //            printAllSockets();
@@ -45,8 +45,7 @@ io.sockets.on('connection', function(socket) {
             var m = JSON.parse(message);
             console.log('message dir: ' + m.direction);
             if (m.direction == 'TO_ANON') {
-                // update user
-                console.dir(m);
+                // update user when she send messages
                 console.log('will update ' + m.session.target.username);
                 update_user(m.session.target.username);
             }
@@ -59,8 +58,8 @@ io.sockets.on('connection', function(socket) {
         var i = all_sockets.indexOf(socket);
         console.log("Socket disconnected: " + i);
         console.log('user disconnected: ' + socket.username);
-        all_sockets.splice(i, 1); // remove element
 //        console.log('active sockets len now: ' + all_sockets.length);
+        all_sockets.splice(i, 1); // remove element
         // search for socket username
         if (socket.username) {
             // any client left for this user?
@@ -76,7 +75,21 @@ io.sockets.on('connection', function(socket) {
                 // remove from redis as well
                 updater.del('sessions_' + socket.username);
                 // inform all users and anon that this user really disconnected
-                io.sockets.emit('disconnected_' + socket.username);
+//                io.sockets.emit('disconnected_' + socket.username);
+                if (socket.sessions && socket.sessions.length > 0) {
+                    socket.sessions.forEach(function(session) {
+                        // find all sockets that has this session
+                        console.log("session to be closed " + session);
+                        _.filter(all_sockets, function(_socket) {
+                            if (_socket.sessions  && _socket.sessions.length > 0 && _.contains(_socket.sessions, session)) {
+                                _socket.emit('disconnected_' + session, {session: session});
+                                removeSessionFromSocketSessions(_socket, session);
+                            }
+                        });
+                    });
+                    // remove all sessions from removed socket
+                    socket.sessions.length = 0;
+                }
             } else {
                 console.log('remaining sockets does exists for user ' + socket.username);
             }
@@ -84,13 +97,14 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('user_disconnected', function(data) {
+        // triggered when user herself closes session voluntarily
         console.log("disconnected: " + data.user + " ses" + data.uuid);
         console.log('socket id: ' + socket.id + " socket user: " + socket.username);
         if (data.uuid) {
             // find parties to inform
             var pending_notification = [];
             _.filter(all_sockets, function(i) {
-                if (i.sessions && _.contains(i.sessions, data.uuid)) {
+                if (i.sessions && i.sessions.length > 0 &&  _.contains(i.sessions, data.uuid)) {
                     console.log('socket with session: ' + i.id);
                     pending_notification.push(i);
                 }
@@ -100,6 +114,7 @@ io.sockets.on('connection', function(socket) {
             if (pending_notification.length > 0) {
                 pending_notification.forEach(function (socket) {
                     socket.emit('disconnected_' + data.uuid, data);
+                    removeSessionFromSocketSessions(socket, data.uuid);
                 });
             }
 
@@ -137,4 +152,9 @@ function printAllSockets() {
     all_sockets.forEach(function(socket) {
         console.dir(socket);
     });
+}
+
+function removeSessionFromSocketSessions(socket, session_uuid) {
+    var k = socket.sessions.indexOf(session_uuid);
+    socket.sessions.splice(k, 1);
 }
