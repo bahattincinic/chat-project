@@ -33,7 +33,7 @@ io.sockets.on('connection', function(socket) {
             console.log(session.uuid);
             if (socket.sessions) {
                 console.log('add to session array');
-                socket.sessions.push(message);
+                socket.sessions.push(session.uuid);
             } else {
                 console.log('create new sessions array');
                 socket.sessions = [session.uuid];
@@ -97,8 +97,16 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('user_disconnected', function(data) {
+        console.log("---before----");
+        all_sockets.forEach(function(ii) {
+            console.log(">>> socket.username: " + ii.username);
+            ii.sessions.forEach(function(session) {
+                console.log(">>>   " + session);
+            });
+        });
+        console.log("---before----");
         // triggered when user herself closes session voluntarily
-        console.log("disconnected: " + data.user + " ses" + data.uuid);
+        console.log("disconnected: " + data.user + " session.id: " + data.uuid);
         console.log('socket id: ' + socket.id + " socket user: " + socket.username);
         if (data.uuid) {
             // find parties to inform
@@ -121,6 +129,15 @@ io.sockets.on('connection', function(socket) {
             // reset pending notification
             pending_notification.length = 0;
         }
+
+        console.log("---before----");
+        all_sockets.forEach(function(ii) {
+            console.log(">>> socket.username: " + ii.username);
+            ii.sessions.forEach(function(session) {
+                console.log(">>>   " + session);
+            });
+        });
+        console.log("---before----");
     });
 
     socket.on('active_connection', function(data) {

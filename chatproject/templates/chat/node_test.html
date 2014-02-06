@@ -66,20 +66,33 @@ socket.on('session_' + username, function(session) {
     });
 
     // listen for disconnect event for this channel
-    console.log('listening disconnected event:  ' + 'disconnected_' + session.uuid);
     socket.on('disconnected_' + session.uuid, function(data) {
-        console.log('disconnect received on channel, anon left');
+        vm.removesession(session.uuid);
     });
 });
 
 {% endif %}
 
 var vm = {
+    users: ko.observableArray([
+        { name: 'osman', url: '/api/v1/account/osman/sessions/'},
+        { name: 'kazim', url: '/api/v1/account/kazim/sessions/'},
+        { name: 'balkan', url: '/api/v1/account/balkan/sessions/'}
+    ]),
     messages: ko.observableArray([]),
     sessions: ko.observableArray([]),
-    newsession: function() {
+    removesession: function(session_uuid) {
+        vm.sessions.remove(function(session){return session.uuid == session_uuid});
+        // remove messages too
+        vm.messages.remove(function(message) {return message.session.uuid == session_uuid});
+    },
+    newsession: function(form) {
+        var context = ko.contextFor(form);
+        var data = context.$data;
+
+
         // first connect to node
-        $.post(vm.url, function(session) {
+        $.post(data.url, function(session) {
             vm.sessions.push(session);
             var channel = 'message_' + session.uuid;
 
@@ -90,9 +103,8 @@ var vm = {
             });
 
             // listen for disconnected event for the session we created
-            console.log('listening disconnected event:  ' + 'disconnected_' + session.uuid);
             socket.on('disconnected_' + session.uuid, function(data) {
-                console.log('disconnect received, we disconnected');
+                vm.removesession(session.uuid);
             });
         }, 'json');
     // });
@@ -103,15 +115,7 @@ var vm = {
     {% else %}
     active_sessions_url: null,
     {% endif %}
-    {% if request.user.username == 'balkan' %}
-    url: '/api/v1/account/osman/sessions/',
-    target: 'osman',
-    {% else %}
-    url: '/api/v1/account/balkan/sessions/',
-    target: 'balkan',
-    {% endif %}
     sendmessage: function(form) {
-        // console.log(form);
         var context = ko.contextFor(form);
         var data = context.$data;
         var target_username = data.target.username;
@@ -138,6 +142,10 @@ var vm = {
 
 $(function() {
     ko.applyBindings(vm);
+    {% if request.user.is_authenticated %}
+    vm.users.remove(function(user) {return user.name == '{{request.user.username}}'});
+    {% endif %}
+
     // get active sessions from rest
     // $.get(vm.active_sessions_url, function(data) {
     //     // TODO: data.count > pagination.count ??
@@ -161,14 +169,17 @@ $(function() {
 {% endblock head %}
 
 {% block body %}
-
 {% if request.user.is_authenticated %}
-<button data-bind='click: newsession, hasFocus: true'>create session with <span data-bind='text: target'></span></button>
+<div data-bind='foreach: users'>
+    <form data-bind='submit: vm.newsession'>
+        <button type='submit'>create session with <span data-bind='text: name'></span></button>
+    </form>
+</div>
+
 {# list sessions #}
 <legend>Sessions: </legend>
 <div class='listsessions' data-bind="foreach: sessions">
     <form data-bind='submit: vm.sendmessage'>
-        <span data-bind="text: $index"></span>
         <span data-bind='text: uuid'></span>
         <input id='text' data-bind='value: vm.messagetext'>
         <button type='submit'>Submit</button>
