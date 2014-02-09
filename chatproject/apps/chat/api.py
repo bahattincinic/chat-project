@@ -71,19 +71,21 @@ class SessionAPIView(generics.ListCreateAPIView):
         r = redis.StrictRedis()
         # ensures that connection will be returned to pool
         # when context exists
-        with r.pipeline() as pipe:
-            while 1:
-                try:
-                    user_sessions_set = "sessions_%s" % target_username
-                    # watch this user's sessions
-                    pipe.watch(user_sessions_set)
-                    # enter multi
-                    pipe.multi()
-                    pipe.sadd(user_sessions_set, obj.uuid)
-                    pipe.execute()
-                    break
-                except WatchError:
-                    continue
+        ## moved to node ##
+        # with r.pipeline() as pipe:
+        #     while 1:
+        #         try:
+        #             user_sessions_set = "sessions_%s" % target_username
+        #             # watch this user's sessions
+        #             pipe.watch(user_sessions_set)
+        #             # enter multi
+        #             pipe.multi()
+        #             pipe.sadd(user_sessions_set, obj.uuid)
+        #             pipe.execute()
+        #             break
+        #         except WatchError:
+        #             continue
+        ## moved to node ##
         res = r.publish("session_%s" % obj.target.username, data)
         print res
 

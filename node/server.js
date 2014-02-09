@@ -38,7 +38,9 @@ io.sockets.on('connection', function(socket) {
                 console.log('create new sessions array');
                 socket.sessions = [session.uuid];
             }
-//            printAllSockets();
+
+            // add to redis
+            addSessionToUser(socket.username, session.uuid);
         } else if (pattern == mpattern) {
             // this is message notification
             console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
@@ -47,7 +49,7 @@ io.sockets.on('connection', function(socket) {
             if (m.direction == 'TO_ANON') {
                 // update user when she send messages
                 console.log('will update ' + m.session.target.username);
-                update_user(m.session.target.username);
+                update_user_rank(m.session.target.username);
             }
         }
 
@@ -72,8 +74,6 @@ io.sockets.on('connection', function(socket) {
 
             if (!has_sockets) {
                 console.log('no sockets remaining for user ' + socket.username + " delete all sessions");
-                // remove from redis as well
-                updater.del('sessions_' + socket.username);
                 // inform all users and anon that this user really disconnected
 //                io.sockets.emit('disconnected_' + socket.username);
                 if (socket.sessions && socket.sessions.length > 0) {
@@ -144,7 +144,7 @@ io.sockets.on('connection', function(socket) {
         if (data.username) {
             socket.username = data.username;
             console.log('new user: ' + data.username);
-            update_user(data.username);
+            update_user_rank(data.username);
         } else {
             console.log('no username in hear');
         }
@@ -152,7 +152,7 @@ io.sockets.on('connection', function(socket) {
 });
 
 
-function update_user(username) {
+function update_user_rank(username) {
     // redis conn
     var score = parseInt(moment().format('YYMMDDHHmm'));
     var args = ["active_connections", score, username];
@@ -162,16 +162,27 @@ function update_user(username) {
         if (err) throw err;
         console.log(response);
     });
-}
+};
 
-function printAllSockets() {
-    console.log('print all sockets');
-    all_sockets.forEach(function(socket) {
-        console.dir(socket);
+
+function addSessionToUser(username, session__uuid, socket__id) {
+    var args = ["sessions_" + username, socket_id, session__uuid];
+    var multi = updater.multi();
+    multi.zadd(args);
+    multi.exec(function(err, response) {
+        if (err) throw err;
     });
-}
+};
+
 
 function removeSessionFromSocketSessions(socket, session_uuid) {
     var k = socket.sessions.indexOf(session_uuid);
     socket.sessions.splice(k, 1);
+    // remove from redis as well
+    var args = ["sessions_" + username, score, session_uuid];
+    var multi = updater.multi();
+    multi.zrem(args);
+    multi.exec(function(err, response) {
+        if (err) throw err;
+    });
 }
