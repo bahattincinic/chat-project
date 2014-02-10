@@ -4,70 +4,65 @@
 {% block title %}{{ request.user.username }} | The Chat{% endblock %}
 
 {% block body %}
+<div ng-controller="userChatController">
 <div class="row-body content-profile">
-         <!-- Cover/Profile Bar -->
-         <div class="twelve columns">
-            <div class="cover-container">
-               <div class="cover-content">
-                  <div class="cover-image" background-image="user.background" ng-init="user.background='/media/cover/{{ request.user.background }}'">
-                  </div>
-                  <div class="cover-description">
-                     <div class="cover-avatar-content">
-                        <div class="cover-avatar">
-                           <span ng-init="user.avatar='/media/avatar/{{ request.user.avatar }}'">
-                            <img ng-src="{[{ user.avatar }]}" />
-                           </span>
-                        </div>
-                     </div>
-                     <div class="cover-description-content">
-                        <span id="author3pricop"></span>
-                        <span id="time3pricop"></span>
-                        <div class="cover-username" ng-init="user.username='{{ request.user.username }}'">
-                           <a href="javascript:void(0)" ng-bind="user.username"></a>
-                        </div>
-                        <div class="cover-description-buttons">
-                           <div id="subscribe3"></div>
-                        </div>
-                     </div>
-                  </div>
+     <!-- Cover/Profile Bar -->
+     <div class="twelve columns">
+        <div class="cover-container">
+           <div class="cover-content">
+               <div id="user_statistics_count">
+                 <span class="span_margin">
+                      <a ng-click="getFollows()" style="color:#fff">
+                          Follows: <span ng-bind="user.followees"></span>
+                      </a>
+                  </span>
+                   <span class="span_margin">
+                      Followers: <span ng-bind="user.followers"></span>
+                  </span>
+                  <span>
+                      Session: <span ng-bind="user.session"></span>
+                  </span>
                </div>
-            </div>
-         </div>
+              <div class="cover-image" ng-style="{'background-image': 'url(' + user.background_url + ')'}"></div>
+              <div class="cover-description">
+                 <div class="cover-avatar-content">
+                    <div class="cover-avatar">
+                       <span>
+                        <img ng-src="{[{ user.avatar_url }]}" />
+                       </span>
+                    </div>
+                 </div>
+                 <div class="cover-description-content">
+                    <span id="author3pricop"></span>
+                    <span id="time3pricop"></span>
+                    <div class="cover-username">
+                       <a href="javascript:void(0)" ng-bind="user.username"></a>
+                    </div>
+                    <div class="cover-description-buttons">
+                       <div id="subscribe3"></div>
+                    </div>
+                     <div>
+                         <a href="javascript:void(0)" title="Change Profile Images">
+                             <div class="edit_profile_btn"></div>
+                         </a>
+                     </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+     </div>
 </div>
 
-<div class="row-body content-messages" ng-controller="userChatController">
-    <div class="chat_list two columns">
-        <div class="sidebar-container">
-        <div class="sidebar-content">
-            <div class="sidebar-header">Chat List</div>
-            <div class="sidebar-link" ng-repeat="item in session_list">
-                <a href="javascript:void(0)" ng-click="sessionChangeStatus($event, item)">
-                    <strong>{[{ item.anon.username }]}</strong>
-                </a>
-            </div>
-        </div>
-        </div>
-    </div>
 
-    <div class="nine columns" id="messages">
-        <div class="message-container">
-        <div class="message-content">
-            <div class="message-form-header" style="height: 17px;">
-                <div class="message-form-user"><img src="{% static "images/chat.png" %}"></div>
-                <span class="chat-username" ng-bind="active_session.anon.username"></span>
-                <span class="blocked-button" ng-click="blockSession()" ng-show="active_session.user"><a>Block</a></span>
-            </div>
-            <div class="chat-container">
-                <comment instance="active_session.messages"></comment>
-            </div>
-            <div class="message-divider"></div>
-            <div class="chat-form-inner" ng-show="active_session.anon">
-                <form ng-submit="createMessage()">
-                    <input id="chat" class="chat-user32" ng-model="content.content" placeholder="Write a message..." name="chat">
-                </form>
-            </div>
-        </div>
-        </div>
+<div class="row-body content-messages" ng-switch="page">
+    <!-- Follows -->
+    <div ng-switch-when="follows">
+        <div ng-include=" '/static/js/apps/views/account_follows.html' "></div>
     </div>
+    <!-- Chat -->
+    <div ng-switch-default>
+        <div ng-include=" '/static/js/apps/views/account_chat.html' "></div>
+    </div>
+</div>
 </div>
 {% endblock %}

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 from account.models import User, Report, Follow
+from django.conf import settings
 
 
 class BaseUserSerializer(serializers.ModelSerializer):
@@ -9,6 +10,9 @@ class BaseUserSerializer(serializers.ModelSerializer):
     """
     followers = serializers.SerializerMethodField('followers_count')
     followees = serializers.SerializerMethodField('followees_count')
+    session = serializers.SerializerMethodField('session_count')
+    avatar_url = serializers.SerializerMethodField('avatar_path')
+    background_url = serializers.SerializerMethodField('background_path')
     username = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True,
                                            format='%d-%m-%Y %H:%M',)
@@ -18,6 +22,15 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     def followees_count(self, obj):
         return obj.followees().count()
+
+    def session_count(self, obj):
+        return obj.chatsession_set.count()
+
+    def background_path(self, obj):
+        return '%s%s' % (settings.BACKGROUND_MEDIA_URL, obj.background)
+
+    def avatar_path(self, obj):
+        return '%s%s' % (settings.AVATAR_MEDIA_URL, obj.avatar)
 
     class Meta:
         abstract = True
@@ -42,7 +55,9 @@ class UserDetailSerializer(BaseUserSerializer):
         fields = ('username', 'email', 'created_at', 'location',
                   'avatar', 'background', 'is_sound_enabled', 'bio',
                   'follow_needs_approve', 'status',
-                  'last_notification_date', 'gender', 'followers', 'followees')
+                  'last_notification_date', 'gender',
+                  'followers', 'followees', 'session',
+                  'avatar_url', 'background_url')
 
 
 class AnonUserDetailSerializer(BaseUserSerializer):
@@ -53,7 +68,8 @@ class AnonUserDetailSerializer(BaseUserSerializer):
     class Meta:
         model = User
         fields = ('username', 'location', 'avatar', 'background',
-                  'bio', 'gender', 'followers', 'followees')
+                  'bio', 'gender', 'followers', 'followees', 'session',
+                  'avatar_url', 'background_url')
 
 
 class UserChangePasswordSerializer(serializers.Serializer):

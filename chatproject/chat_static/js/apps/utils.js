@@ -1,4 +1,4 @@
-angular.module('mainApp').run(['$rootScope', function($rootScope) {
+angular.module('mainApp').run(['$rootScope', '$location', 'accountService', function($rootScope, $location, accountService) {
 
  // Api Error format
  $rootScope.ErrorRenderer = function(data) {
@@ -8,5 +8,17 @@ angular.module('mainApp').run(['$rootScope', function($rootScope) {
    }, errors);
    return errors;
  };
+
+ // Get Active User
+ $rootScope.getActiveUser = function(callback){
+    var username = $location.absUrl().split('/');
+    if(username.length > 3){
+       accountService.user_profile(username[3], function(data){
+          callback(data.data);
+       });
+    }else{
+        callback({});
+    }
+ }
 
 }]);

@@ -72,15 +72,23 @@ angular.module('chatApp').factory('accountService', function($http){
     return {
         check_follow: function(username, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/follow/';
-            $http.get(url).success(successCallback, errorCallback);
+            $http.get(url).then(successCallback, errorCallback);
         },
         follow: function(username, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/follow/';
-            $http.post(url).success(successCallback, errorCallback);
+            $http.post(url).then(successCallback, errorCallback);
         },
         unfollow: function(username, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/follow/';
-            $http.delete(url).success(successCallback, errorCallback);
+            $http.delete(url).then(successCallback, errorCallback);
+        },
+        user_profile: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/';
+            $http.get(url).then(successCallback, errorCallback);
+        },
+        follows: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follows/';
+            $http.get(url, {params: payload}).then(successCallback, errorCallback);
         }
     }
 });
