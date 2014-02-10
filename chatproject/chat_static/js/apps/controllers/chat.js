@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('chatApp').controller('userChatController' ,[
-    '$scope', '$filter', 'socket','chatService', '$rootScope', 'accountService',
-        function($scope, $filter, socket, chatService, $rootScope, accountService) {
+    '$scope', '$filter', 'socket','chatService', '$rootScope', 'accountService', '$timeout',
+        function($scope, $filter, socket, chatService, $rootScope, accountService, $timeout) {
     // All Session list
     $scope.session_list = [];
     $scope.content = {'content': ''};
@@ -23,6 +23,7 @@ angular.module('chatApp').controller('userChatController' ,[
             });
             $scope.user.follows = [];
         });
+        $timeout(function(){$scope.is_loading = false;}, 500);
     });
 
     // Chat Session Close
@@ -55,7 +56,6 @@ angular.module('chatApp').controller('userChatController' ,[
         });
     };
 
-
     $scope.loadFollows = function(){
         $scope.user.follows_page.page = $scope.user.follows_page + 1;
         accountService.follows($scope.user.username, $scope.user.follows_page, function(data){
@@ -69,6 +69,7 @@ angular.module('chatApp').controller('userChatController' ,[
     $scope.goBack = function(){
         $scope.page = 'chat';
     }
+
 }]);
 
 

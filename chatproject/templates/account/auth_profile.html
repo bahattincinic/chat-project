@@ -9,6 +9,9 @@
      <!-- Cover/Profile Bar -->
      <div class="twelve columns">
         <div class="cover-container">
+            <div ng-init="is_loading=true" ng-show="is_loading" class="cover_loading animation">
+                <img src="/static/images/loading.gif" />
+            </div>
            <div class="cover-content">
                <div id="user_statistics_count">
                  <span class="span_margin">

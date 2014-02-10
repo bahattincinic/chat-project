@@ -2498,3 +2498,17 @@ a[ ng-click ] {
 .animation.ng-leave.ng-leave-active {
   opacity: 0;
 }
+
+.cover_loading{
+    background-color: #E0E0E0;
+    z-index:999;
+    position:absolute;
+    width: 98%;
+    height: 214px;
+    opacity: 0.8;
+}
+
+.cover_loading img {
+    margin-left: 47%;
+    margin-top: 12%;
+}
