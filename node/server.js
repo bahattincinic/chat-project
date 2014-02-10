@@ -4,6 +4,9 @@ var app = require('http').createServer(),
     _ = require('underscore');
     logger  = io.log,
     redis = require('redis');
+// used when storing socket values in redis
+var redisSocketPrefix = 'sockets_';
+var redisSessionPrefix = 'sessions_';
 
 app.listen(8080);
 
@@ -33,6 +36,7 @@ io.sockets.on('connection', function(socket) {
             console.log(session.uuid);
             if (socket.sessions) {
                 console.log('add to session array');
+                // TODO: bug here!
                 socket.sessions.push(session.uuid);
             } else {
                 console.log('create new sessions array');
@@ -40,7 +44,7 @@ io.sockets.on('connection', function(socket) {
             }
 
             // add to redis
-            addSessionToUser(socket.username, session.uuid);
+            addSessionToUser(socket.username, session.uuid, socket.id);
         } else if (pattern == mpattern) {
             // this is message notification
             console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
@@ -49,7 +53,8 @@ io.sockets.on('connection', function(socket) {
             if (m.direction == 'TO_ANON') {
                 // update user when she send messages
                 console.log('will update ' + m.session.target.username);
-                update_user_rank(m.session.target.username);
+                // TODO: find a better way to handle this!!
+                updateUserRank(m.session.target.username);
             }
         }
 
@@ -58,10 +63,10 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('disconnect', function () {
         var i = all_sockets.indexOf(socket);
-        console.log("Socket disconnected: " + i);
-        console.log('user disconnected: ' + socket.username);
-//        console.log('active sockets len now: ' + all_sockets.length);
+        console.log("Socket disconnected: " + socket.id);
+        console.log('User disconnected: ' + socket.username);
         all_sockets.splice(i, 1); // remove element
+
         // search for socket username
         if (socket.username) {
             // any client left for this user?
@@ -71,6 +76,9 @@ io.sockets.on('connection', function(socket) {
                     has_sockets = true;
                 }
             });
+
+            //
+            removeSocketFromUser(socket.username, socket.id);
 
             if (!has_sockets) {
                 console.log('no sockets remaining for user ' + socket.username + " delete all sessions");
@@ -130,21 +138,24 @@ io.sockets.on('connection', function(socket) {
             pending_notification.length = 0;
         }
 
-        console.log("---before----");
+        console.log("---after----");
         all_sockets.forEach(function(ii) {
             console.log(">>> socket.username: " + ii.username);
             ii.sessions.forEach(function(session) {
                 console.log(">>>   " + session);
             });
         });
-        console.log("---before----");
+        console.log("---after----");
     });
 
     socket.on('active_connection', function(data) {
         if (data.username) {
             socket.username = data.username;
             console.log('new user: ' + data.username);
-            update_user_rank(data.username);
+            // TODO: maybe merge here??
+            updateUserRank(data.username);
+            // add new socket to redis
+            addSocketToUser(data.username, socket.id);
         } else {
             console.log('no username in hear');
         }
@@ -152,8 +163,8 @@ io.sockets.on('connection', function(socket) {
 });
 
 
-function update_user_rank(username) {
-    // redis conn
+function updateUserRank(username) {
+    // score is current date
     var score = parseInt(moment().format('YYMMDDHHmm'));
     var args = ["active_connections", score, username];
     var multi = updater.multi();
@@ -165,24 +176,71 @@ function update_user_rank(username) {
 };
 
 
+function addSocketToUser(username, socket__id) {
+    if (username) {
+        updater.sadd(redisSocketPrefix + username, socket__id);
+    } else {
+        throw('no username....');
+    }
+};
+
 function addSessionToUser(username, session__uuid, socket__id) {
-    var args = ["sessions_" + username, socket_id, session__uuid];
+    var socket_args = [redisSocketPrefix + username, socket__id];
+    var session_args = [redisSessionPrefix + username, session__uuid];
     var multi = updater.multi();
-    multi.zadd(args);
+    // multi.sadd(socket_args);
+    multi.sadd(session_args);
     multi.exec(function(err, response) {
         if (err) throw err;
     });
 };
 
 
-function removeSessionFromSocketSessions(socket, session_uuid) {
-    var k = socket.sessions.indexOf(session_uuid);
+function removeSessionFromSocketSessions(socket, session__uuid) {
+    var k = socket.sessions.indexOf(session__uuid);
     socket.sessions.splice(k, 1);
-    // remove from redis as well
-    var args = ["sessions_" + username, score, session_uuid];
-    var multi = updater.multi();
-    multi.zrem(args);
-    multi.exec(function(err, response) {
+    // // remove from redis as well
+    var username = socket.username;
+    if (username) {
+        updater.srem(redisSessionPrefix + username, session__uuid);
+    } else {
+        throw('username not set for this socket while operation on redis');
+    }
+};
+
+function removeSocketFromUser(username, socket__id) {
+    console.log('removeSocketFromUser: ' + username + " id: " + socket__id);
+    // remove this socket from redis
+    updater.srem(redisSocketPrefix + username, socket__id);
+    // if there are no sockets left for this user, then
+    // delete all sessions and sockets
+    updater.scard(redisSocketPrefix + username, function(err, count) {
         if (err) throw err;
+        console.log(count + " number of sockets for " + username);
+
+        if (count == 0) {
+            console.log('deleting all for ' + username);
+            var multi = updater.multi();
+            multi.del(redisSocketPrefix + username);
+            multi.del(redisSessionPrefix + username);
+            multi.exec(function(err, response) {
+                if (err) throw err;
+            });
+        }
     });
-}
+
+    debugNodeSockets();
+};
+
+
+
+function debugNodeSockets() {
+    console.log("---before----");
+    all_sockets.forEach(function(ii) {
+        console.log(">>> socket.username: " + ii.username);
+        ii.sessions.forEach(function(session) {
+            console.log(">>>   " + session);
+        });
+    });
+    console.log("---before----");
+};
