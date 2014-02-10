@@ -2478,3 +2478,23 @@ a[ ng-click ] {
     cursor: pointer;
     text-decoration: none;
 }
+
+.animation.ng-enter, .animation.ng-leave{
+  -webkit-transition: 1s;
+}
+
+.animation.ng-enter {
+  opacity: 0;
+}
+
+.animation.ng-leave {
+  opacity: 1;
+}
+
+.animation.ng-enter.ng-enter-active {
+  opacity: 1;
+}
+
+.animation.ng-leave.ng-leave-active {
+  opacity: 0;
+}
