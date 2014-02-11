@@ -2,7 +2,7 @@ var app = require('http').createServer(),
     io = require('socket.io').listen(app),
     moment = require('moment'),
     _ = require('underscore');
-    logger  = io.log,
+    logger = io.log,
     redis = require('redis');
 // used when storing socket values in redis
 var redisSocketPrefix = 'sockets_';
@@ -16,49 +16,72 @@ io.configure(function() {
 });
 
 subscriber = redis.createClient();
-var spattern = "session_*";
-subscriber.psubscribe(spattern);
+var spattern = "new_session";
+// subscriber.psubscribe(spattern);
 var mpattern = "message_*";
 subscriber.psubscribe(mpattern);
 updater = redis.createClient();
 
+function Session(target, uuid, anon, anon_socket_id) {
+    this.target = target;
+    this.uuid = uuid;
+    this.anon = anon;
+    this.anon_socket_id = anon_socket_id;
+}
+
 var all_sockets = [];
+var all_sessions = [];
 io.sockets.on('connection', function(socket) {
     console.log('on connection');
     all_sockets.push(socket);
 
-    subscriber.on('pmessage', function(pattern, channel, message) {
-        // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
-        if (pattern == spattern) {
-            // this is session creation
-            console.log('session username:' + socket.username + ' id: ' + socket.id);
-            var session = JSON.parse(message);
-            console.log(session.uuid);
-            if (socket.sessions) {
-                console.log('add to session array');
-                // TODO: bug here!
-                socket.sessions.push(session.uuid);
-            } else {
-                console.log('create new sessions array');
-                socket.sessions = [session.uuid];
-            }
+    // subscriber.on('pmessage', function(pattern, channel, message) {
+    //     // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
+    //     if (pattern == spattern) {
+    //         // this is session creation
+    //         console.log('session username:' + socket.username + ' id: ' + socket.id);
+    //         // var session = JSON.parse(message);
+    //         // console.log(session.uuid);
+    //         // console.dir(session);
+    //         if (socket.sessions) {
+    //             console.log('add to session array');
+    //             // TODO: bug here!
+    //             socket.sessions.push(message);
+    //         } else {
+    //             console.log('create new sessions array');
+    //             socket.sessions = [message];
+    //         }
 
-            // add to redis
-            addSessionToUser(socket.username, session.uuid, socket.id);
-        } else if (pattern == mpattern) {
-            // this is message notification
-            console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
-            var m = JSON.parse(message);
-            console.log('message dir: ' + m.direction);
-            if (m.direction == 'TO_ANON') {
-                // update user when she send messages
-                console.log('will update ' + m.session.target.username);
-                // TODO: find a better way to handle this!!
-                updateUserRank(m.session.target.username);
-            }
+    //         startSession(message);
+    //         // add to redis
+    //         // addSessionToUser(socket.username, session.uuid, socket.id);
+    //     } else if (pattern == mpattern) {
+    //         // this is message notification
+    //         console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
+    //         var m = JSON.parse(message);
+    //         console.log('message dir: ' + m.direction);
+    //         if (m.direction == 'TO_ANON') {
+    //             // update user when she send messages
+    //             console.log('will update ' + m.session.target.username);
+    //             // TODO: find a better way to handle this!!
+    //             // updateUserRank(m.session.target.username);
+    //         }
+    //     }
+
+    //     // socket.emit(channel, message);
+    // });
+
+    socket.on('initiate_session', function(data) {
+        console.log('initiate_session');
+        console.dir(data);
+        if (data.anon && data.uuid && data.target) {
+            var session = new Session(data.target, data.uuid, data.anon, socket.id);
+            all_sessions.push(session);
+            debugNodeSessions();
+            // startSession();
+        } else {
+            throw('ewr!!');
         }
-
-        socket.emit(channel, message);
     });
 
     socket.on('disconnect', function () {
@@ -162,6 +185,11 @@ io.sockets.on('connection', function(socket) {
     });
 });
 
+// function startSession(session__uuid) {
+//     var session = JSON.parse(updater.get("session_" + session__uuid));
+//     console.dir(session);
+// };
+
 
 function updateUserRank(username) {
     // score is current date
@@ -241,6 +269,17 @@ function debugNodeSockets() {
         ii.sessions.forEach(function(session) {
             console.log(">>>   " + session);
         });
+    });
+    console.log("---before----");
+};
+
+
+function debugNodeSessions() {
+    console.log("---before----");
+    all_sessions.forEach(function(ii) {
+        console.log(">>> session.target: " + ii.target);
+        console.log(">>> session.uuid: " + ii.uuid);
+        console.log(">>> session.anon: " + ii.anon);
     });
     console.log("---before----");
 };

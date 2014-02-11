@@ -54,7 +54,7 @@ $.ajaxSetup({
 var socket = io.connect('http://l:8080');
 var username = '{{ request.user.username }}';
 socket.emit('active_connection', {username: username});
-socket.on('session_' + username, function(session) {
+socket.on('new_session', function(session) {
     // set session to ko
     var session = JSON.parse(session);
     vm.sessions.push(session);
@@ -70,7 +70,6 @@ socket.on('session_' + username, function(session) {
         vm.removesession(session.uuid);
     });
 });
-
 {% endif %}
 
 var vm = {
@@ -90,22 +89,25 @@ var vm = {
         var context = ko.contextFor(form);
         var data = context.$data;
 
-
         // first connect to node
         $.post(data.url, function(session) {
-            vm.sessions.push(session);
-            var channel = 'message_' + session.uuid;
+            socket.emit('initiate_session', { 'anon': session.anon.username,
+                                              'uuid': session.uuid,
+                                              'target': session.target.username});
+            // console.log("opening session, socket.id: " + socket.id);
+            // vm.sessions.push(session);
+            // var channel = 'message_' + session.uuid;
 
-            // listen for messages on out session
-            socket.on(channel, function(data) {
-                var message = JSON.parse(data);
-                vm.messages.push(message);
-            });
+            // // listen for messages on out session
+            // socket.on(channel, function(data) {
+            //     var message = JSON.parse(data);
+            //     vm.messages.push(message);
+            // });
 
-            // listen for disconnected event for the session we created
-            socket.on('disconnected_' + session.uuid, function(data) {
-                vm.removesession(session.uuid);
-            });
+            // // listen for disconnected event for the session we created
+            // socket.on('disconnected_' + session.uuid, function(data) {
+            //     vm.removesession(session.uuid);
+            // });
         }, 'json');
     // });
     },
