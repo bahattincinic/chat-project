@@ -89,6 +89,11 @@ angular.module('chatApp').factory('accountService', function($http){
         follows: function(username, payload, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/follows/';
             $http.get(url, {params: payload}).then(successCallback, errorCallback);
+        },
+        update_profile: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/';
+            payload = angular.toJson(payload);
+            $http.put(url, payload).then(successCallback, errorCallback);
         }
     }
 });

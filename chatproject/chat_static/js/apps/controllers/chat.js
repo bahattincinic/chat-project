@@ -6,6 +6,18 @@ angular.module('chatApp').controller('userChatController' ,[
     // All Session list
     $scope.session_list = [];
     $scope.content = {'content': ''};
+    // user profile form
+    $scope.form = {
+      gender: [
+          {id:'male', name:'Male'},
+          {id:'female', name:'Female'},
+          {id:'other', name:'Other'}
+      ],
+      sound: [
+          {id:true, name:'On'},
+          {id:false, name:'Off'}
+      ]
+    };
 
     $rootScope.getActiveUser(function(data){
         $scope.user = data;
@@ -68,7 +80,24 @@ angular.module('chatApp').controller('userChatController' ,[
 
     $scope.goBack = function(){
         $scope.page = 'chat';
-    }
+    };
+
+    $scope.update_profile = function(){
+        var form = angular.copy($scope.user);
+        delete form.avatar;
+        delete form.background;
+        accountService.update_profile($scope.user.username, form, function(data){
+            $scope.form.state = true;
+            $scope.form.visibility = true;
+            $scope.form.error_header = 'Settings Saved';
+            $scope.form.error_message = 'Your settings has been successfully updated.';
+        }, function(data){
+            $scope.form.state = false;
+            $scope.form.visibility = true;
+            $scope.form.error_header = 'Settings not saved';
+            $scope.form.error_message = data.data.non_field_errors;
+        });
+    };
 
 }]);
 
