@@ -97,8 +97,8 @@ class SessionAPIView(generics.ListCreateAPIView):
             pipe.set(session_key, data)
             pipe.execute()
         ########
-        res = r.publish("new_session", obj.uuid)
-        print res
+        # res = r.publish("new_session", obj.uuid)
+        # print res
 
 
 class SessionDetailAPIView(generics.RetrieveAPIView):
@@ -138,15 +138,15 @@ class SessionMessageAPIView(generics.ListCreateAPIView):
 
         obj.session = session
 
-    def post_save(self, obj, created=False):
-        serializer = MessageSerializer(obj)
-        data = JSONRenderer().render(serializer.data)
-        print data
-        r = redis.StrictRedis()
-        uuid = self.kwargs.get('uuid')
-        print "publish message"
-        res = r.publish("message_%s" % uuid, data)
-        print res
+    # def post_save(self, obj, created=False):
+    #     serializer = MessageSerializer(obj)
+    #     data = JSONRenderer().render(serializer.data)
+    #     print data
+    #     r = redis.StrictRedis()
+    #     uuid = self.kwargs.get('uuid')
+    #     print "publish message"
+    #     res = r.publish("message_%s" % uuid, data)
+    #     print res
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:

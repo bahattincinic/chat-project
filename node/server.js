@@ -8,7 +8,8 @@ var app = require('http').createServer(),
 var redisSocketPrefix = 'sockets_';
 var redisSessionPrefix = 'sessions_';
 
-app.listen(8080);
+app.listen(9999);
+
 
 io.configure(function() {
     io.set('close timeout', 60*60*24); // 24h
@@ -23,10 +24,9 @@ subscriber.psubscribe(mpattern);
 updater = redis.createClient();
 
 function Session(target, uuid, anon, anon_socket_id) {
-    this.target = target;
+    this.target = {'username': target};
     this.uuid = uuid;
-    this.anon = anon;
-    this.anon_socket_id = anon_socket_id;
+    this.anon = {'username': anon, 'socket_id': anon_socket_id};
 }
 
 var all_sockets = [];
@@ -75,30 +75,73 @@ io.sockets.on('connection', function(socket) {
         console.log('initiate_session');
         console.dir(data);
         if (data.anon && data.uuid && data.target) {
-            var session = new Session(data.target, data.uuid, data.anon, socket.id);
+            var session = new Session(data.target,
+                                      data.uuid,
+                                      data.anon,
+                                      socket.id);
             all_sessions.push(session);
             debugNodeSessions();
             // find all the sockets of the target
             // and emit to all of 'em
             var this_sessions_sockets = [socket];
             _.filter(all_sockets, function(i) {
-                if (i.username == socket.username) {
+                // get all sockets of target
+                if (i.username == data.target) {
                     if (i.sessions) {
-                        i.sessions.push(data.uuid);
+                        i.sessions.push(session);
                     } else {
-                        i.sessions = [data.uuid];
+                        i.sessions = [session];
                     }
 
                     this_sessions_sockets.push(i);
                 }
             });
+
             // open session in all of them
             this_sessions_sockets.forEach(function(ii) {
-                ii.emit('new_session', {'uuid': data.uuid});
+                ii.emit('new_session', session);
             });
         } else {
             throw('eww!!');
         }
+    });
+
+    socket.on('message', function(message) {
+        console.log('message');
+        console.dir(message);
+        if (!(message.content && message.direction && message.session)) {
+            throw('bad message, bad kitty!!');
+        }
+
+        var session = _.find(all_sessions, function(i){
+            return i.uuid == message.session.uuid;
+        });
+
+        var target_sockets = _.filter(all_sockets, function(i) {
+            return i.username == message.session.target.username;
+        });
+
+        if (!(session && target_sockets.length > 0)) {
+            console.dir(session);
+            throw('eww!');
+        }
+
+        var anon_socket = _.find(all_sockets, function(i) {
+            return i.id == session.anon.socket_id;
+        });
+
+        if (!anon_socket) {
+            throw('not anon socket');
+        }
+
+        // add socket of anon to target sockets
+        target_sockets.push(anon_socket);
+        // emit to all parties
+        target_sockets.forEach(function(socket){
+            socket.emit('new_message', message);
+        });
+
+        target_sockets.length = 0;
     });
 
     socket.on('disconnect', function () {
@@ -148,9 +191,13 @@ io.sockets.on('connection', function(socket) {
         console.log("---before----");
         all_sockets.forEach(function(ii) {
             console.log(">>> socket.username: " + ii.username);
-            ii.sessions.forEach(function(session) {
-                console.log(">>>   " + session);
-            });
+            if (ii.sessions && ii.sessions.length > 0) {
+                ii.sessions.forEach(function(session) {
+                    console.log(">>>   " + session);
+                });
+            } else {
+                console.log('no sessions for this socket');
+            }
         });
         console.log("---before----");
         // triggered when user herself closes session voluntarily
@@ -181,9 +228,13 @@ io.sockets.on('connection', function(socket) {
         console.log("---after----");
         all_sockets.forEach(function(ii) {
             console.log(">>> socket.username: " + ii.username);
-            ii.sessions.forEach(function(session) {
-                console.log(">>>   " + session);
-            });
+            if (ii.sessions) {
+                ii.sessions.forEach(function(session) {
+                    console.log(">>>   " + session);
+                });
+            } else {
+                console.log('no sessions for ' + ii.username);
+            }
         });
         console.log("---after----");
     });
@@ -201,11 +252,6 @@ io.sockets.on('connection', function(socket) {
         }
     });
 });
-
-// function startSession(session__uuid) {
-//     var session = JSON.parse(updater.get("session_" + session__uuid));
-//     console.dir(session);
-// };
 
 
 function updateUserRank(username) {
@@ -282,9 +328,11 @@ function debugNodeSockets() {
     console.log("---before----");
     all_sockets.forEach(function(ii) {
         console.log(">>> socket.username: " + ii.username);
-        ii.sessions.forEach(function(session) {
-            console.log(">>>   " + session);
-        });
+        if (ii.sessions) {
+            ii.sessions.forEach(function(session) {
+                console.log(">>>   " + session);
+            });
+        }
     });
     console.log("---before----");
 };
@@ -293,9 +341,9 @@ function debugNodeSockets() {
 function debugNodeSessions() {
     console.log("---before----");
     all_sessions.forEach(function(ii) {
-        console.log(">>> session.target: " + ii.target);
+        console.dir(">>> session.target: " + ii.target);
         console.log(">>> session.uuid: " + ii.uuid);
-        console.log(">>> session.anon: " + ii.anon);
+        console.dir(">>> session.anon: " + ii.anon);
     });
     console.log("---before----");
 };

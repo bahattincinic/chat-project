@@ -51,12 +51,12 @@ $.ajaxSetup({
     }
 });
 {% if request.user.is_authenticated %}
-var socket = io.connect('http://l:8080');
+var socket = io.connect('http://l:9999');
 var username = '{{ request.user.username }}';
 socket.emit('active_connection', {username: username});
+// on new sessions for this client
 socket.on('new_session', function(session) {
     // set session to ko
-    var session = JSON.parse(session);
     vm.sessions.push(session);
     var channel = 'message_' + session.uuid;
 
@@ -70,6 +70,11 @@ socket.on('new_session', function(session) {
         vm.removesession(session.uuid);
     });
 });
+// on new messages for this client
+socket.on('new_message', function(message) {
+    vm.messages.push(message);
+});
+
 {% endif %}
 
 var vm = {
@@ -91,9 +96,9 @@ var vm = {
 
         // first connect to node
         $.post(data.url, function(session) {
-            socket.emit('initiate_session', { 'anon': session.anon.username,
-                                              'uuid': session.uuid,
-                                              'target': session.target.username});
+            socket.emit('initiate_session', {'anon': session.anon.username,
+                                             'uuid': session.uuid,
+                                             'target': session.target.username});
             // console.log("opening session, socket.id: " + socket.id);
             // vm.sessions.push(session);
             // var channel = 'message_' + session.uuid;
@@ -123,10 +128,13 @@ var vm = {
         var target_username = data.target.username;
         var uuid = data.uuid;
 
+        // console.log(data);
+
         var url = '/api/v1/account/' + target_username + '/sessions/' + uuid + '/messages/';
-        $.post(url, {'content': vm.messagetext()}).done(
-            function(data){ console.log(data);}
-        );
+        $.post(url, {'content': vm.messagetext()}).done(function(data) {
+                console.log(data);
+                socket.emit('message', data);
+            });
     },
     closesession: function(form) {
         var context = ko.contextFor(form);
