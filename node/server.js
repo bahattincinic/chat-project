@@ -79,8 +79,16 @@ io.sockets.on('connection', function(socket) {
             all_sessions.push(session);
             debugNodeSessions();
             // startSession();
+            // find all the sockets of the target
+            // and emit to all of 'em
+            var this_sessions_sockets = [socket,];
+            _.filter(all_sockets, function(i) {
+                if (i.username == socket.username) {
+                    has_sockets = true;
+                }
+            });
         } else {
-            throw('ewr!!');
+            throw('eww!!');
         }
     });
 
@@ -259,7 +267,6 @@ function removeSocketFromUser(username, socket__id) {
 
     debugNodeSockets();
 };
-
 
 
 function debugNodeSockets() {
