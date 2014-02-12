@@ -78,14 +78,23 @@ io.sockets.on('connection', function(socket) {
             var session = new Session(data.target, data.uuid, data.anon, socket.id);
             all_sessions.push(session);
             debugNodeSessions();
-            // startSession();
             // find all the sockets of the target
             // and emit to all of 'em
-            var this_sessions_sockets = [socket,];
+            var this_sessions_sockets = [socket];
             _.filter(all_sockets, function(i) {
                 if (i.username == socket.username) {
-                    has_sockets = true;
+                    if (i.sessions) {
+                        i.sessions.push(data.uuid);
+                    } else {
+                        i.sessions = [data.uuid];
+                    }
+
+                    this_sessions_sockets.push(i);
                 }
+            });
+            // open session in all of them
+            this_sessions_sockets.forEach(function(ii) {
+                ii.emit('new_session', {'uuid': data.uuid});
             });
         } else {
             throw('eww!!');
