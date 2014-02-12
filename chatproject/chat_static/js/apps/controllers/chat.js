@@ -12,12 +12,10 @@ angular.module('chatApp').controller('userChatController' ,[
           {id:'male', name:'Male'},
           {id:'female', name:'Female'},
           {id:'other', name:'Other'}
-      ],
-      sound: [
+      ], sound: [
           {id:true, name:'On'},
           {id:false, name:'Off'}
-      ]
-    };
+      ]};
 
     $rootScope.getActiveUser(function(data){
         $scope.user = data;
@@ -95,7 +93,27 @@ angular.module('chatApp').controller('userChatController' ,[
             $scope.form.state = false;
             $scope.form.visibility = true;
             $scope.form.error_header = 'Settings not saved';
-            $scope.form.error_message = data.data.non_field_errors;
+            $scope.form.error_message = '';
+            angular.forEach(data.data, function(value, key){
+                $scope.form.error_message += ' ' +  value;
+            });
+        });
+    };
+
+    $scope.change_password = function(){
+        accountService.change_password($scope.user.username, $scope.user, function(){
+            $scope.form.state = true;
+            $scope.form.visibility = true;
+            $scope.form.error_header = 'Settings Saved';
+            $scope.form.error_message = 'Password Changed';
+        }, function(data){
+            $scope.form.state = false;
+            $scope.form.visibility = true;
+            $scope.form.error_header = 'Settings not saved';
+            $scope.form.error_message = '';
+            angular.forEach(data.data, function(value, key){
+                $scope.form.error_message += value[0];
+            });
         });
     };
 

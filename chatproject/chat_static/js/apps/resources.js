@@ -94,6 +94,11 @@ angular.module('chatApp').factory('accountService', function($http){
             var url = '/api/v1/account/' + username + '/';
             payload = angular.toJson(payload);
             $http.put(url, payload).then(successCallback, errorCallback);
+        },
+        change_password: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/change-password/';
+            payload = angular.toJson(payload);
+            $http.put(url, payload).then(successCallback, errorCallback);
         }
     }
 });
