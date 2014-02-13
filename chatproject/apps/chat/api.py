@@ -63,42 +63,42 @@ class SessionAPIView(generics.ListCreateAPIView):
                                            exc=Http404())
         obj.target = target
 
-    def post_save(self, obj, created=False):
-        target_username = obj.target.username
-        serializer = SessionSerializer(obj)
-        data = JSONRenderer().render(serializer.data)
-        print data
-        r = redis.StrictRedis()
-        # ensures that connection will be returned to pool
-        # when context exists
-        # with r.pipeline() as pipe:
-        #     while 1:
-        #         try:
-        #             user_sessions_set = "sessions_%s" % target_username
-        #             # watch this user's sessions
-        #             pipe.watch(user_sessions_set)
-        #             # enter multi
-        #             pipe.multi()
-        #             pipe.sadd(user_sessions_set, obj.uuid)
-        #             pipe.set()
-        #             pipe.execute()
-        #             break
-        #         except WatchError:
-        #             continue
-        ########
-        session_key = 'session_%s' % obj.uuid
-        with r.pipeline() as pipe:
-            user_sessions_set = "sessions_%s" % target_username
-            # enter multi
-            pipe.multi()
-            # add this session to users sessions
-            pipe.sadd(user_sessions_set, obj.uuid)
-            # write this session to redis
-            pipe.set(session_key, data)
-            pipe.execute()
-        ########
-        # res = r.publish("new_session", obj.uuid)
-        # print res
+    # def post_save(self, obj, created=False):
+    #     target_username = obj.target.username
+    #     serializer = SessionSerializer(obj)
+    #     data = JSONRenderer().render(serializer.data)
+    #     print data
+    #     r = redis.StrictRedis()
+    #     # ensures that connection will be returned to pool
+    #     # when context exists
+    #     # with r.pipeline() as pipe:
+    #     #     while 1:
+    #     #         try:
+    #     #             user_sessions_set = "sessions_%s" % target_username
+    #     #             # watch this user's sessions
+    #     #             pipe.watch(user_sessions_set)
+    #     #             # enter multi
+    #     #             pipe.multi()
+    #     #             pipe.sadd(user_sessions_set, obj.uuid)
+    #     #             pipe.set()
+    #     #             pipe.execute()
+    #     #             break
+    #     #         except WatchError:
+    #     #             continue
+    #     ########
+    #     session_key = 'session_%s' % obj.uuid
+    #     with r.pipeline() as pipe:
+    #         user_sessions_set = "sessions_%s" % target_username
+    #         # enter multi
+    #         pipe.multi()
+    #         # add this session to users sessions
+    #         pipe.sadd(user_sessions_set, obj.uuid)
+    #         # write this session to redis
+    #         pipe.set(session_key, data)
+    #         pipe.execute()
+    #     ########
+    #     # res = r.publish("new_session", obj.uuid)
+    #     # print res
 
 
 class SessionDetailAPIView(generics.RetrieveAPIView):

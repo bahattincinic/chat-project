@@ -16,11 +16,11 @@ io.configure(function() {
     io.set('log level', 1);
 });
 
-subscriber = redis.createClient();
-var spattern = "new_session";
-// subscriber.psubscribe(spattern);
-var mpattern = "message_*";
-subscriber.psubscribe(mpattern);
+// subscriber = redis.createClient();
+// var spattern = "new_session";
+// // subscriber.psubscribe(spattern);
+// var mpattern = "message_*";
+// subscriber.psubscribe(mpattern);
 updater = redis.createClient();
 
 function Session(target, uuid, anon, anon_socket_id) {
@@ -35,42 +35,6 @@ io.sockets.on('connection', function(socket) {
     console.log('on connection');
     all_sockets.push(socket);
 
-    // subscriber.on('pmessage', function(pattern, channel, message) {
-    //     // console.log('new message, channel:' + channel + ' pattern: ' + pattern);
-    //     if (pattern == spattern) {
-    //         // this is session creation
-    //         console.log('session username:' + socket.username + ' id: ' + socket.id);
-    //         // var session = JSON.parse(message);
-    //         // console.log(session.uuid);
-    //         // console.dir(session);
-    //         if (socket.sessions) {
-    //             console.log('add to session array');
-    //             // TODO: bug here!
-    //             socket.sessions.push(message);
-    //         } else {
-    //             console.log('create new sessions array');
-    //             socket.sessions = [message];
-    //         }
-
-    //         startSession(message);
-    //         // add to redis
-    //         // addSessionToUser(socket.username, session.uuid, socket.id);
-    //     } else if (pattern == mpattern) {
-    //         // this is message notification
-    //         console.log('message pattern: ' + socket.username + ' id: ' + socket.id);
-    //         var m = JSON.parse(message);
-    //         console.log('message dir: ' + m.direction);
-    //         if (m.direction == 'TO_ANON') {
-    //             // update user when she send messages
-    //             console.log('will update ' + m.session.target.username);
-    //             // TODO: find a better way to handle this!!
-    //             // updateUserRank(m.session.target.username);
-    //         }
-    //     }
-
-    //     // socket.emit(channel, message);
-    // });
-
     socket.on('initiate_session', function(data) {
         console.log('initiate_session');
         console.dir(data);
@@ -84,7 +48,7 @@ io.sockets.on('connection', function(socket) {
             // find all the sockets of the target
             // and emit to all of 'em
             var this_sessions_sockets = [socket];
-            _.filter(all_sockets, function(i) {
+            all_sockets.forEach(function(i){
                 // get all sockets of target
                 if (i.username == data.target) {
                     if (i.sessions) {
@@ -154,29 +118,14 @@ io.sockets.on('connection', function(socket) {
         if (socket.username) {
             // redis op
             removeSocketFromUser(socket.username, socket.id);
-            // any client left for this user?
 
-            var has_sockets = false;
-            _.filter(all_sockets, function(i) {
-                if (i.username == socket.username) {
-                    has_sockets = true;
-                }
-            });
-
-            //
+            // any other sockets left for this user
             if (_.find(all_sockets, function(i){return i.username == socket.username}) == undefined) {
-                console.log('no sockets remaining for user ' + socket.username + " delete all sessions");
+                console.log('no sockets remaining: ' + socket.username + " delete all sessions");
                 // inform all users and anon that this user really disconnected
                 if (socket.sessions && socket.sessions.length > 0) {
                     socket.sessions.forEach(function(session) {
-                        // find all sockets that has this session
-                        console.log("session to be closed " + session);
-                        _.filter(all_sockets, function(_socket) {
-                            if (_socket.sessions  && _socket.sessions.length > 0 && _.contains(_socket.sessions, session)) {
-                                _socket.emit('disconnected_' + session, {session: session});
-                                removeSessionFromSocketSessions(_socket, session);
-                            }
-                        });
+                        closeSession(session);
                     });
                     // remove all sessions from removed socket
                     socket.sessions.length = 0;
@@ -191,28 +140,9 @@ io.sockets.on('connection', function(socket) {
         debugNodeSockets();
         // triggered when user herself closes session voluntarily
         console.log("disconnected: " + data.user + " session.id: " + data.uuid);
-        console.log('socket id: ' + socket.id + " socket user: " + socket.username);
-        if (data.uuid) {
-            // find parties to inform
-            var pending_notification = [];
-            _.filter(all_sockets, function(i) {
-                if (i.sessions && i.sessions.length > 0 &&  _.contains(i.sessions, data.uuid)) {
-                    console.log('socket with session: ' + i.id);
-                    pending_notification.push(i);
-                }
-            });
+        console.log('socket.id: ' + socket.id + " socket.user: " + socket.username);
+        closeSession(data);
 
-            // inform all parties
-            if (pending_notification.length > 0) {
-                pending_notification.forEach(function (socket) {
-                    socket.emit('disconnected_' + data.uuid, data);
-                    removeSessionFromSocketSessions(socket, data.uuid);
-                });
-            }
-
-            // reset pending notification
-            pending_notification.length = 0;
-        }
 
         debugNodeSockets();
     });
@@ -244,6 +174,42 @@ function updateUserRank(username) {
     });
 };
 
+function removeSession(session__uuid) {
+    // TODO: check ops here!
+    var k = all_sessions.indexOf(session__uuid);
+    all_sessions.splice(k, 1);
+    // delete from redis also
+    updater.del(redisSessionPrefix + session__uuid);
+};
+
+function getAnonSocket(socket__id) {
+    var socket = _.find(all_sockets, function(i){
+        return i.id == socket__id;
+    });
+    if (!socket) {
+        throw('failed to find anon socket');
+    }
+    return socket;
+}
+
+function getSession(session__uuid) {
+    var session = _.find(all_sessions, function(i){
+        return i.uuid == session__uuid;
+    });
+
+    if (!session) {
+        throw('unable to find session');
+    }
+    return session;
+};
+
+function getTargetSockets (username) {
+    var target_sockets = _.filter(all_sockets, function(i) {
+        return i.username == username;
+    });
+
+    return target_sockets;
+};
 
 function addSocketToUser(username, socket__id) {
     if (username) {
@@ -319,9 +285,50 @@ function debugNodeSockets() {
 function debugNodeSessions() {
     console.log("---before----");
     all_sessions.forEach(function(ii) {
-        console.dir(">>> session.target: " + ii.target);
+        console.dir(">>> session.target: " + ii.target.username);
         console.log(">>> session.uuid: " + ii.uuid);
-        console.dir(">>> session.anon: " + ii.anon);
+        console.dir(">>> session.anon: " + ii.anon.username + " socket.id: " + ii.socket_id);
     });
     console.log("---before----");
+};
+
+
+// expectes Session instance
+// closes, emits and removes session
+function closeSession(session) {
+    if (data.uuid) {
+        // get session
+        var session = getSession(data.uuid);
+
+        // find targets to inform
+        var pending_notification = getTargetSockets(data.target.username);
+
+        // remove this session from target sessions
+        pending_notification.forEach(function(ii) {
+            if (ii.sessions && ii.sessions.length > 0 && _.contains(ii.sessions, session)) {
+                removeSessionFromSocketSessions(ii, data.uuid);
+            }
+        });
+
+        // find anon socket to inform and add it to list
+        pending_notification.push(getAnonSocket(data.anon.socket_id));
+
+        //
+        console.log('break');
+
+        // inform all targets
+        if (pending_notification.length > 0) {
+            pending_notification.forEach(function (socket) {
+                socket.emit('close_sessions', data);
+            });
+        }
+
+        // reset pending notification
+        pending_notification.length = 0;
+
+        // remove session from all resources (redis and node)
+        removeSession(data.uuid);
+    } else {
+        throw('no uuid for session');
+    }
 };

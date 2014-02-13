@@ -58,23 +58,26 @@ socket.emit('active_connection', {username: username});
 socket.on('new_session', function(session) {
     // set session to ko
     vm.sessions.push(session);
-    var channel = 'message_' + session.uuid;
+    // var channel = 'message_' + session.uuid;
 
-    // listen for messages on channel requested
-    socket.on(channel, function(data) {
-        vm.messages.push(JSON.parse(data));
-    });
+    // // listen for messages on channel requested
+    // socket.on(channel, function(data) {
+    //     vm.messages.push(JSON.parse(data));
+    // });
 
     // listen for disconnect event for this channel
-    socket.on('disconnected_' + session.uuid, function(data) {
-        vm.removesession(session.uuid);
-    });
+    // socket.on('disconnected_' + session.uuid, function(data) {
+    //     vm.removesession(session.uuid);
+    // });
 });
 // on new messages for this client
 socket.on('new_message', function(message) {
     vm.messages.push(message);
 });
-
+// on close sessions
+socket.on('close_session', function(session) {
+    vm.removesession(session.uuid);
+});
 {% endif %}
 
 var vm = {
@@ -128,8 +131,6 @@ var vm = {
         var target_username = data.target.username;
         var uuid = data.uuid;
 
-        // console.log(data);
-
         var url = '/api/v1/account/' + target_username + '/sessions/' + uuid + '/messages/';
         $.post(url, {'content': vm.messagetext()}).done(function(data) {
                 console.log(data);
@@ -141,12 +142,10 @@ var vm = {
         var data = context.$data;
         var target_username = data.target.username;
         var uuid = data.uuid;
-        socket.emit('user_disconnected',
-            {
-                'user': "{{ request.user.username }}",
-                'uuid': uuid,
-            }
-        );
+
+        console.dir(data); // same as node Session()
+
+        socket.emit('user_disconnected', data);
     }
 };
 
@@ -185,7 +184,6 @@ $(function() {
         <button type='submit'>create session with <span data-bind='text: name'></span></button>
     </form>
 </div>
-
 {# list sessions #}
 <legend>Sessions: </legend>
 <div class='listsessions' data-bind="foreach: sessions">
@@ -198,7 +196,6 @@ $(function() {
         <button type='submit'>Close</button>
     </form>
 </div>
-
 {# list messages #}
 <legend>Messages: </legend>
 <div class='listmessages' data-bind="foreach: messages">
