@@ -152,7 +152,10 @@ io.sockets.on('connection', function(socket) {
 
         // search for socket username
         if (socket.username) {
+            // redis op
+            removeSocketFromUser(socket.username, socket.id);
             // any client left for this user?
+
             var has_sockets = false;
             _.filter(all_sockets, function(i) {
                 if (i.username == socket.username) {
@@ -161,12 +164,9 @@ io.sockets.on('connection', function(socket) {
             });
 
             //
-            removeSocketFromUser(socket.username, socket.id);
-
-            if (!has_sockets) {
+            if (_.find(all_sockets, function(i){return i.username == socket.username}) == undefined) {
                 console.log('no sockets remaining for user ' + socket.username + " delete all sessions");
                 // inform all users and anon that this user really disconnected
-//                io.sockets.emit('disconnected_' + socket.username);
                 if (socket.sessions && socket.sessions.length > 0) {
                     socket.sessions.forEach(function(session) {
                         // find all sockets that has this session
@@ -188,18 +188,7 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('user_disconnected', function(data) {
-        console.log("---before----");
-        all_sockets.forEach(function(ii) {
-            console.log(">>> socket.username: " + ii.username);
-            if (ii.sessions && ii.sessions.length > 0) {
-                ii.sessions.forEach(function(session) {
-                    console.log(">>>   " + session);
-                });
-            } else {
-                console.log('no sessions for this socket');
-            }
-        });
-        console.log("---before----");
+        debugNodeSockets();
         // triggered when user herself closes session voluntarily
         console.log("disconnected: " + data.user + " session.id: " + data.uuid);
         console.log('socket id: ' + socket.id + " socket user: " + socket.username);
@@ -225,18 +214,7 @@ io.sockets.on('connection', function(socket) {
             pending_notification.length = 0;
         }
 
-        console.log("---after----");
-        all_sockets.forEach(function(ii) {
-            console.log(">>> socket.username: " + ii.username);
-            if (ii.sessions) {
-                ii.sessions.forEach(function(session) {
-                    console.log(">>>   " + session);
-                });
-            } else {
-                console.log('no sessions for ' + ii.username);
-            }
-        });
-        console.log("---after----");
+        debugNodeSockets();
     });
 
     socket.on('active_connection', function(data) {
