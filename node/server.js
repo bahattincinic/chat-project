@@ -3,7 +3,9 @@ var app = require('http').createServer(),
     moment = require('moment'),
     _ = require('underscore');
     logger = io.log,
-    redis = require('redis');
+    redis = require('redis'),
+    xss = require('./xsessions'),
+    ;
 // used when storing socket values in redis
 var redisSocketPrefix = 'sockets_';
 var redisSessionPrefix = 'sessions_';
@@ -11,7 +13,6 @@ var redisSessionPrefix = 'sessions_';
 app.listen(9999);
 
 var all_sockets = [];
-var all_sessions = [];
 
 io.configure(function() {
     io.set('close timeout', 60*60*24); // 24h
@@ -25,12 +26,6 @@ io.configure(function() {
 // subscriber.psubscribe(mpattern);
 updater = redis.createClient();
 
-function Session(target, uuid, anon, anon_socket_id) {
-    this.target = {'username': target};
-    this.uuid = uuid;
-    this.anon = {'username': anon,
-                 'socket_id': anon_socket_id};
-};
 
 io.sockets.on('connection', function(socket) {
     console.log('on connection');
@@ -39,11 +34,11 @@ io.sockets.on('connection', function(socket) {
     socket.on('initiate_session', function(data) {
         console.log('initiate_session');
         if (data.anon && data.uuid && data.target) {
-            var session = new Session(data.target,
-                                      data.uuid,
-                                      data.anon,
-                                      socket.id);
-            all_sessions.push(session);
+            var session = new xss.Session(data.target,
+                                          data.uuid,
+                                          data.anon,
+                                          socket.id);
+            xss.addSession(session);
             // find all the sockets of the target
             // and emit to all of 'em
             var this_sessions_sockets = [socket];
@@ -76,9 +71,7 @@ io.sockets.on('connection', function(socket) {
             throw('bad message, bad kitty!!');
         }
 
-        var session = _.find(all_sessions, function(i){
-            return i.uuid == message.session.uuid;
-        });
+        var session = xss.getSession(message.session.uuid);
 
         var target_sockets = _.filter(all_sockets, function(i) {
             return i.username == message.session.target.username;
@@ -124,7 +117,7 @@ io.sockets.on('connection', function(socket) {
                 // inform all users and anon that this user really disconnected
                 if (socket.sessions && socket.sessions.length > 0) {
                     socket.sessions.forEach(function(session) {
-                        session.close();
+                        closeSession(session);
                     });
                     // remove all sessions from removed socket
                     socket.sessions.length = 0;
@@ -139,8 +132,8 @@ io.sockets.on('connection', function(socket) {
         // triggered when user herself closes session voluntarily
         console.log("disconnected: " + data.user + " session.id: " + data.uuid);
         console.log('socket.id: ' + socket.id + " socket.user: " + socket.username);
-        var session = _.find(all_sessions, function(ii){return ii.uuid == data.uuid});
-        if (session) {session.close();} else {throw('not found session')}
+        var session = xss.getSession(data.uuid);
+        if (session) {closeSession(session);} else {throw('not found session')}
     });
 
     socket.on('active_connection', function(data) {
@@ -170,13 +163,6 @@ function updateUserRank(username) {
     });
 };
 
-function removeSession(session__uuid) {
-    // TODO: check ops here!
-    var k = all_sessions.indexOf(session__uuid);
-    all_sessions.splice(k, 1);
-    // delete from redis also
-    updater.del(redisSessionPrefix + session__uuid);
-};
 
 function getAnonSocket(socket__id) {
     var socket = _.find(all_sockets, function(i){
@@ -262,30 +248,28 @@ function removeSocketFromUser(username, socket__id) {
 };
 
 
-
-function closeSession (data) {
-    if (data.uuid) {
+function closeSession (session) {
+    if (session.uuid) {
         // find targets to inform
-        var pending_notification = getTargetSockets(data.target.username);
+        var pending_notification = getTargetSockets(session.target.username);
 
         // remove this session from target sessions
         pending_notification.forEach(function(ii) {
-            if (ii.sessions && ii.sessions.length > 0 && _.contains(ii.sessions, data)) {
-                removeSessionFromSocketSessions(ii, data.uuid);
+            if (ii.sessions && ii.sessions.length > 0 && _.contains(ii.sessions, session)) {
+                removeSessionFromSocketSessions(ii, session.uuid);
             }
         });
 
         // find anon socket to inform and add it to list
-        pending_notification.push(getAnonSocket(data.anon.socket_id));
+        pending_notification.push(getAnonSocket(session.anon.socket_id));
 
         // inform all targets
         if (pending_notification.length > 0) {
             pending_notification.forEach(function (socket) {
-                console.log('break here');
                 socket.emit('close_session', {
-                    target: data.target,
-                    uuid: data.uuid,
-                    anon: data.anon});
+                    target: session.target,
+                    uuid: session.uuid,
+                    anon: session.anon});
             });
         }
 
@@ -293,18 +277,8 @@ function closeSession (data) {
         pending_notification.length = 0;
 
         // remove session from all resources (redis and node)
-        removeSession(data);
+        xss.removeSession(session);
     } else {
         throw('no uuid for session');
     }
 };
-
-function removeSession(data) {
-    // TODO: check ops here!
-    if (data.uuid) {
-        var k = all_sessions.indexOf(data.uuid);
-        all_sessions.splice(k, 1);
-        // delete from redis
-        updater.del(redisSessionPrefix + data.uuid);
-    }
-}
