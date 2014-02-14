@@ -28,52 +28,9 @@ updater = redis.createClient();
 function Session(target, uuid, anon, anon_socket_id) {
     this.target = {'username': target};
     this.uuid = uuid;
-    this.anon = {'username': anon, 'socket_id': anon_socket_id};
-    this.close = function() {
-        if (this.uuid) {
-            // find targets to inform
-            var pending_notification = getTargetSockets(this.target.username);
-
-            // remove this session from target sessions
-            pending_notification.forEach(function(ii) {
-                if (ii.sessions && ii.sessions.length > 0 && _.contains(ii.sessions, this)) {
-                    removeSessionFromSocketSessions(ii, this.uuid);
-                }
-            });
-
-            // find anon socket to inform and add it to list
-            pending_notification.push(getAnonSocket(this.anon.socket_id));
-
-            // inform all targets
-            var self = this;
-            if (pending_notification.length > 0) {
-                pending_notification.forEach(function (socket) {
-                    console.log('break here');
-                    socket.emit('close_session', {
-                        target: self.target,
-                        uuid: self.uuid,
-                        anon: self.anon});
-                });
-            }
-
-            // reset pending notification
-            pending_notification.length = 0;
-
-            // remove session from all resources (redis and node)
-            this.remove();
-        } else {
-            throw('no uuid for session');
-        }
-    };
-    this.remove = function() {
-        // TODO: check ops here!
-        var k = all_sessions.indexOf(this.uuid);
-        all_sessions.splice(k, 1);
-        // delete from redis
-        updater.del(redisSessionPrefix + this.uuid);
-    };
+    this.anon = {'username': anon,
+                 'socket_id': anon_socket_id};
 };
-
 
 io.sockets.on('connection', function(socket) {
     console.log('on connection');
@@ -81,7 +38,6 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('initiate_session', function(data) {
         console.log('initiate_session');
-        console.dir(data);
         if (data.anon && data.uuid && data.target) {
             var session = new Session(data.target,
                                       data.uuid,
@@ -305,3 +261,50 @@ function removeSocketFromUser(username, socket__id) {
     });
 };
 
+
+
+function closeSession (data) {
+    if (data.uuid) {
+        // find targets to inform
+        var pending_notification = getTargetSockets(data.target.username);
+
+        // remove this session from target sessions
+        pending_notification.forEach(function(ii) {
+            if (ii.sessions && ii.sessions.length > 0 && _.contains(ii.sessions, data)) {
+                removeSessionFromSocketSessions(ii, data.uuid);
+            }
+        });
+
+        // find anon socket to inform and add it to list
+        pending_notification.push(getAnonSocket(data.anon.socket_id));
+
+        // inform all targets
+        if (pending_notification.length > 0) {
+            pending_notification.forEach(function (socket) {
+                console.log('break here');
+                socket.emit('close_session', {
+                    target: data.target,
+                    uuid: data.uuid,
+                    anon: data.anon});
+            });
+        }
+
+        // reset pending notification
+        pending_notification.length = 0;
+
+        // remove session from all resources (redis and node)
+        removeSession(data);
+    } else {
+        throw('no uuid for session');
+    }
+};
+
+function removeSession(data) {
+    // TODO: check ops here!
+    if (data.uuid) {
+        var k = all_sessions.indexOf(data.uuid);
+        all_sessions.splice(k, 1);
+        // delete from redis
+        updater.del(redisSessionPrefix + data.uuid);
+    }
+}
