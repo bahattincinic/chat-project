@@ -7,11 +7,13 @@ angular.module('authApp', []);
 angular.module('chatApp', []);
 // network application
 angular.module('networkApp', []);
+// account application
+angular.module('accountApp', []);
 
 // Angular Apps
 var ANGULAR_APPS = ['ngAnimate', 'ngRoute', 'ngResource'];
 // Local Apps
-var LOCAL_APPS = ['authApp', 'chatApp', 'networkApp'];
+var LOCAL_APPS = ['authApp', 'chatApp', 'networkApp', 'accountApp'];
 // All Apps
 var INSTALLED_APPS = ANGULAR_APPS.concat(LOCAL_APPS);
 

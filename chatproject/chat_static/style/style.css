@@ -808,6 +808,7 @@ background-size: 17px;
     float: right;
     cursor: pointer;
     margin-left: 5px;
+    margin-top: -5px;
 }
 .follow:hover {
     box-shadow: 0px 1px 1px #CCC;

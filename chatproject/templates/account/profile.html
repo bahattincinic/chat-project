@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% load staticfiles %}
 
-{% block title %}{{ request.user.username }} | The Chat{% endblock %}
+{% block title %}{{ object.username }} | The Chat{% endblock %}
 
 {% block body %}
-<div ng-controller="userChatController">
-<div class="row-body content-profile">
+<div class="row-body content-profile" ng-init="state='{{ type }}'; authenticate={{ authenticate|lower }}">
      <!-- Cover/Profile Bar -->
      <div class="twelve columns">
         <div class="cover-container">
@@ -14,8 +13,11 @@
             </div>
            <div class="cover-content">
                <div id="user_statistics_count">
-                 <span class="span_margin">
-                      <a ng-click="getFollows()" style="color:#fff">
+                  <span class="span_margin" ng-switch="state">
+                      <a href="#/follows" ng-switch-when="me" style="color:#fff">
+                          Follows: <span ng-bind="user.followees"></span>
+                      </a>
+                      <a style="color:#fff" ng-switch-when="anon">
                           Follows: <span ng-bind="user.followees"></span>
                       </a>
                   </span>
@@ -44,10 +46,16 @@
                     <div class="cover-description-buttons">
                        <div id="subscribe3"></div>
                     </div>
-                     <div>
-                         <a href="javascript:void(0)" ng-click="page='account_edit'" title="Change Profile Images">
+                     <div ng-switch="state">
+                         <a href="#/edit-profile" ng-switch-when="me" title="Change Profile Images">
                              <div class="edit_profile_btn"></div>
                          </a>
+                         <div ng-controller="followController" ng-switch-when="anon">
+                             <div class="follow" ng-click="do_follow()" ng-show="follow.visibility">
+                                <span ng-class="{'subscribe': !follow.state, 'unsubscribe': follow.state}"></span>
+                                <span class="follow_text" ng-bind="follow.text"></span>
+                             </div>
+                         </div>
                      </div>
                  </div>
               </div>
@@ -57,19 +65,7 @@
 </div>
 
 
-<div class="row-body content-messages" ng-switch="page">
-    <!-- Follows -->
-    <div ng-switch-when="follows">
-        <div class="animation" ng-include=" '/static/js/apps/views/account_follows.html' "></div>
-    </div>
-    <!-- Account Edit -->
-    <div ng-switch-when="account_edit">
-        <div class="animation" ng-include=" '/static/js/apps/views/account_edit.html' "></div>
-    </div>
-    <!-- Chat -->
-    <div ng-switch-default>
-        <div class="animation" ng-include=" '/static/js/apps/views/account_chat.html' "></div>
-    </div>
-</div>
+<div class="row-body content-messages">
+    <div ng-view class="animation" ></div>
 </div>
 {% endblock %}

@@ -19,6 +19,6 @@ angular.module('mainApp').run(['$rootScope', '$location', 'accountService', func
     }else{
         callback({});
     }
- }
+ };
 
 }]);
