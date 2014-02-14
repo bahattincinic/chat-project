@@ -14,7 +14,7 @@ accountApp.controller('followController', [
                 $rootScope.user.load_more_follow = data.data.count >= 10;
             });
         }else if($rootScope.authenticate){
-            $rootScope.follow = { visibility: $rootScope.authenticate, text: '', state: false };
+            $scope.follow = { visibility: $rootScope.authenticate, text: '', state: false };
                 accountService.check_follow($rootScope.user.username, function(data){
                    if(data.data.count > 0){
                         $scope.follow.text = 'Un Follow';

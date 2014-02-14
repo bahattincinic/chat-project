@@ -3,20 +3,31 @@
 angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/', {
         templateUrl: '/static/js/apps/views/account_chat.html',
-        action: 'chatApp.chatController'
+        action: 'chatApp.chatController',
+        access: '*'
     }).when('/follows', {
         templateUrl: '/static/js/apps/views/account_follows.html',
-        action: 'accountApp.followController'
+        action: 'accountApp.followController',
+        access: 'me'
     }).when('/edit-profile', {
         templateUrl: '/static/js/apps/views/account_edit.html',
-        action: 'accountApp.updateProfile'
+        action: 'accountApp.updateProfile',
+        access: 'me'
     }).when('/change-password', {
         templateUrl: '/static/js/apps/views/account_change_password.html',
-        action: 'accountApp.changePasswordController'
+        action: 'accountApp.changePasswordController',
+        access: 'me'
     }).otherwise({
        redirectTo: '/'
     });
-}]).run(function ($rootScope, $timeout, $filter, socket, $q) {
+}]).run(function ($rootScope, $timeout, $filter, socket, $q, $location) {
+    // permisson Control
+    $rootScope.$on("$routeChangeStart", function (event, next, current) {
+        if(next.access == 'me' && $rootScope.state == 'anon'){
+            $location.path('/');
+        }
+    });
+    // get selected user
     $rootScope.ajaxCall = $q.defer();
     $rootScope.getActiveUser(function(data){
         $rootScope.user = data;
