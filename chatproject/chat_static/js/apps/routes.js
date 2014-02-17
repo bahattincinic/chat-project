@@ -21,10 +21,13 @@ angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
        redirectTo: '/'
     });
 }]).run(function ($rootScope, $timeout, $filter, socket, $q, $location) {
-    // permisson Control
     $rootScope.$on("$routeChangeStart", function (event, next, current) {
+        // permisson Control
         if(next.access == 'me' && $rootScope.state == 'anon'){
             $location.path('/');
+        }
+        if(next.originalPath == '/' && $rootScope.state == 'anon'){
+            next.templateUrl = '/static/js/apps/views/anon_chat.html';
         }
     });
     // get selected user

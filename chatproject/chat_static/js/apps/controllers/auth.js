@@ -10,7 +10,11 @@ angular.module('authApp').controller('loginController' ,[
         authService.login($scope.form, function(data){
             location.reload();
         }, function(data){
-            $scope.isError = true;
+            $scope.alert = {
+                visibility: true,
+                title: 'Error',
+                message: 'Invalid username or password.'
+            };
         });
     };
 }]);
@@ -23,16 +27,20 @@ angular.module('authApp').controller('registerController',[
     // Login Process
     $scope.process = function(){
         authService.register($scope.form, function(data){
-            $scope.errorType = "Success";
+            $scope.alert = {
+                visibility: true,
+                title: 'Success',
+                message: 'Registration process is successful'
+            };
             $scope.form.email = '';
             $scope.form.username = '';
             $scope.form.password = '';
-            $scope.isError = true;
-            $scope.errorMessage = 'Registration process is successful';
         }, function(data){
-            $scope.errorType = "Error";
-            $scope.isError = true;
-            $scope.errorMessage = $rootScope.ErrorRenderer(data.data);
+            $scope.alert = {
+                visibility: true,
+                title: 'Error',
+                message: $rootScope.ErrorRenderer(data.data)
+            };
         });
     };
 }]);
@@ -74,15 +82,20 @@ angular.module('authApp').controller('forgotPasswordController', [
             api_method = authService.forgot_username;
         }
         api_method($scope.form, function(data){
-            $scope.isMessage = true;
-            $scope.isSuccess = true;
-            $scope.errorTitle = 'Success';
-            $scope.erorrMessage = $scope.form.email + ' mail send';
+            $scope.alert = {
+                visibility: true,
+                title: 'Success',
+                state: true,
+                message: $scope.form.email + ' mail send'
+            };
+            $scope.form.email = '';
         }, function(data){
-            $scope.isMessage = true;
-            $scope.isError = true;
-            $scope.errorTitle = 'Error';
-            $scope.erorrMessage = $rootScope.ErrorRenderer(data.data);
+            $scope.alert = {
+                visibility: true,
+                title: 'Error',
+                state: false,
+                message: $rootScope.ErrorRenderer(data.data)
+            };
         });
     };
 }]);
@@ -96,25 +109,28 @@ angular.module('authApp').controller('newPasswordController', [
             $scope.form.confirm_password != '' &&
             $scope.form.new_password == $scope.form.confirm_password){
             authService.new_password($scope.form, function(data){
-                $scope.isMessage = true;
-                $scope.isSuccess = true;
-                $scope.errorTitle = 'Success';
-                $scope.erorrMessage = 'Changed Password';
-                setInterval(function(){
-                   window.location = '/';
-                }, 1500);
+                $scope.alert = {
+                    visibility: true,
+                    title: 'Success',
+                    state: true,
+                    message: 'Changed Password'
+                };
+                setInterval(function(){ window.location = '/'; }, 1000);
             }, function(data){
-                $scope.isMessage = true;
-                $scope.isError = true;
-                $scope.errorTitle = 'Error';
-                $scope.erorrMessage = $rootScope.ErrorRenderer(data.data);
+                $scope.alert = {
+                    visibility: true,
+                    title: 'Error',
+                    state: false,
+                    message: $rootScope.ErrorRenderer(data.data)
+                };
             });
         }else{
-            $scope.isSuccess = false;
-            $scope.isError = true;
-            $scope.errorTitle = 'Error';
-            $scope.isMessage = true;
-            $scope.erorrMessage = 'passwords did not match';
+            $scope.alert = {
+                visibility: true,
+                title: 'Error',
+                state: false,
+                message: 'passwords did not match'
+             };
         }
     };
 }]);

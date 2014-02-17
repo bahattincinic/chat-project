@@ -12,12 +12,10 @@ angular.module('mainApp').run(['$rootScope', '$location', 'accountService', func
  // Get Active User
  $rootScope.getActiveUser = function(callback){
     var username = $location.absUrl().split('/');
-    if(username.length > 3){
+    if(username.length > 3 && username[3] != ''){
        accountService.user_profile(username[3], function(data){
           callback(data.data);
        });
-    }else{
-        callback({});
     }
  };
 

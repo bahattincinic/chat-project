@@ -1,3 +1,4 @@
+// background-image directive
 angular.module('mainApp').directive('backgroundImage', function(){
     return function(scope, element, attrs){
         // string to scope instange
@@ -9,7 +10,7 @@ angular.module('mainApp').directive('backgroundImage', function(){
     };
 });
 
-
+// chat message directive
 angular.module('chatApp').directive('comment', function(){
     return {
         restrict: 'E',
@@ -17,5 +18,17 @@ angular.module('chatApp').directive('comment', function(){
             instance: '=instance'
         },
         templateUrl: '/static/js/apps/views/comment.html'
+    };
+});
+
+// form alert directive
+angular.module('mainApp').directive('alert', function(){
+    return {
+        restrict: 'E',
+        scope: {
+            alert: '=context',
+            shape: '=shape'
+        },
+        templateUrl: '/static/js/apps/views/notification_box.html'
     };
 });

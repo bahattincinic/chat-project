@@ -28,8 +28,8 @@ angular.module('authApp').factory('authService', function($http) {
 });
 
 // Node Resource
-angular.module('mainApp').factory('socket', function ($rootScope) {
-  var socket = io.connect('http://localhost:8080');
+angular.module('mainApp').factory('socket', function ($rootScope, $location) {
+  var socket = io.connect('http://127.0.0.1:8080');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
