@@ -2,6 +2,7 @@ var app = require('http').createServer(),
     io = require('socket.io').listen(app),
     xsocket = require('./xsockets'),
     xsession = require('./xsessions'),
+    cookie_reader = require('cookie'),
     xredis = require('./xredis');
 
 // used when storing socket values in redis
@@ -9,6 +10,13 @@ var app = require('http').createServer(),
 app.listen(9999);
 
 io.configure(function() {
+    io.set('authorization', function(data, accept) {
+        if (data.headers.cookie) {
+            data.cookie = cookie_reader.parse(data.headers.cookie);
+            return accept(null, true);
+        }
+        return accept('error', false);
+    });
     io.set('close timeout', 60*60*24); // 24h
     io.set('log level', 1);
 });
@@ -116,6 +124,8 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('active_connection', function(data) {
         if (data.username) {
+            var sessionid = socket.handshake.cookie['sessionid'];
+            console.log(sessionid);
             socket.username = data.username;
             console.log('new user: ' + data.username);
             // TODO: maybe merge here??

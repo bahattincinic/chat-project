@@ -56,19 +56,7 @@ var username = '{{ request.user.username }}';
 socket.emit('active_connection', {username: username});
 // on new sessions for this client
 socket.on('new_session', function(session) {
-    // set session to ko
     vm.sessions.push(session);
-    // var channel = 'message_' + session.uuid;
-
-    // // listen for messages on channel requested
-    // socket.on(channel, function(data) {
-    //     vm.messages.push(JSON.parse(data));
-    // });
-
-    // listen for disconnect event for this channel
-    // socket.on('disconnected_' + session.uuid, function(data) {
-    //     vm.removesession(session.uuid);
-    // });
 });
 // on new messages for this client
 socket.on('new_message', function(message) {
