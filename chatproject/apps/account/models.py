@@ -23,7 +23,7 @@ class User(AbstractBaseUser):
         help_text=_('Designates whether this user should be treated as '
                     'active. Unselect this instead of deleting accounts.'))
     created_at = models.DateTimeField(_('date joined'), auto_now_add=True)
-    location = models.CharField(_('Location'), max_length=100,
+    location = models.CharField(_('Location'), max_length=65,
                                 null=True, blank=True)
     # TODO: /media/avatar/bahattincinic/hede.png seklinde olucak
     avatar = models.ImageField(_('Avatar'), upload_to='avatar/',
@@ -33,7 +33,7 @@ class User(AbstractBaseUser):
                                    null=True, blank=True,
                                    default='default.png')
     is_sound_enabled = models.BooleanField(_('Chat Sound'), default=True)
-    bio = models.CharField(_('Biography'), max_length=255,
+    bio = models.CharField(_('Biography'), max_length=150,
                            null=True, blank=True)
 
     CHAT_ACTIVE = 'ACTIVE'

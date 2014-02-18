@@ -38,13 +38,9 @@
                     </div>
                  </div>
                  <div class="cover-description-content">
-                    <span id="author3pricop"></span>
-                    <span id="time3pricop"></span>
                     <div class="cover-username">
                        <a href="javascript:void(0)" ng-bind="user.username"></a>
-                    </div>
-                    <div class="cover-description-buttons">
-                       <div id="subscribe3"></div>
+                       <span class="user_location" ng-bind=" '/' +user.location"></span>
                     </div>
                      <div ng-switch="state">
                          <a href="#/edit-profile" ng-switch-when="me" title="Change Profile Images">
@@ -58,6 +54,9 @@
                          </div>
                      </div>
                  </div>
+              </div>
+              <div class="seven columns user_bio">
+                  <span ng-bind="user.bio"></span>
               </div>
            </div>
         </div>

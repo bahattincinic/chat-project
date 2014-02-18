@@ -2,7 +2,7 @@
     <div class="animation" ng-include=" '/static/js/apps/views/account_menu.html' "></div>
 
     <!-- General Settings -->
-	<div class="nine columns" ng-init="subpage='general'" ng-show="subpage == 'general' ">
+	<div class="nine columns">
 		<div class="page-settings-container">
             <form ng-submit="update_profile()" method="post">
 			<div class="page-content">
@@ -14,11 +14,7 @@
                     <div class="page-title">Change account, privacy, location settings.</div>
                 </div>
 
-                <div class="notification-box" ng-show="form.visibility" ng-class="{'notification-box-success': form.state, 'notification-box-error': !form.state}">
-                    <h5 ng-bind="form.error_header"></h5>
-                    <p ng-bind="form.error_message"></p>
-                    <a href="#" class="notification-close" ng-click="form.visibility=false">x</a>
-                </div>
+                <alert shape="'form'" context="alert"></alert>
 
             <div class="message-divider"></div>
             <div class="page-inner">
@@ -39,9 +35,9 @@
                     <div class="page-input-container">
                         <div class="page-input-title">Location</div>
                         <div class="page-input-content">
-                            <input type="text" maxlength="100" name="location" style="width: 250px" ng-model="user.location">
+                            <input type="text" maxlength="65" name="location" style="width: 250px" ng-model="user.location">
                             <div class="page-input-sub">Where do you live?
-                             (100 characters or less)</div>
+                             (65 characters or less)</div>
                         </div>
                     </div>
             </div>
@@ -60,8 +56,8 @@
             <div class="page-input-container">
                 <div class="page-input-title">Bio</div>
                 <div class="page-input-content">
-                    <textarea class="ads" name="bio" maxlength="255" ng-model="user.bio"></textarea>
-                    <div class="page-input-sub">About you (255 characters or less)</div>
+                    <textarea class="ads" name="bio" maxlength="150" ng-model="user.bio"></textarea>
+                    <div class="page-input-sub">About you (150 characters or less)</div>
                 </div>
             </div>
         </div>

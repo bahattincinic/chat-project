@@ -12,7 +12,7 @@
 <div ng-switch-when="form" style="margin: 0px" class="notification-box" ng-show="alert.visibility" ng-class="{'notification-box-success': alert.state, 'notification-box-error': !alert.state}">
     <h5 ng-bind="alert.title"></h5>
     <p ng-bind="alert.message"></p>
-    <a href="#" class="notification-close" ng-click="alert.visibility=false">x</a>
+    <a href="javascript:void(0)" class="notification-close" ng-click="alert.visibility=false">x</a>
 </div>
 
 </div>

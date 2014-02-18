@@ -1,4 +1,6 @@
-angular.module('mainApp').run(['$rootScope', '$location', 'accountService', function($rootScope, $location, accountService) {
+var mainApp = angular.module('mainApp');
+
+mainApp.run(['$rootScope', '$location', 'accountService', function($rootScope, $location, accountService) {
 
  // Api Error format
  $rootScope.ErrorRenderer = function(data) {
@@ -20,3 +22,25 @@ angular.module('mainApp').run(['$rootScope', '$location', 'accountService', func
  };
 
 }]);
+
+
+mainApp.service('alertService', function(){
+    // error alert
+    this.error = function(title, message){
+       return {
+            visibility: true,
+            title: title,
+            state: false,
+            message: message
+       }
+   };
+   // success alert
+   this.success = function(title, message){
+       return {
+            visibility: true,
+            title: title,
+            state: true,
+            message: message
+       }
+   };
+});

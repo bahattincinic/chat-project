@@ -59,7 +59,8 @@ accountApp.controller('followController', [
 
 
 accountApp.controller('updateProfile', [
-    '$scope', 'accountService', '$rootScope', function($scope, accountService, $rootScope){
+    '$scope', 'accountService', '$rootScope', 'alertService', function($scope, accountService, $rootScope, alertService){
+
     // form elements
     $scope.form = {
       gender: [
@@ -71,25 +72,19 @@ accountApp.controller('updateProfile', [
           {id:false, name:'Off'}
       ]
     };
-
     // update action
     $scope.update_profile = function(){
         var form = angular.copy($rootScope.user);
         delete form.avatar;
         delete form.background;
         accountService.update_profile($scope.user.username, form, function(data){
-            $scope.form.state = true;
-            $scope.form.visibility = true;
-            $scope.form.error_header = 'Settings Saved';
-            $scope.form.error_message = 'Your settings has been successfully updated.';
+            $scope.alert = alertService.success('Settings saved', 'Your settings has been successfully updated.');
         }, function(data){
-            $scope.form.state = false;
-            $scope.form.visibility = true;
-            $scope.form.error_header = 'Settings not saved';
-            $scope.form.error_message = '';
+            var message = '';
             angular.forEach(data.data, function(value, key){
-                $scope.form.error_message += ' ' +  value;
+                message += ' ' +  value;
             });
+            $scope.alert = alertService.error('Settings not saved', message);
         });
     };
 }]);
@@ -97,28 +92,18 @@ accountApp.controller('updateProfile', [
 
 
 accountApp.controller('changePasswordController', [
-    '$scope', 'accountService', '$rootScope', function($scope, accountService, $rootScope){
-
-    // change password forn
-    $scope.form = {state:false, visibility:false, error_heade:'', error_message:''};
+    '$scope', 'accountService', '$rootScope', 'alertService', function($scope, accountService, $rootScope, alertService){
 
     // account change password
     $scope.change_password = function(){
         accountService.change_password($rootScope.user.username, $rootScope.user, function(){
-            $scope.form.state = true;
-            $scope.form.visibility = true;
-            $scope.form.error_header = 'Settings Saved';
-            $scope.form.error_message = 'Password Changed';
+            $scope.alert = alertService.success('Settings saved', 'Password Changed');
         }, function(data){
-            $scope.form.state = false;
-            $scope.form.visibility = true;
-            $scope.form.error_header = 'Settings not saved';
-            $scope.form.error_message = '';
+            var message = '';
             angular.forEach(data.data, function(value, key){
-                $scope.form.error_message += value[0];
+                message += ' ' +  value[0];
             });
+            $scope.alert = alertService.error('Settings not saved', message);
         });
     };
 }]);
-
-

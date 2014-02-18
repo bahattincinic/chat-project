@@ -2242,10 +2242,34 @@ background-size: 25px;
     }
 }
 /* ------------------- !MOBILE ----------------------- */
+@media only screen and (max-device-width: 610px), only screen and (device-width: 610px) and (device-height: 610px), only screen and (width: 610px) and (orientation: landscape), only screen and (device-width: 610px), only screen and (max-width: 610px) {
+    .user_bio {
+        display: none;
+    }
+    #user_statistics_count {
+        bottom: 58px !important;
+    }
+}
+
+@media only screen and (max-device-width: 901px), only screen and (device-width: 901px) and (device-height: 901px), only screen and (width: 901px) and (orientation: landscape), only screen and (device-width: 901px), only screen and (max-width: 901px) {
+    .user_bio {
+        display: none;
+    }
+    #user_statistics_count {
+        bottom: 58px !important;
+    }
+}
+
 @media only screen and (max-device-width: 600px), only screen and (device-width: 600px) and (device-height: 600px), only screen and (width: 600px) and (orientation: landscape), only screen and (device-width: 600px), only screen and (max-width: 600px) {
 	.logo {
 	display: none;
 	}
+    .user_location {
+        display: none;
+    }
+    .user_bio {
+        display: none;
+    }
 	.logo-small {
 	display: block;
 	}
@@ -2451,7 +2475,7 @@ background-size: 25px;
 #user_statistics_count {
     right: 11px;
     z-index:990;
-    bottom: 58px;
+    bottom: 94px;
     position: absolute;
     padding: 12px;
     background-color: #474752;
@@ -2512,4 +2536,15 @@ a[ ng-click ] {
 .cover_loading img {
     margin-left: 47%;
     margin-top: 12%;
+}
+
+.user_location {
+    margin-left: 10px;
+    font-style: italic;
+    font-size: 13px;
+    color: #474752;
+}
+
+.user_bio {
+    margin-left: 125px;
 }
