@@ -1,0 +1,26 @@
+<div class="twelve columns" ng-controller="reportController">
+    <div class="page-settings-container">
+        <form method="post" ng-submit="report()">
+            <div validate class="page-content">
+                <div class="page-header">
+                    <img src="/static/images/thumb.jpeg" width="80" height="80">
+                    <strong>Report <span ng-bind="user.username"></span></strong>
+                </div>
+
+                <div class="message-divider"></div>
+                <div class="page-inner">
+                    <div class="page-input-container">
+                        <div class="page-input-title">Why</div>
+                        <div class="page-input-content" style="width: 80%">
+                           <textarea required class="ads" name="why" style="width: 100%;" maxlength="150" ng-model="form.text"></textarea>
+                        </div>
+                    </div>
+                <div class="message-divider"></div>
+                <div class="page-inner">
+                    <div class="page-input-title"></div>
+                    <input type="submit" value="Send" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

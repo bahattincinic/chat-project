@@ -107,3 +107,14 @@ accountApp.controller('changePasswordController', [
         });
     };
 }]);
+
+
+accountApp.controller('reportController', function($scope, accountService, $rootScope, $location){
+    $scope.form = {text: ''};
+
+    $scope.report = function(){
+        accountService.report($rootScope.user.username, $scope.form, function(){
+            $location.path('/');
+        });
+    };
+});

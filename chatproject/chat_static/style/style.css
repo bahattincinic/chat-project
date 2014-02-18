@@ -847,6 +847,17 @@ background-size: 17px;
     width: 25px;
     height: 25px;
 }
+
+.report_icon{
+    float: left;
+    background-image: url(../images/icons/report.png);
+    background-size: 25px;
+    width: 25px;
+    height: 25px;
+    margin-left: 8px;
+    margin-top: 2px;
+}
+
 .follow_text{
     float: right;
     padding-top: 6px;
@@ -2260,6 +2271,12 @@ background-size: 25px;
     }
 }
 
+@media only screen and (max-device-width: 380px), only screen and (device-width: 380px) and (device-height: 380px), only screen and (width: 380px) and (orientation: landscape), only screen and (device-width: 380px), only screen and (max-width: 380px) {
+    .user_report {
+        display: none;
+    }
+}
+
 @media only screen and (max-device-width: 600px), only screen and (device-width: 600px) and (device-height: 600px), only screen and (width: 600px) and (orientation: landscape), only screen and (device-width: 600px), only screen and (max-width: 600px) {
 	.logo {
 	display: none;
@@ -2475,7 +2492,7 @@ background-size: 25px;
 #user_statistics_count {
     right: 11px;
     z-index:990;
-    bottom: 94px;
+    top: 123px;
     position: absolute;
     padding: 12px;
     background-color: #474752;

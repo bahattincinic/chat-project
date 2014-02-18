@@ -17,13 +17,17 @@ angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
         templateUrl: '/static/js/apps/views/account_change_password.html',
         action: 'accountApp.changePasswordController',
         access: 'me'
+    }).when('/report', {
+        templateUrl: '/static/js/apps/views/anon_report.html',
+        action: 'accountApp.reportController',
+        access: 'anon'
     }).otherwise({
        redirectTo: '/'
     });
 }]).run(function ($rootScope, $timeout, $filter, socket, $q, $location) {
     $rootScope.$on("$routeChangeStart", function (event, next, current) {
         // permisson Control
-        if(next.access == 'me' && $rootScope.state == 'anon'){
+        if(next.access != '*' && next.access != $rootScope.state){
             $location.path('/');
         }
         if(next.originalPath == '/' && $rootScope.state == 'anon'){

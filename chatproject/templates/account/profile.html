@@ -40,14 +40,18 @@
                  <div class="cover-description-content">
                     <div class="cover-username">
                        <a href="javascript:void(0)" ng-bind="user.username"></a>
-                       <span class="user_location" ng-bind=" '/' +user.location"></span>
+                       <span ng-hide="user.location == null" class="user_location" ng-bind=" '/' +user.location"></span>
                     </div>
                      <div ng-switch="state">
                          <a href="#/edit-profile" ng-switch-when="me" title="Change Profile Images">
                              <div class="edit_profile_btn"></div>
                          </a>
-                         <div ng-controller="followController" ng-switch-when="anon">
-                             <div class="follow" ng-click="do_follow()" ng-show="follow.visibility">
+                         <div ng-switch-when="anon">
+                             <div class="follow user_report" click-link="/report/" ng-show="authenticate" style="width: 76px;">
+                                 <span class="report_icon"></span>
+                                 <span class="follow_text">Report</span>
+                             </div>
+                             <div ng-controller="followController" class="follow" ng-click="do_follow()" ng-show="follow.visibility">
                                 <span ng-class="{'subscribe': !follow.state, 'unsubscribe': follow.state}"></span>
                                 <span class="follow_text" ng-bind="follow.text"></span>
                              </div>
