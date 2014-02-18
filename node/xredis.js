@@ -5,6 +5,28 @@ var redisSocketPrefix = 'sockets_'; // sockets_<username>
 var redisSessionPrefix = 'sessions_'; // sessions_<username>
 var redisSingleSessionPrefix = 'session_'; // session_<sesion__uuid>
 
+exports.redis = redis;
+
+exports.bindUserSocket = function(socket, sessionid) {
+    if (socket && sessionid) {
+        console.log(sessionid);
+        redis.get('djsession:' + sessionid, function(err, reply) {
+            try {
+                var buffer = new Buffer(reply, 'base64').toString();
+                var add = buffer.split(':')[0] + ":";
+                var djsession = JSON.parse(buffer.replace(add, ''));
+                var userid = djsession["_auth_user_id"];
+                socket.username = userid;
+                // update rank for this user
+                updateRank(socket.username);
+            } catch(err) {
+                console.error("error parsing user session:  " + err);
+                throw(err);
+            }
+        });
+    }
+}
+
 exports.removeSocket = function(username, socket__id) {
     console.log('removeSocketFromUser: ' + username + " id: " + socket__id);
     // remove this socket from redis
@@ -56,7 +78,7 @@ exports.addSessionToUser = function(username, session) {
     }
 }
 
-exports.updateUserRank = function(username) {
+function updateRank(username) {
     // score is current date
     var score = parseInt(moment().format('YYMMDDHHmm'));
     var args = ["active_connections", score, username];
@@ -66,4 +88,8 @@ exports.updateUserRank = function(username) {
         if (err) throw err;
         console.log(response);
     });
-};
+    console.log('xxx');
+}
+
+exports.updateUserRank = updateRank;
+
