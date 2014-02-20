@@ -1,4 +1,6 @@
-angular.module('mainApp').run(['$rootScope', function($rootScope) {
+var mainApp = angular.module('mainApp');
+
+mainApp.run(['$rootScope', '$location', 'accountService', function($rootScope, $location, accountService) {
 
  // Api Error format
  $rootScope.ErrorRenderer = function(data) {
@@ -9,4 +11,36 @@ angular.module('mainApp').run(['$rootScope', function($rootScope) {
    return errors;
  };
 
+ // Get Active User
+ $rootScope.getActiveUser = function(callback){
+    var username = $location.absUrl().split('/');
+    if(username.length > 3 && username[3] != ''){
+       accountService.user_profile(username[3], function(data){
+          callback(data.data);
+       });
+    }
+ };
+
 }]);
+
+
+mainApp.service('alertService', function(){
+    // error alert
+    this.error = function(title, message){
+       return {
+            visibility: true,
+            title: title,
+            state: false,
+            message: message
+       }
+   };
+   // success alert
+   this.success = function(title, message){
+       return {
+            visibility: true,
+            title: title,
+            state: true,
+            message: message
+       }
+   };
+});

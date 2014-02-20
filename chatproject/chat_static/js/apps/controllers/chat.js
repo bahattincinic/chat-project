@@ -1,73 +1,51 @@
 'use strict';
 
-angular.module('chatApp').controller('userChatController' ,[
-    '$scope', '$filter', 'socket','chatService', function($scope, $filter, socket, chatService) {
-    // All Session list
-    $scope.session_list = [];
-    $scope.content = {'content': ''};
+angular.module('chatApp').controller('chatController', [
+    '$scope', '$rootScope', 'chatService', 'socket', function($scope, $rootScope, chatService, socket){
 
-    // Socket
-    socket.on('session_' + $scope.user.username, function(session) {
-        var tmpSesssion = JSON.parse(session);
-        tmpSesssion.messages = [];
-        $scope.session_list.push(tmpSesssion);
-        if(!$scope.active_session){
-            $scope.active_session = tmpSesssion;
-        }
-        socket.on('session_' + tmpSesssion.uuid, function(data){
-            var sessionFilter = $filter('filter')($scope.session_list, tmpSesssion.uuid)[0]
-            sessionFilter.messages.push(JSON.parse(data));
-        });
-    });
+    // All Session list
+    $scope.content = {'content': ''};
 
     // Chat Session Close
     $scope.blockSession = function(){
 
     };
+
     // Chat Session Change status active
     $scope.sessionChangeStatus = function($event, item){
-       $scope.active_session = item;
+       $rootScope.active_session = item;
     };
+
     // Session new message
     $scope.createMessage = function(){
-        chatService.message($scope.content,
-                            $scope.user.username,
-                            $scope.active_session.uuid,
-                            function(data){
-            $scope.content.content = '';
-        });
+        if($rootScope.active_session && $scope.content.content != ''){
+            chatService.message(
+                $scope.content,
+                $rootScope.user.username,
+                $rootScope.active_session.uuid,
+                function(data){
+                    $scope.content.content = '';
+            });
+        }
+
+        if($rootScope.state == 'anon' && !$rootScope.session){
+            $scope.createSession();
+        }
     };
-}]);
 
-
-angular.module('chatApp').controller('anonChatController',[
-    '$scope', 'socket', 'chatService', function($scope, socket, chatService) {
-    // messages
-    $scope.messages = [];
-    // input
-    $scope.content = {'content': ''};
-    // Session new message
+    // anon user create session
     $scope.createSession = function(){
-        if(!$scope.session &&  $scope.content.content != ''){
-            chatService.session($scope.user.username, function(data){
-                $scope.session = data.data;
+        if(!$rootScope.active_session &&  $scope.content.content != '' && $rootScope.state == 'anon'){
+            chatService.session($rootScope.user.username, function(data){
+                var tmpSesssion = data.data;
+                tmpSesssion.messages = [];
+                $rootScope.active_session = tmpSesssion;
                 $scope.createMessage();
-                socket.on('session_' + $scope.session.uuid, function(data){
-                    $scope.messages.push(JSON.parse(data));
+                socket.on('session_' + $scope.active_session.uuid, function(data){
+                    $scope.active_session.messages.push(JSON.parse(data));
                 });
             });
         }
     };
-    $scope.createMessage = function(){
-        if($scope.session && $scope.content.content != ''){
-            chatService.message($scope.content,
-                                $scope.user.username,
-                                $scope.session.uuid,
-                                function(data){
-                $scope.content.content = '';
-            })
-        }else{
-            $scope.createSession();
-        }
-    };
+
 }]);

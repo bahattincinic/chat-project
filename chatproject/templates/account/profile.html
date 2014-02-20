@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}{{ object.username }} | The Chat{% endblock %}
+
+{% block body %}
+<div class="row-body content-profile" ng-init="state='{{ type }}'; authenticate={{ authenticate|lower }}">
+     <!-- Cover/Profile Bar -->
+     <div class="twelve columns">
+        <div class="cover-container">
+            <div ng-init="is_loading=true" ng-show="is_loading" class="cover_loading animation">
+                <img src="/static/images/loading.gif" />
+            </div>
+           <div class="cover-content">
+               <div id="user_statistics_count">
+                  <span class="span_margin" ng-switch="state">
+                      <a href="#/follows" ng-switch-when="me" style="color:#fff">
+                          Follows: <span ng-bind="user.followees"></span>
+                      </a>
+                      <a style="color:#fff" ng-switch-when="anon">
+                          Follows: <span ng-bind="user.followees"></span>
+                      </a>
+                  </span>
+                   <span class="span_margin">
+                      Followers: <span ng-bind="user.followers"></span>
+                  </span>
+                  <span>
+                      Session: <span ng-bind="user.session"></span>
+                  </span>
+               </div>
+              <div class="cover-image" ng-style="{'background-image': 'url(' + user.background_url + ')'}"></div>
+              <div class="cover-description">
+                 <div class="cover-avatar-content">
+                    <div class="cover-avatar">
+                       <span>
+                        <img ng-src="{[{ user.avatar_url }]}" />
+                       </span>
+                    </div>
+                 </div>
+                 <div class="cover-description-content">
+                    <div class="cover-username">
+                       <a href="javascript:void(0)" ng-bind="user.username"></a>
+                       <span ng-hide="user.location == null" class="user_location" ng-bind=" '/' +user.location"></span>
+                    </div>
+                     <div ng-switch="state">
+                         <a href="#/edit-profile" ng-switch-when="me" title="Change Profile Images">
+                             <div class="edit_profile_btn"></div>
+                         </a>
+                         <div ng-switch-when="anon">
+                             <div class="follow user_report" click-link="/report/" ng-show="authenticate" style="width: 76px;">
+                                 <span class="report_icon"></span>
+                                 <span class="follow_text">Report</span>
+                             </div>
+                             <div ng-controller="followController" class="follow" ng-click="do_follow()" ng-show="follow.visibility">
+                                <span ng-class="{'subscribe': !follow.state, 'unsubscribe': follow.state}"></span>
+                                <span class="follow_text" ng-bind="follow.text"></span>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+              </div>
+              <div class="seven columns user_bio">
+                  <span ng-bind="user.bio"></span>
+              </div>
+           </div>
+        </div>
+     </div>
+</div>
+
+
+<div class="row-body content-messages">
+    <div ng-view class="animation" ></div>
+</div>
+{% endblock %}

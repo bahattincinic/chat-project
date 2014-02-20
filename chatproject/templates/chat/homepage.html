@@ -5,7 +5,7 @@
 
 {% block body %}
 <!-- Login / Register -->
-<div class="row-welcome content-welcome">
+<div class="row-welcome content-welcome" ng-init="authenticate=false">
     <div class="row-body">
         <div class="welcome-inner">
             <div class="welcome-message">
@@ -20,27 +20,23 @@
                 </div>
             </div>
             <div class="welcome-inputs">
-                <form action="" method="POST" autocomplete="off" ng-controller="registerController">
-                    <div class="notification-box box-transparent notification-box-transparent" ng-show="isError">
-                        <h5 ng-bind="errorType"></h5>
-                        <p ng-bind="errorMessage"></p>
-                        <a href="javascript:void(0)" class="notification-close notification-close-transparent" ng-click="isError=false">x</a>
-                    </div>
-                    <input type="text" id="short" ng-model="form.username" name="username" placeholder="Username" />
-                    <input type="password" id="short" ng-model="form.password" name="password" placeholder="Password" />
+                <form action="" method="POST" autocomplete="off" ng-submit="process()" ng-controller="registerController">
+
+                    <alert shape="'homepage'" context="alert"></alert>
+
+                    <input type="text" required  ng-model="form.username" name="username" placeholder="Username" />
+                    <input type="password" required ng-model="form.password" name="password" placeholder="Password" />
                     <input type="text" id="short" ng-model="form.email" name="email" placeholder="Email (optional)" />
-                    <button type="submit" name="register" ng-click="process()" class="register-button">Register</button>
+                    <button type="submit" name="register"  class="register-button">Register</button>
                 </form>
                 <br />
-                <form action="" method="POST" autocomplete="off" ng-controller="loginController">
-                    <div class="notification-box box-transparent notification-box-transparent" ng-show="isError">
-                        <h5>Error</h5>
-                        <p>Invalid username or password.</p>
-                        <a href="javascript:void(0)" class="notification-close notification-close-transparent" ng-click="isError=false">x</a>
-                    </div>
-                    <input type="text" id="short" ng-model="form.username" name="username" placeholder="Username" />
-                    <input type="password" id="short" ng-model="form.password" name="password" placeholder="Password" />
-                    <button type="submit" name="login" ng-click="process()" class="login-button">Login</button>
+                <form action="" method="POST" autocomplete="off" ng-controller="loginController" ng-submit="process()">
+
+                    <alert shape="'homepage'" context="alert"></alert>
+
+                    <input type="text" required ng-model="form.username" name="username" placeholder="Username" />
+                    <input type="password" required ng-model="form.password" name="password" placeholder="Password" />
+                    <button type="submit" name="login" class="login-button">Login</button>
                     <span class="forgot-password">
                         <a href="{% url 'forgot-my-password' %}">Forgot your password?</a>
                     </span>

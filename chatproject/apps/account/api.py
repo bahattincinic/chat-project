@@ -9,7 +9,7 @@ from actstream.models import action, Action
 from account.models import User, Follow, Report
 from . import serializers
 from . import permissions
-from core.generics import CreateDestroyAPIView
+from core.generics import ListCreateDestroyAPIView
 
 
 class AccountDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -89,7 +89,7 @@ class AccountFollowees(generics.ListAPIView):
         return user.followees()
 
 
-class AccountFollow(CreateDestroyAPIView):
+class AccountFollow(ListCreateDestroyAPIView):
     """
     User Follow, UnFollow
     /account/bahattincinic/follow/ -> (post)

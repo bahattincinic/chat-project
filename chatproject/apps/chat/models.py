@@ -93,8 +93,8 @@ class ChatSession(models.Model):
         return "ChatSession with %s (%s)'target' " \
                "and %s(%s)'anon' " \
                "at %s" % (self.target.username, self.target.id,
-                                  self.anon.username, self.anon.id,
-                                  self.created_at)
+                          self.anon.username, self.anon.id,
+                          self.created_at)
 
 
 class ChatMessage(models.Model):

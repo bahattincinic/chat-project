@@ -1,4 +1,5 @@
 <div class="message-reply-container" ng-repeat="item in instance">
+
    <div class="message-reply-avatar" ng-switch="item.direction">
       <a href="javascript:void(0)" ng-switch-when="TO_USR">
          <img ng-src="/static/images/comment_avatar.jpeg" />
@@ -7,6 +8,7 @@
          <img ng-src="/media/avatar/{[{ item.session.target.avatar }]}" />
       </a>
    </div>
+
    <div class="message-reply-message">
       <span class="message-reply-author" ng-switch="item.direction">
         <a href="javascript:void(0)" ng-switch-when="TO_USR">

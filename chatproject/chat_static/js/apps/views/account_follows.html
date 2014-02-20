@@ -1,0 +1,30 @@
+<div ng-controller="followController">
+    <div class="twelve columns" id="messages">
+         <div class="message-container" ng-repeat="follow in user.follows">
+            <div class="message-content">
+                <div class="message-inner">
+                    <div class="message-avatar">
+                        <a ng-href="/{[{ follow.username }]}/">
+                            <img ng-src="{[{ follow.avatar_url }]}">
+                        </a>
+                    </div>
+                    <div class="message-top">
+                        <div class="message-author" id="author11179">
+                            <a ng-href="/{[{ follow.username }]}/">{[{ follow.username }]}</a>
+                        </div>
+                        <div class="message-time">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="message-container" id="more_messages">
+            <div class="load_more" ng-show="user.load_more_follow">
+                <a href='javascript:void(0)' ng-click="loadFollows()">Load More</a>
+            </div>
+            <div class="load_more">
+                <a href='#/'>Back</a>
+            </div>
+        </div>
+    </div>
+</div>

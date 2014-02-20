@@ -5,7 +5,7 @@ from page.models import Page
 
 
 class HomePageView(TemplateView):
-    template_name = "chat/anon_homepage.html"
+    template_name = "chat/homepage.html"
 
     def get_context_data(self, **kwargs):
         context = super(HomePageView, self).get_context_data(**kwargs)

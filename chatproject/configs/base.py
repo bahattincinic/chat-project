@@ -57,6 +57,8 @@ MEDIA_ROOT = os.path.normpath(os.path.join(BASE_DIR, 'media'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = '/media/'
+AVATAR_MEDIA_URL = MEDIA_URL + 'avatar/'
+BACKGROUND_MEDIA_URL = MEDIA_URL + 'cover/'
 ########## END MEDIA CONFIGURATION
 
 # APP CONFIGURATION
@@ -136,7 +138,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     # Pagination settings
-    'PAGINATE_BY': 5, # TODO: burasi arttirilmali daha sonra
+    'PAGINATE_BY': 10,
     'PAGINATE_BY_PARAM': 'page_size',
     'MAX_PAGINATE_BY': 100,
 }

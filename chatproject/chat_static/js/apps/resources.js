@@ -28,8 +28,8 @@ angular.module('authApp').factory('authService', function($http) {
 });
 
 // Node Resource
-angular.module('mainApp').factory('socket', function ($rootScope) {
-  var socket = io.connect('http://localhost:8080');
+angular.module('mainApp').factory('socket', function ($rootScope, $location) {
+  var socket = io.connect('http://127.0.0.1:8080');
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -63,6 +63,46 @@ angular.module('chatApp').factory('chatService', function($http){
             payload = angular.toJson(payload);
             var url = '/api/v1/account/' + username + '/sessions/' + uuid + '/messages/';
             $http.post(url, payload).then(successCallback, errorCallback)
+        }
+    }
+});
+
+// User Service
+angular.module('chatApp').factory('accountService', function($http){
+    return {
+        check_follow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.get(url).then(successCallback, errorCallback);
+        },
+        follow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.post(url).then(successCallback, errorCallback);
+        },
+        unfollow: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follow/';
+            $http.delete(url).then(successCallback, errorCallback);
+        },
+        user_profile: function(username, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/';
+            $http.get(url).then(successCallback, errorCallback);
+        },
+        follows: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/follows/';
+            $http.get(url, {params: payload}).then(successCallback, errorCallback);
+        },
+        update_profile: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/';
+            payload = angular.toJson(payload);
+            $http.put(url, payload).then(successCallback, errorCallback);
+        },
+        change_password: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/change-password/';
+            payload = angular.toJson(payload);
+            $http.put(url, payload).then(successCallback, errorCallback);
+        },
+        report: function(username, payload, successCallback, errorCallback){
+            var url = '/api/v1/account/' + username + '/report/';
+            $http.post(url, payload).then(successCallback, errorCallback);
         }
     }
 });
