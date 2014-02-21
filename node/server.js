@@ -3,11 +3,13 @@ var app = require('http').createServer(),
     xsocket = require('./xsockets'),
     xsession = require('./xsessions'),
     cookie_reader = require('cookie'),
+    // session_reader = require('redis').createClient(),
     xredis = require('./xredis');
 
 // used when storing socket values in redis
 
 app.listen(9999);
+xredis.redis.set('osman', 'washere');
 
 io.configure(function() {
     io.set('authorization', function(data, accept) {
@@ -25,6 +27,7 @@ io.configure(function() {
 io.sockets.on('connection', function(socket) {
     console.log('on connection');
     xsocket.addSocket(socket);
+    socket.emit('identify');
 
     socket.on('initiate_session', function(data) {
         console.log('initiate_session');
@@ -123,18 +126,16 @@ io.sockets.on('connection', function(socket) {
         console.log('break');
     });
 
-    socket.on('active_connection', function(data) {
-        if (data.username) {
-            var sessionid = socket.handshake.cookie['sessionid'];
-            console.log(sessionid);
-            socket.username = data.username;
-            console.log('new user: ' + data.username);
-            // TODO: maybe merge here??
-            xredis.updateUserRank(data.username);
-            // add new socket to redis
-            xredis.addSocket(data.username, socket.id);
-        } else {
-            console.log('no username in hear');
+    socket.on('active_connection', function() {
+        var sessionid = socket.handshake.cookie['sessionid'];
+        if (sessionid) {
+            xredis.bindUserSocket(socket, sessionid);
+        }
+    });
+
+    socket.on('pulse', function() {
+        if (socket.username) {
+            xredis.updateUserRank(socket.username);
         }
     });
 });

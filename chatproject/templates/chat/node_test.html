@@ -53,7 +53,8 @@ $.ajaxSetup({
 {% if request.user.is_authenticated %}
 var socket = io.connect('http://l', {resource: 'io'});
 var username = '{{ request.user.username }}';
-socket.emit('active_connection', {username: username});
+// register here on start
+// socket.emit('active_connection');
 // on new sessions for this client
 socket.on('new_session', function(session) {
     vm.sessions.push(session);
@@ -65,6 +66,10 @@ socket.on('new_message', function(message) {
 // on close sessions
 socket.on('close_session', function(session) {
     vm.removesession(session.uuid);
+});
+
+socket.on('identify', function() {
+    socket.emit('active_connection');
 });
 {% endif %}
 
@@ -90,20 +95,6 @@ var vm = {
             socket.emit('initiate_session', {'anon': session.anon.username,
                                              'uuid': session.uuid,
                                              'target': session.target.username});
-            // console.log("opening session, socket.id: " + socket.id);
-            // vm.sessions.push(session);
-            // var channel = 'message_' + session.uuid;
-
-            // // listen for messages on out session
-            // socket.on(channel, function(data) {
-            //     var message = JSON.parse(data);
-            //     vm.messages.push(message);
-            // });
-
-            // // listen for disconnected event for the session we created
-            // socket.on('disconnected_' + session.uuid, function(data) {
-            //     vm.removesession(session.uuid);
-            // });
         }, 'json');
     // });
     },
