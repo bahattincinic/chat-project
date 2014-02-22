@@ -22,6 +22,7 @@ io.configure(function() {
     });
     io.set('close timeout', 60*60*24); // 24h
     io.set('log level', 1);
+    io.set('resource', '/io');
 });
 
 io.sockets.on('connection', function(socket) {

@@ -50,14 +50,9 @@ $.ajaxSetup({
         }
     }
 });
-{% comment %}
 {% if request.user.is_authenticated %}
-{% endcomment %}
-
-var socket = io.connect('http://l:9999');
+var socket = io.connect('http://l', {resource: 'io'});
 var username = '{{ request.user.username }}';
-// register here on start
-// socket.emit('active_connection');
 // on new sessions for this client
 socket.on('new_session', function(session) {
     vm.sessions.push(session);
@@ -75,9 +70,7 @@ socket.on('identify', function() {
     console.log('identify received');
     socket.emit('active_connection');
 });
-{% comment %}
 {% endif %}
-{% endcomment %}
 
 var vm = {
     users: ko.observableArray([
