@@ -9,14 +9,15 @@ var app = require('http').createServer(),
 // used when storing socket values in redis
 
 app.listen(9999);
-xredis.redis.set('osman', 'washere');
 
 io.configure(function() {
-    io.set('authorization', function(data, accept) {
-        if (data.headers.cookie) {
-            data.cookie = cookie_reader.parse(data.headers.cookie);
+    io.set('authorization', function(handshakeData, accept) {
+        if (handshakeData.headers.cookie) {
+            handshakeData.cookie = cookie_reader.parse(handshakeData.headers.cookie);
+            console.log('accept');
             return accept(null, true);
         }
+        console.log('accept error');
         return accept('error', false);
     });
     io.set('close timeout', 60*60*24); // 24h
@@ -82,7 +83,6 @@ io.sockets.on('connection', function(socket) {
 //        var i = all_sockets.indexOf(socket);
 //        all_sockets.splice(i, 1); // remove element
         xsocket.removeSocket(socket);
-        console.log('break here');
 
         // check if this socket has any anon sessions
         if (xsession.hasAnonSessions(socket.id)) {
@@ -114,7 +114,6 @@ io.sockets.on('connection', function(socket) {
                 console.log('remaining sockets does exists for user ' + socket.username);
             }
         }
-        console.log('break');
     });
 
     socket.on('user_disconnected', function(data) {
@@ -122,10 +121,10 @@ io.sockets.on('connection', function(socket) {
         console.log('socket.id: ' + socket.id + " socket.user: " + socket.username);
         var session = xsession.getSession(data.uuid);
         if (session) {closeSession(session);} else {throw('not found session')}
-        console.log('break');
     });
 
     socket.on('active_connection', function() {
+        console.log('active_connection');
         var sessionid = socket.handshake.cookie['sessionid'];
         if (sessionid) {
             xredis.bindUserSocket(socket, sessionid);

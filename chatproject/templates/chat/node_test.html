@@ -50,7 +50,10 @@ $.ajaxSetup({
         }
     }
 });
+{% comment %}
 {% if request.user.is_authenticated %}
+{% endcomment %}
+
 var socket = io.connect('http://l:9999');
 var username = '{{ request.user.username }}';
 // register here on start
@@ -69,9 +72,12 @@ socket.on('close_session', function(session) {
 });
 
 socket.on('identify', function() {
+    console.log('identify received');
     socket.emit('active_connection');
 });
+{% comment %}
 {% endif %}
+{% endcomment %}
 
 var vm = {
     users: ko.observableArray([
