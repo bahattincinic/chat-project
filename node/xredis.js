@@ -5,23 +5,32 @@ var redisSocketPrefix = 'sockets_'; // sockets_<username>
 var redisSessionPrefix = 'sessions_'; // sessions_<username>
 var redisSingleSessionPrefix = 'session_'; // session_<sesion__uuid>
 
-exports.redis = redis;
-
 exports.bindUserSocket = function(socket, sessionid) {
     if (socket && sessionid) {
-        console.log(sessionid);
-        redis.get('djsession:' + sessionid, function(err, reply) {
-            try {
-                var buffer = new Buffer(reply, 'base64').toString();
-                var add = buffer.split(':')[0] + ":";
-                var djsession = JSON.parse(buffer.replace(add, ''));
-                var userid = djsession["_auth_user_id"];
-                socket.username = userid;
-                // update rank for this user
-                updateRank(socket.username);
-            } catch(err) {
-                console.error("error parsing user session:  " + err);
-                throw(err);
+        var key = 'djsession:' + sessionid;
+        redis.get(key, function(err, reply) {
+            if (err) {
+                throw new Error('Unable to get session data from redis: ' + key +
+                    ' skipping binding user to socket message:' + err);
+            }
+
+            if (reply) {
+                try {
+                    // try to parse session data
+                    var buffer = new Buffer(reply, 'base64').toString();
+                    var add = buffer.split(':')[0] + ":";
+                    var djsession = JSON.parse(buffer.replace(add, ''));
+                    var userid = djsession["_auth_user_id"];
+                    socket.username = userid;
+                    // update rank for this user
+                    updateRank(socket.username);
+                } catch(err) {
+                    var message =  'Unable to parse session data for sessionid: ' +
+                        sessionid + " message:" + err;
+                    console.error(message);
+                }
+            } else {
+                console.warn('no session data returned for sessionid: ' + sessionid);
             }
         });
     }
@@ -85,8 +94,8 @@ function updateRank(username) {
     var multi = redis.multi();
     multi.zadd(args);
     multi.exec(function(err, response) {
-        if (err) throw err;
-        console.log(response);
+        if (err) throw new Error("Error while executing update multi " +
+            "on redis: " + err);
     });
     console.log('xxx');
 }

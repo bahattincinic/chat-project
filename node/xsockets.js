@@ -1,4 +1,5 @@
 var _ = require('underscore');
+var xredis = require('./xredis');
 
 var all_sockets = [];
 
@@ -6,6 +7,9 @@ exports.all_sockets = all_sockets;
 
 exports.addSocket = function(socket) {
     all_sockets.push(socket);
+    if (socket.handshake.sessionid) {
+        xredis.bindUserSocket(socket, socket.handshake.sessionid);
+    }
 }
 
 exports.removeSocket = function(socket) {
