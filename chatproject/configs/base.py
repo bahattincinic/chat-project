@@ -74,7 +74,8 @@ LOCAL_APPS = (
     'api',
     'chat',
     'network',
-    'page'
+    'page',
+    'internal'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

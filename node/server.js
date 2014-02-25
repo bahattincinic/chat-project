@@ -2,7 +2,7 @@ var d = require('domain').create();
 
 d.on('error', function(err) {
     // log message and exit
-    console.log('fatal: ' + err.message);
+    console.error('fatal: ' + err.message);
     // cleanup
     process.exit(1);
 });
@@ -44,6 +44,9 @@ d.run(function() {
 
     io.sockets.on('connection', function(socket) {
         xsocket.addSocket(socket);
+        socket.on('error', function(err) {
+            console.log('socket io error here: ' + err);
+        });
 
         socket.on('initiate_session', function(data) {
             console.log('initiate_session');
@@ -59,22 +62,20 @@ d.run(function() {
                 socket.emit('new_session', session);
                 // TODO: store session or socket data on redis also
             } else {
-                throw('eww!!');
+                throw new Error('unexpected/missing args when initiating session: ' + data);
             }
-
             console.log('initiate done');
         });
 
         socket.on('message', function(message) {
             console.dir(message);
             if (!(message.content && message.direction && message.session)) {
-                throw('bad message, bad kitty!!');
+                throw new Error('unexpected/missing args ' +
+                    'when relaying message: ' + message);
             }
 
             var session = xsession.getSession(message.session.uuid);
-
             var target_sockets = xsocket.getUserSockets(message.session.target.username);
-
             if (!(session && target_sockets.length > 0)) {
                 console.dir(session);
                 throw('eww!');
@@ -96,8 +97,6 @@ d.run(function() {
         socket.on('disconnect', function () {
             console.log("Socket disconnected: " + socket.id);
             console.log('User disconnected: ' + socket.username);
-//        var i = all_sockets.indexOf(socket);
-//        all_sockets.splice(i, 1); // remove element
             xsocket.removeSocket(socket);
 
             // check if this socket has any anon sessions
@@ -137,14 +136,6 @@ d.run(function() {
             console.log('socket.id: ' + socket.id + " socket.user: " + socket.username);
             var session = xsession.getSession(data.uuid);
             if (session) {closeSession(session);} else {throw('not found session')}
-        });
-
-        socket.on('active_connection', function() {
-            console.log('active_connection');
-            var sessionid = socket.handshake.cookie['sessionid'];
-            if (sessionid) {
-                var res = xredis.bindUserSocket(socket, sessionid);
-            }
         });
 
         socket.on('pulse', function() {

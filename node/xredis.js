@@ -1,4 +1,6 @@
 var redis = require('redis').createClient(),
+    http = require('http'),
+    _ = require('underscore'),
     moment = require('moment');
 
 var redisSocketPrefix = 'sockets_'; // sockets_<username>
@@ -21,9 +23,30 @@ exports.bindUserSocket = function(socket, sessionid) {
                     var add = buffer.split(':')[0] + ":";
                     var djsession = JSON.parse(buffer.replace(add, ''));
                     var userid = djsession["_auth_user_id"];
-                    socket.username = userid;
-                    // update rank for this user
-                    updateRank(socket.username);
+                    if (userid) {
+                        var options = {
+                            host: '127.0.0.1',
+                            port: 80,
+                            path: '/internal/translate/' + userid + '/'
+                        };
+                        // make request
+                        http.get(options, function(resp){
+                            resp.on('data', function(rawdata) {
+                                console.log('run: ' + userid);
+                                var response = JSON.parse(new Buffer(rawdata, 'ascii').toString());
+                                if (_.has(response, 'username')) {
+                                    console.log('setting username as ' + response.username);
+                                    socket.username = response.username;
+                                    updateRank(socket.username);
+                                } else {
+                                    console.error('username not found for id: ' + userid);
+                                }
+                            });
+                        }).on('error', function(e) {
+                                throw new Error('Error while using internal api, ' +
+                                    'userid: ' + userid + "error: " + e.message);
+                        });
+                    }
                 } catch(err) {
                     var message =  'Unable to parse session data for sessionid: ' +
                         sessionid + " message:" + err;
