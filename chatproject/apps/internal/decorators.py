@@ -15,7 +15,6 @@ def ensure_request_origin(origin_list):
     def decorator(func):
         @wraps(func, assigned=available_attrs(func))
         def inner(request, *args, **kwargs):
-            print 'allow from %s' % origin_list
             x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
             if x_forwarded_for:
                 ip = x_forwarded_for.split(',')[-1].strip()
