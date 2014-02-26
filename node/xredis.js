@@ -16,6 +16,7 @@ exports.bindUserSocket = function(socket, sessionid) {
                     ' skipping binding user to socket message:' + err);
             }
 
+
             if (reply) {
                 try {
                     // try to parse session data
@@ -32,13 +33,12 @@ exports.bindUserSocket = function(socket, sessionid) {
                         // make request
                         http.get(options, function(resp){
                             resp.on('data', function(rawdata) {
-                                console.log('run: ' + userid);
                                 var response = JSON.parse(new Buffer(rawdata, 'ascii').toString());
                                 if (_.has(response, 'username')) {
-                                    console.log('setting username as ' + response.username);
                                     socket.username = response.username;
                                     updateRank(socket.username);
                                 } else {
+                                    // log this error
                                     console.error('username not found for id: ' + userid);
                                 }
                             });

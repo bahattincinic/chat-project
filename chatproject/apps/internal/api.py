@@ -10,3 +10,7 @@ class TranslateApiView(RetrieveAPIView):
     permission_classes = (LocalPermission,)
     lookup_field = "pk"
     lookup_url_kwarg = "pk"
+
+    def get_queryset(self):
+        user_id = self.kwargs['pk']
+        return User.actives.filter(id=user_id)
