@@ -41,10 +41,6 @@ class SessionAPIView(generics.ListCreateAPIView):
     )
     model = ChatSession
 
-    def __init__(self):
-        print self.__class__.__name__
-        super(SessionAPIView,self).__init__()
-
     def get_serializer_class(self):
         # detail query param returns session with all its messages
         detail = self.request.QUERY_PARAMS.get('detail')
