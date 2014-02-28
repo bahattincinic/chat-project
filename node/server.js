@@ -43,13 +43,16 @@ d.run(function() {
     });
 
     io.sockets.on('connection', function(socket) {
+        console.log('connection socket with id: ' + socket.id);
         xsocket.addSocket(socket);
         socket.on('error', function(err) {
             console.log('socket io error here: ' + err);
+            throw new Error(err);
         });
 
         socket.on('initiate_session', function(data) {
             console.log('initiate_session');
+            console.dir(data);
             if (data.anon && data.uuid && data.target) {
                 var session = xsession.createSession(
                     data.target,
@@ -60,6 +63,7 @@ d.run(function() {
                 var sockets = xsocket.addSessionToTargetSockets(data.target, session.uuid);
                 sockets.forEach(function(ii){ii.emit('new_session', session)});
                 socket.emit('new_session', session);
+                xredis.addSessionToUser(session);
                 // TODO: store session or socket data on redis also
             } else {
                 throw new Error('unexpected/missing args when initiating session: ' + data);
@@ -75,14 +79,18 @@ d.run(function() {
             }
 
             var session = xsession.getSession(message.session.uuid);
-            var target_sockets = xsocket.getUserSockets(message.session.target.username);
-            if (!(session && target_sockets.length > 0)) {
-                console.dir(session);
-                throw('eww!');
+            if (!session) {
+                throw new Error('unable to find session to send message');
+            }
+
+            var target_username = message.session.target.username;
+            var target_sockets = xsocket.getUserSockets(target_username);
+            if (!target_sockets.length > 0) {
+                throw new Error('No target sockets found ' +
+                    'while sending message for username: ' + target_username);
             }
 
             var anon_socket = xsocket.getSocket(session.anon.socket_id);
-
             // add socket of anon to target sockets
             target_sockets.push(anon_socket);
             // emit to all parties
@@ -170,7 +178,7 @@ d.run(function() {
 
             // remove session from all resources (redis and node)
             xsession.removeSession(session);
-            xredis.removeSession(session.uuid);
+            xredis.removeSessionFromUser(session);
         } else {
             throw('invalid session to close');
         }

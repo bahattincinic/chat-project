@@ -69,5 +69,13 @@ exports.removeSessionFromTargetSockets = function (username, session) {
     return sockets;
 }
 
-
+exports.addSessionToSocket = function(session__uuid, socket) {
+    if (socket && session__uuid) {
+        if (socket.sessions) {
+            socket.sessions.push(session__uuid);
+        } else {
+            socket.sessions = [session__uuid];
+        }
+    }
+};
 
