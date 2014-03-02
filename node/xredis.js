@@ -119,7 +119,7 @@ exports.addSocket = function(username, socket__id) {
 }
 
 exports.removeSessionFromUser = function(session) {
-    if (session.target && session.target.username && session.uuid) {
+    if (session && session.target && session.target.username && session.uuid) {
         var key = redisSessionPrefix + session.target.username;
         redis.srem(key, session.uuid);
         // TODO: if scard == 0 then delete
@@ -130,7 +130,7 @@ exports.removeSessionFromUser = function(session) {
 }
 
 exports.addSessionToUser = function(session) {
-    if (session.target && session.target.username && session.uuid) {
+    if (session && session.target && session.target.username && session.uuid) {
         redis.sadd(redisSessionPrefix + session.target.username, session.uuid);
     }
 }
@@ -145,7 +145,6 @@ function updateRank(username) {
         if (err) throw new Error("Error while executing update multi " +
             "on redis: " + err);
     });
-    console.log('xxx');
 }
 
 exports.updateUserRank = updateRank;

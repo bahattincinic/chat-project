@@ -155,7 +155,7 @@ d.run(function() {
 
     function closeSession(session) {
         console.log('close session');
-        if (session.uuid && session.target.username) {
+        if (session && session.uuid && session.target.username) {
             var pending_notification = xsocket.removeSessionFromTargetSockets(session.target.username, session.uuid);
             xredis.removeSessionFromUser(session.target.username, session.uuid);
             // find anon socket to inform and add it to list
