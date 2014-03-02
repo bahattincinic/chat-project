@@ -31,7 +31,7 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
         fields = ('content', 'session', 'direction', 'created_at')
-        read_only_fields = ('direction', 'created_at')
+        read_only_fields = ('direction',)
 
 
 class SessionMessageSerializer(serializers.ModelSerializer):
