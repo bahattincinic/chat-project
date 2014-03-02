@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block head %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+<script type="text/javascript" src="{% static "js/socket.io.js" %}"></script>
+<script type="text/javascript" src='//cdn.jsdelivr.net/underscorejs/1.4.3/underscore-min.js'></script>
+<script type="text/javascript">
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Django csrf stuff
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+function sameOrigin(url) {
+    // test that a given url is a same-origin URL
+    // url could be relative or scheme relative or absolute
+    var host = document.location.host; // host + port
+    var protocol = document.location.protocol;
+    var sr_origin = '//' + host;
+    var origin = protocol + sr_origin;
+    // Allow absolute or scheme relative URLs to same origin
+    return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+        (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+        // or any other URL that isn't scheme relative or absolute i.e relative.
+        !(/^(\/\/|http:|https:).*/.test(url));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+        }
+    }
+});
+{% if request.user.is_authenticated %}
+var socket = io.connect('http://l', {resource: 'io'});
+var username = '{{ request.user.username }}';
+// on new sessions for this client
+socket.on('new_session', function(session) {
+    vm.sessions.push(session);
+});
+// on new messages for this client
+socket.on('new_message', function(message) {
+    vm.messages.push(message);
+});
+// on close sessions
+socket.on('close_session', function(session) {
+    vm.removesession(session.uuid);
+});
+
+socket.on('identify', function() {
+    console.log('identify received');
+    socket.emit('active_connection');
+});
+{% endif %}
+
+var vm = {
+    users: ko.observableArray([
+        { name: 'osman', url: '/api/v1/account/osman/sessions/'},
+        { name: 'kazim', url: '/api/v1/account/kazim/sessions/'},
+        { name: 'balkan', url: '/api/v1/account/balkan/sessions/'}
+    ]),
+    messages: ko.observableArray([]),
+    sessions: ko.observableArray([]),
+    removesession: function(session_uuid) {
+        vm.sessions.remove(function(session){return session.uuid == session_uuid});
+        // remove messages too
+        vm.messages.remove(function(message) {return message.session.uuid == session_uuid});
+    },
+    newsession: function(form) {
+        var context = ko.contextFor(form);
+        var data = context.$data;
+
+        // first connect to node
+        $.post(data.url, function(session) {
+            socket.emit('initiate_session', {'anon': session.anon.username,
+                                             'uuid': session.uuid,
+                                             'target': session.target.username});
+        }, 'json');
+    // });
+    },
+    messagetext: ko.observable(),
+    {% if request.user.is_authenticated %}
+    active_sessions_url: '/api/v1/account/{{request.user.username}}/sessions/active/',
+    {% else %}
+    active_sessions_url: null,
+    {% endif %}
+    sendmessage: function(form) {
+        var context = ko.contextFor(form);
+        var data = context.$data;
+        var target_username = data.target.username;
+        var uuid = data.uuid;
+
+        var url = '/api/v1/account/' + target_username + '/sessions/' + uuid + '/messages/';
+        $.post(url, {'content': vm.messagetext()}).done(function(data) {
+                console.log(data);
+                socket.emit('message', data);
+            });
+    },
+    closesession: function(form) {
+        var context = ko.contextFor(form);
+        var data = context.$data;
+        var target_username = data.target.username;
+        var uuid = data.uuid;
+
+        console.dir(data); // same as node Session()
+
+        socket.emit('user_disconnected', data);
+    }
+};
+
+$(function() {
+    ko.applyBindings(vm);
+    {% if request.user.is_authenticated %}
+    vm.users.remove(function(user) {return user.name == '{{request.user.username}}'});
+    {% endif %}
+
+    // get active sessions from rest
+    // $.get(vm.active_sessions_url, function(data) {
+    //     // TODO: data.count > pagination.count ??
+    //     if (data.count > 0) {
+    //         console.log(data.count + 'number of active sessions found!');
+    //         // embed sessions
+    //         data.results.forEach(function(x){
+    //             console.log('adding session with uuid ' + x.uuid);
+    //             vm.sessions.push(x);
+    //             var channel = 'session_' + x.uuid;
+    //             // listen sessions
+    //             socket.on(channel, function(data) {
+    //                 vm.messages.push(JSON.parse(data));
+    //             });
+    //         });
+    //     }
+
+    // });
+});
+</script>
+{% endblock head %}
+
+{% block body %}
+{% if request.user.is_authenticated %}
+<div data-bind='foreach: users'>
+    <form data-bind='submit: vm.newsession'>
+        <button type='submit'>create session with <span data-bind='text: name'></span></button>
+    </form>
+</div>
+{# list sessions #}
+<legend>Sessions: </legend>
+<div class='listsessions' data-bind="foreach: sessions">
+    <form data-bind='submit: vm.sendmessage'>
+        <span data-bind='text: uuid'></span>
+        <input id='text' data-bind='value: vm.messagetext'>
+        <button type='submit'>Submit</button>
+    </form>
+    <form data-bind='submit: vm.closesession'>
+        <button type='submit'>Close</button>
+    </form>
+</div>
+{# list messages #}
+<legend>Messages: </legend>
+<div class='listmessages' data-bind="foreach: messages">
+    <span data-bind='text: $index'></span>
+    <span>DIR: <span data-bind='text: direction'></span></span>
+    <span>content: <span data-bind='text: content'></span></span>
+    <br>
+</div>
+{% else %}
+<span>not authenticated</span>
+{% endif %}
+
+{% endblock body %}
+
+

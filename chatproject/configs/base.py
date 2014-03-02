@@ -83,7 +83,8 @@ LOCAL_APPS = (
     'api',
     'chat',
     'network',
-    'page'
+    'page',
+    'internal'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -97,6 +98,15 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
+
+
+# sessions on redis
+SESSION_ENGINE = 'redis_sessions.session'
+SESSION_REDIS_HOST = 'localhost'
+SESSION_REDIS_PORT = 6379
+SESSION_REDIS_DB = 0
+SESSION_REDIS_PREFIX = 'djsession'
+
 
 ROOT_URLCONF = 'chatproject.urls'
 
@@ -226,3 +236,5 @@ DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL = 'WHITESPACE_ONLY'
 DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS = True
 DJANGO_STATIC_CLOSURE_COMPILER = '%s/../deploy/compiler.jar' % BASE_DIR
 DJANGO_STATIC_FILENAME_GENERATOR = 'utils.gen'
+
+INTERNAL_ALLOWED = ('127.0.0.1', '127.0.1.1', '192.168.75.1')

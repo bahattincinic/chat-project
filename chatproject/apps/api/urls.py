@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf.urls import patterns, include, url
+from django.views.generic.base import TemplateView
 from rest_framework.urlpatterns import format_suffix_patterns
 from account.urls import account_v1
 from auth.urls import auth_v1
@@ -14,6 +15,7 @@ v1_routers = patterns('',
     url(r'^auth/', include(auth_v1)),
     url(r'^page/', include(page_v1)),
     url(r'^network/', include(network_v1)),
+
 )
 
 v1_routers = format_suffix_patterns(v1_routers,

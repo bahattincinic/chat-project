@@ -5,6 +5,10 @@ from .validators import uuid_re_url
 
 chat_v1 = patterns('',
     url(r'^$', api.SessionAPIView.as_view(), name='session'),
+    # all sessions
+    url(r'^$', api.SessionAPIView.as_view(), name='session'),
+    # active session
+    url(r'^active/$', api.ActiveSessionAPIView.as_view(), name='active-session'),
     # session url group
     url(r'%s/' % uuid_re_url, include(patterns('',
         url(r'^$', api.SessionDetailAPIView.as_view(),

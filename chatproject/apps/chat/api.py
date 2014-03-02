@@ -12,6 +12,24 @@ from rest_framework.permissions import SAFE_METHODS
 from chat.serializers import SessionSerializer, MessageSerializer
 
 
+class ActiveSessionAPIView(generics.ListAPIView):
+    serializer_class = SessionSerializer
+    permission_classes = (
+        permissions.IsPostOrActiveAuthenticated,
+        permissions.IsRequestingUserDiffThanUrl,
+    )
+    model = ChatSession
+
+    def get_queryset(self):
+        # get session uuids from redis
+        r = redis.StrictRedis()
+        username = self.kwargs.get('username')
+        session_key = "sessions_%s" % username
+        members = r.smembers(session_key)
+        sessions = ChatSession.objects.filter(target__username=username, uuid__in=members)
+        return sessions
+
+
 class SessionAPIView(generics.ListCreateAPIView):
     serializer_class = serializers.SessionSerializer
     permission_classes = (
@@ -37,12 +55,6 @@ class SessionAPIView(generics.ListCreateAPIView):
         target = User.actives.get_or_raise(username=username,
                                            exc=Http404())
         obj.target = target
-
-    def post_save(self, obj, created=False):
-        serializer = SessionSerializer(obj)
-        data = JSONRenderer().render(serializer.data)
-        r = redis.StrictRedis()
-        r.publish("session_%s" % obj.target.username, data)
 
 
 class SessionDetailAPIView(generics.RetrieveAPIView):
