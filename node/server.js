@@ -25,11 +25,9 @@ d.run(function() {
                 if (handshakeData.cookie['sessionid']) {
                     handshakeData.sessionid = handshakeData.cookie['sessionid'];
                 }
-
-                return accept(null, true);
             }
-            // no cookie no connection
-            return accept('no cookie', false);
+            // allow connection always
+            return accept(null, true);
         });
         io.set('close timeout', 60*60*24); // 24h
         io.set('log level', 1);
@@ -133,6 +131,9 @@ d.run(function() {
                         // remove all sessions from removed socket
                         socket.sessions.length = 0;
                     }
+
+                    // remove from rank as well
+                    xredis.removeUserFromRank(socket.username);
                 } else {
                     console.log('remaining sockets does exists for user ' + socket.username);
                 }

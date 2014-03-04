@@ -56,16 +56,25 @@ exports.bindUserSocket = function(socket, sessionid) {
 };
 
 function updateRank(username) {
-    // score is current date
-    var score = parseInt(moment().format('YYMMDDHHmm'));
-    var args = ["active_connections", score, username];
-    var multi = redis.multi();
-    multi.zadd(args);
-    multi.exec(function(err, response) {
-        if (err) throw new Error("Error while executing update multi " +
-            "on redis: " + err);
-    });
+    if (username) {
+        // score is current date
+        var score = parseInt(moment().format('YYMMDDHHmm'));
+        var args = ["active_connections", score, username];
+        var multi = redis.multi();
+        multi.zadd(args);
+        multi.exec(function(err, response) {
+            if (err) throw new Error("Error while executing update multi " +
+                "on redis: " + err);
+        });
+    }
+}
+
+function removeUserFromRank(username) {
+    if (username) {
+        redis.zrem('active_connections', username);
+    }
 }
 
 exports.updateUserRank = updateRank;
+exports.removeUserFromRank = removeUserFromRank;
 

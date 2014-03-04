@@ -130,7 +130,6 @@ var vm = {
         $.post(url, {'content': vm.messagetext()}).done(function(data) {
                 console.log(data);
                 socket.emit('message', data);
-                // vm.messagetext('');
         });
     },
     closesession: function(form) {
