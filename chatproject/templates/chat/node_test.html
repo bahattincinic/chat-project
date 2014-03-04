@@ -51,7 +51,6 @@ $.ajaxSetup({
         }
     }
 });
-{% if request.user.is_authenticated %}
 var socket = io.connect('http://l', {resource: 'io'});
 var username = '{{ request.user.username }}';
 // on new sessions for this client
@@ -87,7 +86,6 @@ socket.on('typing_stopped', function(data) {
     console.log('stopped typing');
     vm.typing(false);
 });
-{% endif %}
 
 var vm = {
     users: ko.observableArray([
@@ -169,8 +167,6 @@ vm.watchguard.subscribe(function(val) {
 vm.messagetext.subscribe(function(newValue) {
     socket.emit('typing', computeTyping('start'));
 });
-
-
 $(function() {
     ko.applyBindings(vm);
     {% if request.user.is_authenticated %}
@@ -181,7 +177,6 @@ $(function() {
 {% endblock head %}
 
 {% block body %}
-{% if request.user.is_authenticated %}
 <div data-bind='foreach: users, visible: sessions().length == 0'>
     <form data-bind='submit: vm.newsession'>
         <button type='submit'>create session with <span data-bind='text: name'></span></button>
@@ -209,8 +204,4 @@ $(function() {
 </div>
 {# typing notification here #}
 <div class='info' data-bind='visible: vm.typing()'><span>Typing...</span></div>
-{% else %}
-<span>not authenticated</span>
-{% endif %}
-
 {% endblock body %}
