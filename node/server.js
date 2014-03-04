@@ -42,7 +42,7 @@ d.run(function() {
         ]);
     });
 
-    io.sockets.on('connection', function(socket) {
+    io.sockets.on('connection', function(socket){
         console.log('connection socket with id: ' + socket.id);
         xsocket.addSocket(socket);
         socket.on('error', function(err) {

@@ -38,24 +38,12 @@ angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
     $rootScope.ajaxCall = $q.defer();
     $rootScope.getActiveUser(function(data){
         $rootScope.user = data;
+        $rootScope.user.follows = [];
         $rootScope.is_loading = false;
         $rootScope.session_list = [];
-        if($rootScope.state == 'me'){
-            socket.on('session_' + $rootScope.user.username, function(session) {
-                var tmpSesssion = JSON.parse(session);
-                tmpSesssion.messages = [];
-                $rootScope.session_list.push(tmpSesssion);
-                if(!$rootScope.active_session){
-                    $rootScope.active_session = tmpSesssion;
-                }
-                socket.on('session_' + tmpSesssion.uuid, function(data){
-                    var sessionFilter = $filter('filter')($rootScope.session_list, tmpSesssion.uuid)[0];
-                    sessionFilter.messages.push(JSON.parse(data));
-                });
-                $rootScope.user.follows = [];
-            });
-        }
-        $timeout(function(){$rootScope.is_loading = false;}, 500);
+        $timeout(function(){
+            $rootScope.is_loading = false;
+        }, 500);
         $rootScope.ajaxCall.resolve();
     });
 });
