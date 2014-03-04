@@ -13,6 +13,7 @@ d.run(function() {
         xsocket = require('./xsockets'),
         xsession = require('./xsessions'),
         cookie_reader = require('cookie'),
+        _ = require('underscore'),
         xredis = require('./xredis');
     // used when storing socket values in redis
     app.listen(9999);
@@ -24,11 +25,9 @@ d.run(function() {
                 if (handshakeData.cookie['sessionid']) {
                     handshakeData.sessionid = handshakeData.cookie['sessionid'];
                 }
-
-                return accept(null, true);
             }
-            // no cookie no connection
-            return accept('no cookie', false);
+            // allow connection always
+            return accept(null, true);
         });
         io.set('close timeout', 60*60*24); // 24h
         io.set('log level', 1);
@@ -45,13 +44,14 @@ d.run(function() {
     io.sockets.on('connection', function(socket){
         console.log('connection socket with id: ' + socket.id);
         xsocket.addSocket(socket);
+
         socket.on('error', function(err) {
             console.log('socket io error here: ' + err);
             throw new Error(err);
         });
 
         socket.on('initiate_session', function(data) {
-            console.log('initiate_session');
+            console.log('initiate_session..');
             console.dir(data);
             if (data.anon && data.uuid && data.target) {
                 var session = xsession.createSession(
@@ -63,24 +63,25 @@ d.run(function() {
                 var sockets = xsocket.addSessionToTargetSockets(data.target, session.uuid);
                 sockets.forEach(function(ii){ii.emit('new_session', session)});
                 socket.emit('new_session', session);
-                xredis.addSessionToUser(session);
                 // TODO: store session or socket data on redis also
             } else {
                 throw new Error('unexpected/missing args when initiating session: ' + data);
             }
-            console.log('initiate done');
         });
 
         socket.on('message', function(message) {
+            console.log('message..');
             console.dir(message);
             if (!(message.content && message.direction && message.session)) {
-                throw new Error('unexpected/missing args ' +
+                console.error('unexpected/missing args ' +
                     'when relaying message: ' + message);
+                return;
             }
 
             var session = xsession.getSession(message.session.uuid);
             if (!session) {
-                throw new Error('unable to find session to send message');
+                console.error('unable to find session to send message');
+                return;
             }
 
             var target_username = message.session.target.username;
@@ -119,9 +120,6 @@ d.run(function() {
 
             // search for target sessions
             if (socket.username) {
-                // redis op
-//            xredis.removeSocket(socket.username, socket.id);
-
                 // any other sockets left for this user
                 if (xsocket.noSocketsLeft(socket.username)) {
                     console.log('no sockets remaining: ' + socket.username + " delete all sessions");
@@ -133,6 +131,9 @@ d.run(function() {
                         // remove all sessions from removed socket
                         socket.sessions.length = 0;
                     }
+
+                    // remove from rank as well
+                    xredis.removeUserFromRank(socket.username);
                 } else {
                     console.log('remaining sockets does exists for user ' + socket.username);
                 }
@@ -146,6 +147,48 @@ d.run(function() {
             if (session) {closeSession(session);} else {throw('not found session')}
         });
 
+        socket.on('typing', function(data) {
+            console.log('typing...');
+            console.dir(data);
+            var session = sanitizeTyping(data);
+            if (session) {
+                if (data.direction == 'TO_ANON') {
+                    // get all sockets for target
+                    var socket_id = session.anon.socket_id;
+                    if (!socket_id) {
+                        console.error('unable to determine anon socket id');
+                        return;
+                    }
+
+                    var anon_socket = xsocket.getSocket(socket_id);
+                    if (anon_socket) {
+                        var channel = '';
+                        if (data.action == 'start') {
+                            channel = 'typing_started';
+                        } else {
+                            channel = 'typing_stopped';
+                        }
+
+                        anon_socket.emit(channel, data);
+                    }
+                } else {
+                    var username = session.target.username;
+                    var target_sockets = xsocket.getUserSockets(username);
+                    if (target_sockets && target_sockets.length > 0) {
+                        target_sockets.forEach(function(socket) {
+                            var channel = '';
+                            if (data.action == 'start') {
+                                channel = 'typing_started';
+                            } else {
+                                channel = 'typing_stopped';
+                            }
+                            socket.emit(channel, data);
+                        })
+                    }
+                }
+            }
+        });
+
         socket.on('pulse', function() {
             if (socket.username) {
                 xredis.updateUserRank(socket.username);
@@ -155,9 +198,8 @@ d.run(function() {
 
     function closeSession(session) {
         console.log('close session');
-        if (session.uuid && session.target.username) {
+        if (session && session.uuid && session.target.username) {
             var pending_notification = xsocket.removeSessionFromTargetSockets(session.target.username, session.uuid);
-            xredis.removeSessionFromUser(session.target.username, session.uuid);
             // find anon socket to inform and add it to list
             if (!session.anon_closed) {
                 pending_notification.push(xsocket.getSocket(session.anon.socket_id));
@@ -178,9 +220,36 @@ d.run(function() {
 
             // remove session from all resources (redis and node)
             xsession.removeSession(session);
-            xredis.removeSessionFromUser(session);
         } else {
-            throw('invalid session to close');
+            console.error('invalid session to close');
+            console.log('all sessions:');
+            xsession.all_sessions.forEach(function(session) {
+                console.dir(session);
+            });
         }
-    };
+    }
+
+    function sanitizeTyping(data) {
+        if (!(data && data.uuid && data.direction)) {
+            console.error('invalid typing data');
+            return null;
+        }
+
+        if (!_.contains(['TO_USR','TO_ANON'], data.direction)) {
+            console.error('invalid direction data');
+            return null;
+        }
+
+        var session = xsession.getSession(data.uuid);
+        if (!session) {
+            console.error('invalid session data to relay typing.');
+            return null;
+        }
+        if (!_.contains(['start', 'stop'], data.action)) {
+            console.error('action must be either start or stop during typing event');
+            return null;
+        }
+
+        return session;
+    }
 });

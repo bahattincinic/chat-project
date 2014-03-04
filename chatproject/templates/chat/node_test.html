@@ -2,6 +2,7 @@
 {% load staticfiles %}
 
 {% block head %}
+<style type="text/css">.info{background-color: #4ea5cd;border-color: #3b8eb5;}</style>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
 <script type="text/javascript" src="{% static "js/socket.io.js" %}"></script>
 <script type="text/javascript" src='//cdn.jsdelivr.net/underscorejs/1.4.3/underscore-min.js'></script>
@@ -50,27 +51,41 @@ $.ajaxSetup({
         }
     }
 });
-{% if request.user.is_authenticated %}
 var socket = io.connect('http://l', {resource: 'io'});
 var username = '{{ request.user.username }}';
 // on new sessions for this client
 socket.on('new_session', function(session) {
     vm.sessions.push(session);
+    if (vm.role() == 'none') {
+        vm.role('target');
+    }
 });
 // on new messages for this client
 socket.on('new_message', function(message) {
+    console.log('received message');
+    vm.typing(false);
     vm.messages.push(message);
 });
 // on close sessions
 socket.on('close_session', function(session) {
     vm.removesession(session.uuid);
+    vm.role('none');
 });
-
+// emitted on bootstrap
 socket.on('identify', function() {
     console.log('identify received');
     socket.emit('active_connection');
 });
-{% endif %}
+//
+socket.on('typing_started', function(data) {
+    console.log('started typing');
+    vm.typing(true);
+});
+
+socket.on('typing_stopped', function(data) {
+    console.log('stopped typing');
+    vm.typing(false);
+});
 
 var vm = {
     users: ko.observableArray([
@@ -94,10 +109,12 @@ var vm = {
             socket.emit('initiate_session', {'anon': session.anon.username,
                                              'uuid': session.uuid,
                                              'target': session.target.username});
+            vm.role('anon');
         }, 'json');
-    // });
     },
+    typing: ko.observable(false),
     messagetext: ko.observable(),
+    role: ko.observable('none'),
     {% if request.user.is_authenticated %}
     active_sessions_url: '/api/v1/account/{{request.user.username}}/sessions/active/',
     {% else %}
@@ -113,7 +130,7 @@ var vm = {
         $.post(url, {'content': vm.messagetext()}).done(function(data) {
                 console.log(data);
                 socket.emit('message', data);
-            });
+        });
     },
     closesession: function(form) {
         var context = ko.contextFor(form);
@@ -122,42 +139,44 @@ var vm = {
         var uuid = data.uuid;
 
         console.dir(data); // same as node Session()
-
         socket.emit('user_disconnected', data);
     }
 };
 
+vm.watchguard = ko.computed(vm.messagetext).extend({throttle: 3000});
+
+function computeTyping(action_name) {
+    var session = vm.sessions()[0];
+    console.dir(session);
+    if (vm.role() == 'anon') {
+        var dir = 'TO_USR';
+    } else {
+        var dir = 'TO_ANON';
+    }
+
+    return {'direction': dir,
+            'uuid': session.uuid,
+            'action': action_name};
+}
+
+vm.watchguard.subscribe(function(val) {
+    socket.emit('typing', computeTyping('stop'));
+});
+
+vm.messagetext.subscribe(function(newValue) {
+    socket.emit('typing', computeTyping('start'));
+});
 $(function() {
     ko.applyBindings(vm);
     {% if request.user.is_authenticated %}
     vm.users.remove(function(user) {return user.name == '{{request.user.username}}'});
     {% endif %}
-
-    // get active sessions from rest
-    // $.get(vm.active_sessions_url, function(data) {
-    //     // TODO: data.count > pagination.count ??
-    //     if (data.count > 0) {
-    //         console.log(data.count + 'number of active sessions found!');
-    //         // embed sessions
-    //         data.results.forEach(function(x){
-    //             console.log('adding session with uuid ' + x.uuid);
-    //             vm.sessions.push(x);
-    //             var channel = 'session_' + x.uuid;
-    //             // listen sessions
-    //             socket.on(channel, function(data) {
-    //                 vm.messages.push(JSON.parse(data));
-    //             });
-    //         });
-    //     }
-
-    // });
 });
 </script>
 {% endblock head %}
 
 {% block body %}
-{% if request.user.is_authenticated %}
-<div data-bind='foreach: users'>
+<div data-bind='foreach: users, visible: sessions().length == 0'>
     <form data-bind='submit: vm.newsession'>
         <button type='submit'>create session with <span data-bind='text: name'></span></button>
     </form>
@@ -167,7 +186,7 @@ $(function() {
 <div class='listsessions' data-bind="foreach: sessions">
     <form data-bind='submit: vm.sendmessage'>
         <span data-bind='text: uuid'></span>
-        <input id='text' data-bind='value: vm.messagetext'>
+        <input id='text' data-bind="value: vm.messagetext, valueUpdate:'afterkeydown'">
         <button type='submit'>Submit</button>
     </form>
     <form data-bind='submit: vm.closesession'>
@@ -182,10 +201,6 @@ $(function() {
     <span>content: <span data-bind='text: content'></span></span>
     <br>
 </div>
-{% else %}
-<span>not authenticated</span>
-{% endif %}
-
+{# typing notification here #}
+<div class='info' data-bind='visible: vm.typing()'><span>Typing...</span></div>
 {% endblock body %}
-
-
