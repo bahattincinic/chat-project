@@ -9,6 +9,7 @@ angular.module('chatApp').controller('chatController', [
     // on new sessions for this client
     socket.on('new_session', function(session) {
         session.messages = [];
+        session.is_bloked = false;
         $rootScope.session_list.push(session);
         if(!$rootScope.active_session){
             $rootScope.active_session = session;
@@ -19,18 +20,27 @@ angular.module('chatApp').controller('chatController', [
     socket.on('new_message', function(message) {
         var session = $filter('filter')($rootScope.session_list, message.session.uuid)[0];
         session.messages.push(message);
+        if(session.uuid == $rootScope.active_session.uuid){
+            $rootScope.active_session = session;
+        }
     });
 
     // on close sessions
     socket.on('close_session', function(session) {
-        // code
+        var check = $filter('filter')($rootScope.session_list, session.uuid);
+        if(check.length > 0){
+            check = check[0];
+            check.is_closed = true;
+            if(check.uuid == $rootScope.active_session.uuid){
+                $rootScope.active_session = check;
+            }
+        }
     });
 
     // Chat Session Close
     $scope.closeSession = function(){
         if($rootScope.active_session){
           socket.emit('user_disconnected', $rootScope.active_session);
-          $rootScope.active_session.is_closed = true;
         }
     };
 

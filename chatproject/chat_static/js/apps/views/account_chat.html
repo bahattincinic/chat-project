@@ -19,13 +19,13 @@
             <div class="message-form-header" style="height: 17px;">
                 <div class="message-form-user"><img src="/static/images/chat.png"></div>
                 <span class="chat-username" ng-bind="active_session.anon.username"></span>
-                <span class="blocked-button" ng-click="blockSession()" ng-show="active_session.user"><a>Block</a></span>
+                <span class="blocked-button" ng-click="closeSession()" ng-show="!active_session.is_closed"><a>Close</a></span>
             </div>
             <div class="chat-container">
                 <comment instance="active_session.messages"></comment>
             </div>
             <div class="message-divider"></div>
-            <div class="chat-form-inner" ng-show="active_session.anon">
+            <div class="chat-form-inner" ng-show="active_session.anon && !active_session.is_closed">
                 <form ng-submit="createMessage()">
                     <input id="chat" class="chat-user32" ng-model="content.content" placeholder="Write a message..." name="chat">
                 </form>
