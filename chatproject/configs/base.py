@@ -75,7 +75,8 @@ LOCAL_APPS = (
     'chat',
     'network',
     'page',
-    'internal'
+    'internal',
+    'shuffle'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
