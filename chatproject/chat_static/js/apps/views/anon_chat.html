@@ -16,10 +16,13 @@
                           </div>
                           <div class="message-comment-box-form">
                               <form ng-submit="createMessage()">
-                              <input type="text" placeholder="Comment..." class="comment-reply-textarea" ng-model="content.content" />
+                              <input type="text" placeholder="" ng-keyup="typing()" class="comment-reply-textarea" ng-model="content.content" />
                               </form>
                           </div>
                       </div>
+
+                      <span ng-show="active_session && active_session.is_typing">typing...</span>
+
                       <!-- Comment -->
                       <comment instance="active_session.messages"></comment>
                    </div>

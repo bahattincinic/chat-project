@@ -9,7 +9,8 @@ angular.module('chatApp').controller('chatController', [
     // on new sessions for this client
     socket.on('new_session', function(session) {
         session.messages = [];
-        session.is_bloked = false;
+        session.is_closed = false;
+        session.is_typing = false;
         $rootScope.session_list.push(session);
         if(!$rootScope.active_session){
             $rootScope.active_session = session;
@@ -31,6 +32,48 @@ angular.module('chatApp').controller('chatController', [
         if(check.length > 0){
             check = check[0];
             check.is_closed = true;
+            check.is_typing = false;
+            if(check.uuid == $rootScope.active_session.uuid){
+                $rootScope.active_session = check;
+            }
+        }
+    });
+
+    // user is typing event
+    $scope.typing = function(){
+      var content = $scope.content.content;
+      var data = {
+          'direction': $rootScope.state == 'me'? 'TO_ANON': 'TO_USR',
+          'uuid': $scope.active_session.uuid,
+          'action': 'start'
+      };
+      if(content != '' && typeof content != 'undefined' && $scope.active_session){
+          data.action = 'start';
+          socket.emit('typing', data);
+      }else if($scope.active_session){
+          data.action = 'stop';
+          socket.emit('typing', data);
+      }
+    };
+
+    // user typing
+    socket.on('typing_started', function(data) {
+        var check = $filter('filter')($rootScope.session_list, data.uuid);
+        if(check.length > 0){
+            check = check[0];
+            check.is_typing = true;
+            if(check.uuid == $rootScope.active_session.uuid){
+                $rootScope.active_session = check;
+            }
+        }
+    });
+
+    // user is not typing
+    socket.on('typing_stopped', function(data) {
+        var check = $filter('filter')($rootScope.session_list, data.uuid);
+        if(check.length > 0){
+            check = check[0];
+            check.is_typing = false;
             if(check.uuid == $rootScope.active_session.uuid){
                 $rootScope.active_session = check;
             }
@@ -56,6 +99,8 @@ angular.module('chatApp').controller('chatController', [
                 function(data){
                     socket.emit('message', data.data);
                     $scope.content.content = '';
+                    // is not typing
+                    $scope.typing();
             });
         }
         if($rootScope.state == 'anon' && !$rootScope.session){
