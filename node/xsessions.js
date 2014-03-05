@@ -2,7 +2,7 @@ var _ = require('underscore');
 
 var all_sessions = [];
 
-
+// TODO: remove this at production
 exports.all_sessions = all_sessions;
 
 function Session(target, uuid, anon, anon_socket_id) {
@@ -17,14 +17,14 @@ exports.createSession = function(target, uuid, anon, anon_socket_id) {
     var session = new Session(target, uuid, anon, anon_socket_id);
     all_sessions.push(session);
     return session;
-}
+};
 
 
 exports.getSession = function(session__uuid) {
     return _.find(all_sessions, function(i) {
         return i.uuid == session__uuid;
     });
-}
+};
 
 exports.removeSession = function(session) {
     // TODO: check ops here!
@@ -34,14 +34,14 @@ exports.removeSession = function(session) {
         // delete from redis
         // updater.del(redisSessionPrefix + data.uuid);
     }
-}
+};
 
 exports.hasAnonSessions = function(socket__id) {
     if (_.find(all_sessions, function(ii) { return ii.anon.socket_id == socket__id }) == undefined) {
         return false;
     }
     return true;
-}
+};
 
 exports.getAnonSessions = function(socket__id) {
     var sessions =  _.filter(all_sessions, function(ii){return ii.anon.socket_id == socket__id;});
@@ -49,4 +49,4 @@ exports.getAnonSessions = function(socket__id) {
         throw('no session found for anon');
     }
     return sessions;
-}
+};

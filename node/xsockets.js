@@ -10,12 +10,12 @@ exports.addSocket = function(socket) {
     if (socket.handshake.sessionid) {
         xredis.bindUserSocket(socket, socket.handshake.sessionid);
     }
-}
+};
 
 exports.removeSocket = function(socket) {
     var i = all_sockets.indexOf(socket);
     all_sockets.splice(i, 1);
-}
+};
 
 exports.getSocket = function(socket__id) {
     if (!socket__id) {
@@ -31,11 +31,11 @@ exports.getSocket = function(socket__id) {
     }
 
     return socket;
-}
+};
 
 exports.noSocketsLeft = function(username) {
     return _.find(all_sockets, function(i){return i.username == username}) == undefined
-}
+};
 
 function get_user_sockets(username) {
     return _.filter(all_sockets, function(socket){ return socket.username == username});
@@ -54,7 +54,7 @@ exports.addSessionToTargetSockets = function(username, session) {
     });
 
     return sockets;
-}
+};
 
 exports.removeSessionFromTargetSockets = function (username, session) {
     // session >> session__uuid
@@ -67,15 +67,4 @@ exports.removeSessionFromTargetSockets = function (username, session) {
     });
     // return relevant sockets
     return sockets;
-}
-
-exports.addSessionToSocket = function(session__uuid, socket) {
-    if (socket && session__uuid) {
-        if (socket.sessions) {
-            socket.sessions.push(session__uuid);
-        } else {
-            socket.sessions = [session__uuid];
-        }
-    }
 };
-

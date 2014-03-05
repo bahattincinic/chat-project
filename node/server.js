@@ -25,11 +25,9 @@ d.run(function() {
                 if (handshakeData.cookie['sessionid']) {
                     handshakeData.sessionid = handshakeData.cookie['sessionid'];
                 }
-
-                return accept(null, true);
             }
-            // no cookie no connection
-            return accept('no cookie', false);
+            // allow connection always
+            return accept(null, true);
         });
         io.set('close timeout', 60*60*24); // 24h
         io.set('log level', 1);
@@ -46,6 +44,7 @@ d.run(function() {
     io.sockets.on('connection', function(socket) {
         console.log('connection socket with id: ' + socket.id);
         xsocket.addSocket(socket);
+
         socket.on('error', function(err) {
             console.log('socket io error here: ' + err);
             throw new Error(err);
@@ -64,7 +63,6 @@ d.run(function() {
                 var sockets = xsocket.addSessionToTargetSockets(data.target, session.uuid);
                 sockets.forEach(function(ii){ii.emit('new_session', session)});
                 socket.emit('new_session', session);
-                xredis.addSessionToUser(session);
                 // TODO: store session or socket data on redis also
             } else {
                 throw new Error('unexpected/missing args when initiating session: ' + data);
@@ -122,9 +120,6 @@ d.run(function() {
 
             // search for target sessions
             if (socket.username) {
-                // redis op
-//            xredis.removeSocket(socket.username, socket.id);
-
                 // any other sockets left for this user
                 if (xsocket.noSocketsLeft(socket.username)) {
                     console.log('no sockets remaining: ' + socket.username + " delete all sessions");
@@ -136,6 +131,9 @@ d.run(function() {
                         // remove all sessions from removed socket
                         socket.sessions.length = 0;
                     }
+
+                    // remove from rank as well
+                    xredis.removeUserFromRank(socket.username);
                 } else {
                     console.log('remaining sockets does exists for user ' + socket.username);
                 }
@@ -202,7 +200,6 @@ d.run(function() {
         console.log('close session');
         if (session && session.uuid && session.target.username) {
             var pending_notification = xsocket.removeSessionFromTargetSockets(session.target.username, session.uuid);
-            xredis.removeSessionFromUser(session.target.username, session.uuid);
             // find anon socket to inform and add it to list
             if (!session.anon_closed) {
                 pending_notification.push(xsocket.getSocket(session.anon.socket_id));
@@ -223,7 +220,6 @@ d.run(function() {
 
             // remove session from all resources (redis and node)
             xsession.removeSession(session);
-            xredis.removeSessionFromUser(session);
         } else {
             console.error('invalid session to close');
             console.log('all sessions:');
@@ -236,23 +232,23 @@ d.run(function() {
     function sanitizeTyping(data) {
         if (!(data && data.uuid && data.direction)) {
             console.error('invalid typing data');
-            return;
+            return null;
         }
 
         if (!_.contains(['TO_USR','TO_ANON'], data.direction)) {
             console.error('invalid direction data');
-            return;
+            return null;
         }
 
         var session = xsession.getSession(data.uuid);
         if (!session) {
             console.error('invalid session data to relay typing.');
-            return;
+            return null;
         }
 
         if (!_.contains(['start', 'stop'], data.action)) {
             console.error('action must be either start or stop during typing event');
-            return;
+            return null;
         }
 
         return session;
