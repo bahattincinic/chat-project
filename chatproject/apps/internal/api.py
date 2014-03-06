@@ -1,5 +1,3 @@
-import redis
-import logging
 from django.conf import settings
 from redis.exceptions import WatchError
 from rest_framework.generics import RetrieveAPIView, ListAPIView
@@ -8,7 +6,6 @@ from .serializers import UserTranslateSerializer
 from .permissions import LocalPermission
 
 
-logger = logging.getLogger(__name__)
 
 class TranslateApiView(RetrieveAPIView):
     model = User
@@ -46,5 +43,4 @@ class OnlineUsersAPIView(ListAPIView):
 
         if not ranked_username_set:
             logger.error("Unable to get ranked username set from redis, check redis..")
-        # TODO: needs ordering here!! username__in loses all ordered data retrived from redis
         return User.objects.filter(username__in=ranked_username_set)

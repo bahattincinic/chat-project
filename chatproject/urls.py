@@ -11,6 +11,6 @@ urlpatterns = patterns('',
         name='new-password'),
     url(r'^api/', include('api.urls')),
     url(r'^page/', include('page.urls')),
-    url(r'^node/$', TemplateView.as_view(template_name='chat/node_test.html'), name='node-test'),
+    url(r'^node/$', TemplateView.as_view(template_name='chat/node_test.html')),
     url(r'^internal/', include('internal.urls')),
 )
