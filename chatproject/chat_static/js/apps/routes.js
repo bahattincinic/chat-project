@@ -33,6 +33,10 @@ angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
         if(next.originalPath == '/' && $rootScope.state == 'anon'){
             next.templateUrl = '/static/js/apps/views/anon_chat.html';
         }
+        // user rank update
+        if($rootScope.state == 'me'){
+            socket.pulse();
+        }
     });
     // get selected user
     $rootScope.ajaxCall = $q.defer();

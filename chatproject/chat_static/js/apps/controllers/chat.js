@@ -85,10 +85,18 @@ angular.module('chatApp').controller('chatController', [
         if($rootScope.active_session){
           socket.emit('user_disconnected', $rootScope.active_session);
         }
+        // user rank update
+        if($rootScope.state == 'me'){
+            socket.pulse();
+        }
     };
 
     // Chat Session Change status active
     $scope.sessionChangeStatus = function($event, item){
+       if($rootScope.active_session){
+        $scope.content.content = '';
+        $scope.typing();
+       }
        $rootScope.active_session = item;
     };
 
@@ -101,7 +109,11 @@ angular.module('chatApp').controller('chatController', [
                     $scope.content.content = '';
                     // is not typing
                     $scope.typing();
-            });
+                    // user rank update
+                    if($rootScope.state == 'me'){
+                        socket.pulse();
+                    }
+                });
         }
         if($rootScope.state == 'anon' && !$rootScope.session){
             $scope.createSession();
