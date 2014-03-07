@@ -6,6 +6,7 @@ from account.urls import account_v1
 from auth.urls import auth_v1
 from network.urls import network_v1
 from page.urls import page_v1
+from shuffle.urls import shuffle_v1
 from django.conf import settings
 
 
@@ -15,7 +16,7 @@ v1_routers = patterns('',
     url(r'^auth/', include(auth_v1)),
     url(r'^page/', include(page_v1)),
     url(r'^network/', include(network_v1)),
-
+    url(r'^shuffle/', include(shuffle_v1))
 )
 
 v1_routers = format_suffix_patterns(v1_routers,

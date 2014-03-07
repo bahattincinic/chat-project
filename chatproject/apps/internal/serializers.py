@@ -8,3 +8,5 @@ class UserTranslateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username',)
         read_only_fields = ('username',)
+
+

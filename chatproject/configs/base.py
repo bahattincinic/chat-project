@@ -84,7 +84,8 @@ LOCAL_APPS = (
     'chat',
     'network',
     'page',
-    'internal'
+    'internal',
+    'shuffle'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -238,3 +239,5 @@ DJANGO_STATIC_CLOSURE_COMPILER = '%s/../deploy/compiler.jar' % BASE_DIR
 DJANGO_STATIC_FILENAME_GENERATOR = 'utils.gen'
 
 INTERNAL_ALLOWED = ('127.0.0.1', '127.0.1.1', '192.168.75.1')
+REDIS_RANK_KEY = 'active_connections'
+REDIS_RANK_MAX_USERS = 20
