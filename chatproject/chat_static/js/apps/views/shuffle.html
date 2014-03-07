@@ -1,0 +1,9 @@
+<div class="row-body">
+    <div class="welcome-inner" ng-repeat="item in instance">
+        <div class="welcome-user">
+            <a ng-href="/{[{ item.username }]}">
+                <img ng-src="{[{ item.avatar_url }]}" />
+            </a>
+        </div>
+    </div>
+</div>

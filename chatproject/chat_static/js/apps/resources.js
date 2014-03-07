@@ -109,3 +109,18 @@ angular.module('chatApp').factory('accountService', function($http){
         }
     }
 });
+
+
+// Shuffle Resource
+angular.module('mainApp').factory('shuffleService', function($http){
+    return {
+        all: function(successCallback){
+            var url = '/api/v1/shuffle/all/';
+            $http.get(url).then(successCallback);
+        },
+        network: function(name, successCallback){
+            var url = '/api/v1/shuffle/network/' + name + '/';
+            $http.get(url).then(successCallback);
+        }
+    }
+});

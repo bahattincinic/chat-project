@@ -21,6 +21,17 @@ angular.module('chatApp').directive('comment', function(){
     };
 });
 
+// shuffle directive
+angular.module('mainApp').directive('shuffle', function(){
+    return {
+        restrict: 'E',
+        scope: {
+            instance: '=instance'
+        },
+        templateUrl: '/static/js/apps/views/shuffle.html'
+    };
+});
+
 // form alert directive
 angular.module('mainApp').directive('alert', function(){
     return {

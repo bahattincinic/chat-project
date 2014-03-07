@@ -47,40 +47,11 @@
 </div>
 
 <!-- Shuffle -->
-<div class="welcome-full">
-	<div class="row-body">
-		<div class="welcome-inner">
-			<div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-            <div class="welcome-user">
-                <a href="javascript:void(0)"><img src="{% static "images/avatar.jpeg" %}"></a>
-            </div>
-		</div>
-	</div>
+<div class="welcome-full" ng-controller="shuffleController">
+    <div class="shuffle_bar row-body">
+        <span class="title">Shuffle</span>
+        <span class="reflesh" ng-click="reflesh()">Reflesh</span>
+    </div>
+    <shuffle instance="shuffle_list"></shuffle>
 </div>
 {% endblock body %}

@@ -71,4 +71,13 @@
 <div class="row-body content-messages">
     <div ng-view class="animation" ></div>
 </div>
+
+<!-- Shuffle -->
+<div class="welcome-full" ng-controller="shuffleController">
+    <div class="shuffle_bar row-body">
+        <span class="title">Shuffle</span>
+        <span class="reflesh" ng-click="reflesh()">Reflesh</span>
+    </div>
+    <shuffle instance="shuffle_list"></shuffle>
+</div>
 {% endblock %}

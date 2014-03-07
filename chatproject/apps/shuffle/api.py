@@ -44,7 +44,7 @@ class ShuffleAPIView(generics.ListAPIView):
     def get_queryset(self):
         username_set = get_ranks()
         if not username_set:
-            return Http404()
+            return []
         return User.objects.filter(username__in=username_set).order_by('?')
 
 

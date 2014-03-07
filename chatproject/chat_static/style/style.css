@@ -2565,3 +2565,29 @@ a[ ng-click ] {
 .user_bio {
     margin-left: 125px;
 }
+
+
+.shuffle_bar {
+    background: #474752;
+    height: 20px;
+    color:#fff;
+    border-bottom: 5px solid #45ADA8;
+    -webkit-border-top-left-radius: 10px;
+    -webkit-border-top-right-radius: 10px;
+    -moz-border-radius-topleft: 10px;
+    -moz-border-radius-topright: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-top: 10px;
+}
+
+.shuffle_bar .title {
+    padding-top: 10px;
+    padding-left: 9px;
+}
+
+.shuffle_bar .reflesh {
+    float: right;
+    padding-right: 10px;
+    cursor:pointer
+}
