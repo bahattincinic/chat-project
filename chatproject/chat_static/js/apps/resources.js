@@ -50,7 +50,7 @@ angular.module('mainApp').factory('socket', function ($rootScope, $location) {
       })
     },
     pulse: function(){
-        socket.pulse();
+        socket.emit('pulse');
     }
   };
 });
