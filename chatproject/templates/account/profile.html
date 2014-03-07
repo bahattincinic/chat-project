@@ -74,7 +74,7 @@
 
 <!-- Shuffle -->
 <div class="welcome-full" ng-controller="shuffleController">
-    <div class="shuffle_bar row-body">
+    <div class="shuffle_bar row-body" ng-hide="shuffle_list.length==0">
         <span class="title">Shuffle</span>
         <span class="reflesh" ng-click="reflesh()">Reflesh</span>
     </div>
