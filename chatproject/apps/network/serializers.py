@@ -8,15 +8,16 @@ from network.models import NetworkAdmin
 class NetworkAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = Network
-        fields = ('id', 'name', 'created_at', 'is_public', 'slug')
+        fields = ('name', 'created_at', 'is_public', 'slug')
         read_only_fields = ('id', 'created_at')
 
 
 class NetworkDetailAPISerializer(serializers.ModelSerializer):
     class Meta:
         model = Network
-        read_only_fields = ('id', 'created_by', 'created_at',
-                            'slug', 'is_deleted', 'deleted_at')
+        read_only_fields = ('created_by', 'created_at', 'slug',
+                            'is_deleted', 'deleted_at')
+        exclude = ('id',)
 
 
 class NetworkConnectionAPISerializer(serializers.ModelSerializer):

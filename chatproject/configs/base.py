@@ -65,6 +65,7 @@ THIRD_PARTY_APPS = (
     'django_extensions',
     'rest_framework',
     'djcelery',
+    'haystack',
 )
 
 # Apps specific for this project go here.
@@ -74,7 +75,8 @@ LOCAL_APPS = (
     'api',
     'chat',
     'network',
-    'page'
+    'page',
+    'search'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -217,3 +219,15 @@ DJANGO_STATIC_CLOSURE_COMPILER_COMP_LEVEL = 'WHITESPACE_ONLY'
 DJANGO_STATIC_CLOSURE_COMPILER_IGNORE_WARNINGS = True
 DJANGO_STATIC_CLOSURE_COMPILER = '%s/../deploy/compiler.jar' % BASE_DIR
 DJANGO_STATIC_FILENAME_GENERATOR = 'utils.gen'
+
+# by default on local
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'haystack',
+    },
+}
+
+# realtime updates
+HAYSTACK_SIGNAL_PROCESSOR = 'search.signal_processor.QueuedSignalProcessor'
