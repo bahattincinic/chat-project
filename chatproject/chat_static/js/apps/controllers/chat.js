@@ -44,14 +44,15 @@ angular.module('chatApp').controller('chatController', [
       var content = $scope.content.content;
       var data = {
           'direction': $rootScope.state == 'me'? 'TO_ANON': 'TO_USR',
-          'uuid': $scope.active_session.uuid,
           'action': 'start'
       };
       if(content != '' && typeof content != 'undefined' && $scope.active_session){
           data.action = 'start';
+          data.uuid = $scope.active_session.uuid;
           socket.emit('typing', data);
       }else if($scope.active_session){
           data.action = 'stop';
+          data.uuid = $scope.active_session.uuid;
           socket.emit('typing', data);
       }
     };
