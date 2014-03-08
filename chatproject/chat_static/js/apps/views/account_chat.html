@@ -4,7 +4,7 @@
         <div class="sidebar-container">
         <div class="sidebar-content">
             <div class="sidebar-header">Chat List</div>
-            <div class="sidebar-link" ng-repeat="item in session_list">
+            <div class="sidebar-link" ng-repeat="item in session_list" ng-class="{chat_active: !item.is_closed, chat_passive: item.is_closed, chat_selected: item.uuid == active_session.uuid}">
                 <a href="javascript:void(0)" ng-click="sessionChangeStatus($event, item)">
                     <strong>{[{ item.anon.username }]}</strong>
                 </a>

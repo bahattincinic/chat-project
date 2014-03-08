@@ -2591,3 +2591,15 @@ a[ ng-click ] {
     padding-right: 10px;
     cursor:pointer
 }
+
+.chat_active {
+    border-right: 5px #32B400 solid !important;
+}
+
+.chat_passive {
+    border-right: 5px #FF0000 solid !important;
+}
+
+.chat_selected {
+    border-right: 5px #868686 solid !important;
+}
