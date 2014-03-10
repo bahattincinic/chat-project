@@ -14,6 +14,8 @@ class UserSearchAPIView(generics.ListAPIView):
     permission_classes = (AllowAny,)
 
     def get_queryset(self):
+        print self.kwargs
+        print self.request.QUERY_PARAMS
         return User.actives.filter(username='balkan')
 
 

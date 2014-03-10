@@ -2,6 +2,7 @@
 import os
 import sys
 import djcelery
+from datetime import timedelta
 
 djcelery.setup_loader()
 
@@ -231,3 +232,26 @@ HAYSTACK_CONNECTIONS = {
 
 # realtime updates
 HAYSTACK_SIGNAL_PROCESSOR = 'search.signal_processor.QueuedSignalProcessor'
+
+# celery setting
+BROKER_URL = 'amqp://guest@localhost//'
+CELERY_TIMEZONE = 'UTC'
+
+# celery routes
+CELERY_ROUTES = {
+    'search.tasks.update': {
+        'queue': 'haystack'
+    },
+    'search.tasks.remove': {
+        'queue': 'haystack'
+    }
+}
+
+# beat
+CELERYBEAT_SCHEDULE = {
+    'reindex_all': {
+        'task': 'search.tasks.reindex_all',
+        'schedule': timedelta(seconds=10),
+        'args': ()
+    }
+}
