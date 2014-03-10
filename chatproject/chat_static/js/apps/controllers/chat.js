@@ -49,11 +49,17 @@ angular.module('chatApp').controller('chatController', [
       if(content != '' && typeof content != 'undefined' && $scope.active_session){
           data.action = 'start';
           data.uuid = $scope.active_session.uuid;
-          socket.emit('typing', data);
+          if(!$scope.active_session.typing_send){
+            socket.emit('typing', data);
+            $scope.active_session.typing_send = true;
+          }
       }else if($scope.active_session){
           data.action = 'stop';
           data.uuid = $scope.active_session.uuid;
-          socket.emit('typing', data);
+          if($scope.active_session.typing_send){
+            socket.emit('typing', data);
+            $scope.active_session.typing_send = false;
+          }
       }
     };
 

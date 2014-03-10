@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import redis
+from redis.exceptions import WatchError
 from rest_framework import serializers
 from account.models import User, Report, Follow
 from django.conf import settings
@@ -16,6 +18,7 @@ class BaseUserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(read_only=True)
     created_at = serializers.DateTimeField(read_only=True,
                                            format='%d-%m-%Y %H:%M',)
+    is_online = serializers.SerializerMethodField('check_online')
 
     def followers_count(self, obj):
         return obj.followers().count()
@@ -31,6 +34,22 @@ class BaseUserSerializer(serializers.ModelSerializer):
 
     def avatar_path(self, obj):
         return '%s%s' % (settings.AVATAR_MEDIA_URL, obj.avatar)
+
+    def check_online(self, obj):
+        username = obj.username
+        r = redis.StrictRedis()
+        rank_key = getattr(settings, 'REDIS_RANK_KEY', 'active_connections')
+        out = None
+        with r.pipeline() as pipe:
+            while 1:
+                try:
+                    # watch this user's sessions
+                    pipe.watch(rank_key)
+                    out = pipe.zscore(rank_key, username)
+                    break
+                except WatchError:
+                    continue
+        return out is not None
 
     class Meta:
         abstract = True
@@ -57,7 +76,7 @@ class UserDetailSerializer(BaseUserSerializer):
                   'follow_needs_approve', 'status',
                   'last_notification_date', 'gender',
                   'followers', 'followees', 'session',
-                  'avatar_url', 'background_url')
+                  'avatar_url', 'background_url', 'is_online')
 
 
 class AnonUserDetailSerializer(BaseUserSerializer):
@@ -69,7 +88,7 @@ class AnonUserDetailSerializer(BaseUserSerializer):
         model = User
         fields = ('username', 'location', 'avatar', 'background',
                   'bio', 'gender', 'followers', 'followees', 'session',
-                  'avatar_url', 'background_url')
+                  'avatar_url', 'background_url', 'is_online')
 
 
 class UserChangePasswordSerializer(serializers.Serializer):

@@ -2601,5 +2601,5 @@ a[ ng-click ] {
 }
 
 .chat_selected {
-    border-right: 5px #868686 solid !important;
+    background: #f7f7f7 !important;
 }
