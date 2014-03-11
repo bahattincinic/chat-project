@@ -5,19 +5,21 @@ from account.models import User
 from network.models import Network
 from account.search_indexes import UserSearchIndex
 from network.search_indexes import NetworkSearchIndex
+from search.exceptions import SearchException
 
 
 logger = logging.getLogger(__name__)
 
 index_map = {
     'user': {'index': UserSearchIndex,
-             'manager': User.actives},
+             'manager': User.vanilla},
     'network': {'index': NetworkSearchIndex,
-                'manager': Network.vanilla}
+                'manager': Network.vanilla},
 }
 
+index_ops = ('update', 'remove')
 
-def get_index(instance_id, ctype_id):
+def get_index_metadata(instance_id, ctype_id):
     ctype = ContentType.objects.get(id=ctype_id)
     index = index_map.get(ctype.name)
     if not index:
@@ -31,27 +33,24 @@ def get_index(instance_id, ctype_id):
 
 @celery.task(name='search.tasks.update', ignore_result=True,
              queue='haystack', retry=False)
-def update(instance_id, ctype_id):
+def update_index(instance_id, type_id, ops):
     try:
-        search_index, instance = get_index(instance_id, ctype_id)
-        search_index().update_object(instance)
+        if not ops in index_ops:
+            raise SearchException('invalid operation submitted to worker')
+        search_index, instance = get_index_metadata(instance_id, type_id)
+        if ops == 'update':
+            search_index().update_object(instance)
+        elif ops == 'remove':
+            search_index().remove_object(instance)
     except Exception, e:
-        logger.exception('Unable to update search index for %s(ct:%s), '
-                         'error: %s' % (instance_id, ctype_id, e.message))
-
-@celery.task(name='search.tasks.delete', ignore_result=True,
-             queue='haystack', retry=False)
-def remove(instance_id, ctype_id):
-    try:
-        search_index, instance = get_index(instance_id, ctype_id)
-        search_index().remove_object(instance)
-    except Exception, e:
-        logger.exception('Unable to delete object from search index %s(ct:%s), '
-                         'error: %s' % (instance_id, ctype_id, e.message))
+        logger.exception('Unable to %s search index for %s(ct:%s), '
+                         'error: %s' % (ops, instance_id, type_id, e.message))
 
 
 @celery.task(name='search.tasks.reindex_all', ignore_result=True,
              queue='haystack', retry=False)
 def reindex_all():
-    print 'running update all'
+    for k,v in index_map.items():
+        klass = v.get('index')
+        klass().update()
 

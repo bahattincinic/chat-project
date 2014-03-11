@@ -239,10 +239,7 @@ CELERY_TIMEZONE = 'UTC'
 
 # celery routes
 CELERY_ROUTES = {
-    'search.tasks.update': {
-        'queue': 'haystack'
-    },
-    'search.tasks.remove': {
+    'search.tasks.update_index': {
         'queue': 'haystack'
     }
 }
@@ -251,7 +248,7 @@ CELERY_ROUTES = {
 CELERYBEAT_SCHEDULE = {
     'reindex_all': {
         'task': 'search.tasks.reindex_all',
-        'schedule': timedelta(seconds=10),
+        'schedule': timedelta(hours=4),
         'args': ()
     }
 }

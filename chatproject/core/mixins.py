@@ -7,10 +7,15 @@ class DeletePreventionMixin(object):
     def delete(self, using=None):
         if not hasattr(self, 'is_deleted'):
             raise
-
+        # prepare
+        signals.pre_delete.send(
+            sender=self.__class__,
+            instance=self
+        )
+        # mark as deleted
         self.is_deleted = True
-        self.save()
-        # call signal
+        self.save(using=using)
+        # trigger
         signals.post_delete.send(
             sender=self.__class__,
             instance=self
