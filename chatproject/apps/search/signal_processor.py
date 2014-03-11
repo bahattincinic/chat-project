@@ -8,6 +8,7 @@ from .exceptions import SearchException
 
 logger = logging.getLogger(__name__)
 
+
 class QueuedSignalProcessor(signals.RealtimeSignalProcessor):
     @classmethod
     def get_ctype_id(cls, instance):
@@ -16,6 +17,7 @@ class QueuedSignalProcessor(signals.RealtimeSignalProcessor):
         return ContentType.objects.get_for_model(instance).id
 
     def handle_save(self, sender, instance, **kwargs):
+        print 'handle_save any'
         try:
             ctype_id = self.get_ctype_id(instance)
             update.delay(instance.id, ctype_id)
@@ -23,6 +25,7 @@ class QueuedSignalProcessor(signals.RealtimeSignalProcessor):
             logger.error('Not updating search index: %s' % e.message)
 
     def handle_delete(self, sender, instance, **kwargs):
+        print 'deleted object: %s' % sender
         try:
             ctype_id = self.get_ctype_id(instance)
             remove.delay(instance.id, ctype_id)

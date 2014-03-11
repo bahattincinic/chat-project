@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from django.http.response import Http404
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
+from rest_framework.permissions import AllowAny
 from .models import NetworkConnection, NetworkAdmin
 from .permissions import IsSafeOrUserActive, NetworkUserDetailPermission, \
     IsSafeOrNoNetworkConnection, IsSafeOrNetworkUser, IsSafeOrNetworkAdmin, \
     NetworkModsDetailPermission
 from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer, NetworkAdminAPISerializer
+from search.tasks import remove
 from .permissions import NetworkDetailPermission
 from .serializers import NetworkDetailAPISerializer
 from .models import Network
@@ -40,9 +42,12 @@ class NetworkAPIView(ListCreateAPIView):
 
 class NetworkDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = NetworkDetailAPISerializer
-    permission_classes = (NetworkDetailPermission,)
+    permission_classes = (AllowAny,)
     lookup_field = 'slug'
     model = Network
+
+    def post_delete(self, obj):
+        print 'network post_delete sea view'
 
 
 class NetworkConnectionAPIView(ListCreateAPIView):

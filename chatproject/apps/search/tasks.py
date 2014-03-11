@@ -13,7 +13,7 @@ index_map = {
     'user': {'index': UserSearchIndex,
              'manager': User.actives},
     'network': {'index': NetworkSearchIndex,
-                'manager': Network.objects}
+                'manager': Network.vanilla}
 }
 
 
@@ -21,11 +21,12 @@ def get_index(instance_id, ctype_id):
     ctype = ContentType.objects.get(id=ctype_id)
     index = index_map.get(ctype.name)
     if not index:
-        raise Exception('failed to find index, invalid model')
+        raise Exception('failed to find index, invalid model '
+                        'to update search index')
 
     search_index = index.get('index')
     instance = index.get('manager').get(id=instance_id)
-    return  search_index, instance
+    return search_index, instance
 
 
 @celery.task(name='search.tasks.update', ignore_result=True,
@@ -47,7 +48,6 @@ def remove(instance_id, ctype_id):
     except Exception, e:
         logger.exception('Unable to delete object from search index %s(ct:%s), '
                          'error: %s' % (instance_id, ctype_id, e.message))
-
 
 
 @celery.task(name='search.tasks.reindex_all', ignore_result=True,
