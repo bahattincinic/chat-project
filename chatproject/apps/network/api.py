@@ -1,23 +1,16 @@
 # -*- coding: utf-8 -*-
 from django.http.response import Http404
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
-from rest_framework.permissions import AllowAny
-from .models import NetworkConnection, NetworkAdmin
-from .permissions import IsSafeOrUserActive, NetworkUserDetailPermission, \
-    IsSafeOrNoNetworkConnection, IsSafeOrNetworkUser, IsSafeOrNetworkAdmin, \
-    NetworkModsDetailPermission
-from network.serializers import NetworkAPISerializer, NetworkConnectionAPISerializer, NetworkAdminAPISerializer
-from search.tasks import remove
-from .permissions import NetworkDetailPermission
-from .serializers import NetworkDetailAPISerializer
-from .models import Network
+from rest_framework import generics
+from .models import NetworkConnection, NetworkAdmin, Network
 from actstream.models import action
 from account.models import User
+from . import permissions
+from . import serializers
 
 
-class NetworkAPIView(ListCreateAPIView):
-    serializer_class = NetworkAPISerializer
-    permission_classes = (IsSafeOrUserActive,)
+class NetworkAPIView(generics.ListCreateAPIView):
+    serializer_class = serializers.NetworkAPISerializer
+    permission_classes = (permissions.IsSafeOrUserActive,)
     model = Network
 
     def pre_save(self, obj):
@@ -40,9 +33,9 @@ class NetworkAPIView(ListCreateAPIView):
                     action_object=obj)
 
 
-class NetworkDetailAPIView(RetrieveUpdateDestroyAPIView):
-    serializer_class = NetworkDetailAPISerializer
-    permission_classes = (AllowAny,)
+class NetworkDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = serializers.NetworkDetailAPISerializer
+    permission_classes = (permissions.NetworkDetailPermission,)
     lookup_field = 'slug'
     model = Network
 
@@ -50,10 +43,10 @@ class NetworkDetailAPIView(RetrieveUpdateDestroyAPIView):
         print 'network post_delete sea view'
 
 
-class NetworkConnectionAPIView(ListCreateAPIView):
-    serializer_class = NetworkConnectionAPISerializer
-    permission_classes = (IsSafeOrUserActive,
-                          IsSafeOrNoNetworkConnection)
+class NetworkConnectionAPIView(generics.ListCreateAPIView):
+    serializer_class = serializers.NetworkConnectionAPISerializer
+    permission_classes = (permissions.IsSafeOrUserActive,
+                          permissions.IsSafeOrNoNetworkConnection)
     model = Network
     lookup_field = 'slug'
 
@@ -71,10 +64,10 @@ class NetworkConnectionAPIView(ListCreateAPIView):
         obj.is_approved = obj.network.is_public
 
 
-class NetworkConnectionDetailAPIView(RetrieveDestroyAPIView):
-    serializer_class = NetworkConnectionAPISerializer
-    permission_classes = (IsSafeOrUserActive,
-                          NetworkUserDetailPermission)
+class NetworkConnectionDetailAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = serializers.NetworkConnectionAPISerializer
+    permission_classes = (permissions.IsSafeOrUserActive,
+                          permissions.NetworkUserDetailPermission)
     model = Network
     lookup_field = 'slug'
 
@@ -90,11 +83,11 @@ class NetworkConnectionDetailAPIView(RetrieveDestroyAPIView):
         return nc
 
 
-class NetworkModAPIView(ListCreateAPIView):
-    serializer_class = NetworkAdminAPISerializer
-    permission_classes = (IsSafeOrUserActive,
-                          IsSafeOrNetworkUser,
-                          IsSafeOrNetworkAdmin)
+class NetworkModAPIView(generics.ListCreateAPIView):
+    serializer_class = serializers.NetworkAdminAPISerializer
+    permission_classes = (permissions.IsSafeOrUserActive,
+                          permissions.IsSafeOrNetworkUser,
+                          permissions.IsSafeOrNetworkAdmin)
     model = Network
     lookup_field = 'slug'
 
@@ -115,10 +108,10 @@ class NetworkModAPIView(ListCreateAPIView):
         obj.connection = connection
 
 
-class NetworkModDetailAPIView(RetrieveDestroyAPIView):
-    serializer_class = NetworkAdminAPISerializer
-    permission_classes = (IsSafeOrUserActive,
-                          NetworkModsDetailPermission,)
+class NetworkModDetailAPIView(generics.RetrieveDestroyAPIView):
+    serializer_class = serializers.NetworkAdminAPISerializer
+    permission_classes = (permissions.IsSafeOrUserActive,
+                          permissions.NetworkModsDetailPermission,)
     model = Network
     lookup_field = 'slug'
 
