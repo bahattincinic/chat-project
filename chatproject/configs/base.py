@@ -252,3 +252,7 @@ CELERYBEAT_SCHEDULE = {
         'args': ()
     }
 }
+
+# search
+SEARCH_LIMIT = 5
+
