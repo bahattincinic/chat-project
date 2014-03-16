@@ -17,6 +17,10 @@ angular.module('mainApp').config(['$routeProvider', function($routeProvider) {
         templateUrl: '/static/js/apps/views/account_change_password.html',
         action: 'accountApp.changePasswordController',
         access: 'me'
+    }).when('/change-avatar-cover', {
+        templateUrl: '/static/js/apps/views/account_change_avatar.html',
+        action: 'accountApp.changeAvatarController',
+        access: 'me'
     }).when('/report', {
         templateUrl: '/static/js/apps/views/anon_report.html',
         action: 'accountApp.reportController',

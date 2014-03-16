@@ -1,0 +1,46 @@
+<div class="row-page content-settings" ng-controller="changeAvatarController">
+    <div class="animation" ng-include=" '/static/js/apps/views/account_menu.html' "></div>
+    <!-- Change Avatar -->
+    <div class="nine columns">
+        <div class="page-settings-container">
+            <div class="page-content">
+				<div class="page-header">
+                    <img src="http://phpdolphin.com/demo/thumb.php?src=default.png&amp;t=a" width="80" height="80">
+                    <strong>Profile Settings</strong>
+                </div>
+				<div class="page-inner"><div class="page-title">Change your account picture.</div></div>
+
+                <div class="message-divider"></div>
+                <div class="page-inner">
+                    <div class="page-input-title-img">
+                        <img ng-src="{[{ form.avatar }]}" width="80" height="80">
+                    </div>
+                    <div class="page-input-content">
+                        <div class="page-input-container">
+                            <form id="upload" class="uploadForm" action="http://phpdolphin.com/demo/index.php?a=settings&amp;b=avatar" method="POST" enctype="multipart/form-data">
+                                <input type="file" id="avatarselect" name="avatarselect[]"><br><br>
+                                <input type="submit" value="Upload Photo">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-divider"></div>
+                <div class="page-inner"><div class="page-title">Change your cover picture.</div></div>
+                <div class="message-divider"></div>
+                <div class="page-input-title-img-wall">
+                    <img ng-src="{[{ form.cover }]}" />
+                </div>
+                <div class="page-inner">
+                    <div class="page-input-content">
+                        <div class="page-input-container">
+                            <form id="upload" class="uploadForm" action="http://phpdolphin.com/demo/index.php?a=settings&amp;b=avatar" method="POST" enctype="multipart/form-data">
+                                <input type="file" id="coverselect" name="coverselect[]"><br><br>
+                                <input type="submit" value="Upload Cover">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+		    </div>
+        </div>
+    </div>
+</div>

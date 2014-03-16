@@ -118,3 +118,12 @@ accountApp.controller('reportController', function($scope, accountService, $root
         });
     };
 });
+
+
+accountApp.controller('changeAvatarController', function($scope, accountService, $rootScope){
+    $scope.form = {avatar: '', cover:''};
+    $scope.ajaxCall.promise.then(function() {
+        $scope.form.avatar = $rootScope.user.avatar_url;
+        $scope.form.cover = $rootScope.user.background_url;
+    });
+});
