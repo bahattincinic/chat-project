@@ -4,8 +4,6 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 DJANGO_STATIC = False
 
-DJANGO_STATIC = False
-
 LOGGING = {
    'version': 1,
    'disable_existing_loggers': False,

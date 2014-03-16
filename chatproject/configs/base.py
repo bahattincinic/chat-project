@@ -87,7 +87,7 @@ LOCAL_APPS = (
     'network',
     'page',
     'internal',
-    'shuffle'
+    'shuffle',
     'search'
 )
 

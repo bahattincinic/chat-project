@@ -8,7 +8,7 @@ from search.models import SearchQuery
 class SimpleUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'created_at')
+        fields = ('username', 'avatar')
 
 
 class CombinedSearchResultSerializer(serializers.ModelSerializer):
@@ -18,5 +18,3 @@ class CombinedSearchResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = SearchQuery
         fields = ('users', 'networks', 'query')
-
-

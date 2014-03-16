@@ -17,7 +17,7 @@ v1_routers = patterns('',
     url(r'^auth/', include(auth_v1)),
     url(r'^page/', include(page_v1)),
     url(r'^network/', include(network_v1)),
-    url(r'^shuffle/', include(shuffle_v1))
+    url(r'^shuffle/', include(shuffle_v1)),
     url(r'^search/', include(search_v1))
 )
 
@@ -33,4 +33,3 @@ if settings.DEBUG:
     urlpatterns += patterns('',
         url(r'^api-auth/', include('rest_framework.urls',
                                    namespace='rest_framework')))
-
