@@ -1,7 +1,25 @@
 from django.db.models.query import QuerySet
+from django.db.models import signals
 from core.exceptions import OPSException
-from django.db import transaction
-from django.utils.decorators import method_decorator
+
+
+class DeletePreventionMixin(object):
+    def delete(self, using=None):
+        if not hasattr(self, 'is_deleted'):
+            raise
+        # prepare
+        signals.pre_delete.send(
+            sender=self.__class__,
+            instance=self
+        )
+        # mark as deleted
+        self.is_deleted = True
+        self.save(using=using)
+        # trigger
+        signals.post_delete.send(
+            sender=self.__class__,
+            instance=self
+        )
 
 
 class ManagerMixins(object):

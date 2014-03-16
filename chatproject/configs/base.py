@@ -2,6 +2,7 @@
 import os
 import sys
 import djcelery
+from datetime import timedelta
 
 djcelery.setup_loader()
 
@@ -74,6 +75,7 @@ THIRD_PARTY_APPS = (
     'django_extensions',
     'rest_framework',
     'djcelery',
+    'haystack',
 )
 
 # Apps specific for this project go here.
@@ -86,6 +88,7 @@ LOCAL_APPS = (
     'page',
     'internal',
     'shuffle'
+    'search'
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -241,3 +244,37 @@ DJANGO_STATIC_FILENAME_GENERATOR = 'utils.gen'
 INTERNAL_ALLOWED = ('127.0.0.1', '127.0.1.1', '192.168.75.1')
 REDIS_RANK_KEY = 'active_connections'
 REDIS_RANK_MAX_USERS = 20
+# by default on local
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'haystack',
+    },
+}
+
+# realtime updates
+HAYSTACK_SIGNAL_PROCESSOR = 'search.signal_processor.QueuedSignalProcessor'
+
+# celery setting
+BROKER_URL = 'amqp://guest@localhost//'
+CELERY_TIMEZONE = 'UTC'
+
+# celery routes
+CELERY_ROUTES = {
+    'search.tasks.update_index': {
+        'queue': 'haystack'
+    }
+}
+
+# beat
+CELERYBEAT_SCHEDULE = {
+    'reindex_all': {
+        'task': 'search.tasks.reindex_all',
+        'schedule': timedelta(hours=4),
+        'args': ()
+    }
+}
+
+# search
+SEARCH_LIMIT = 5

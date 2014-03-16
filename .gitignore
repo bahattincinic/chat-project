@@ -47,5 +47,5 @@ Vagrantfile
 # Django Static folder
 static/
 
-# node
+# node modules
 node/node_modules

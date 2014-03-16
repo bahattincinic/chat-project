@@ -2,11 +2,13 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from account.models import User
+from django.db.models import signals
 from django_extensions.db.fields import AutoSlugField
 from core.managers import FilteringManager, CommonManager
+from core.mixins import DeletePreventionMixin
 
 
-class Network(models.Model):
+class Network(DeletePreventionMixin, models.Model):
     name = models.CharField(_('Name'), max_length=255)
     # TODO: network silinince slugu update et
     slug = AutoSlugField(max_length=255, populate_from=('name',), unique=True)
@@ -19,6 +21,7 @@ class Network(models.Model):
     objects = FilteringManager(is_deleted=False)
     public = FilteringManager(is_public=True, is_deleted=False)
     private = FilteringManager(is_public=False, is_deleted=False)
+    vanilla = models.Manager()
 
     class Meta:
         db_table = 'network'

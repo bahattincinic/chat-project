@@ -7,13 +7,14 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.conf import settings
+from core.mixins import DeletePreventionMixin
 from .managers import UserManager
 from api.models import AccessToken
 from core.managers import CommonManager, FilteringManager
 from .validators import validate_username
 
 
-class User(AbstractBaseUser):
+class User(DeletePreventionMixin, AbstractBaseUser):
     username = models.CharField(_('username'), max_length=25, unique=True,
         help_text=_('Required. 30 characters or fewer. Letters, numbers and '
                     '@/./+/-/_ characters'),
@@ -65,8 +66,7 @@ class User(AbstractBaseUser):
 
     objects = UserManager(is_deleted=False)
     actives = UserManager(is_deleted=False, is_active=True)
-
-
+    vanilla = models.Manager()
 
     verbs = {
         'login': 'Login',
@@ -100,10 +100,6 @@ class User(AbstractBaseUser):
         utc_limit = utc_now - datetime.timedelta(days=settings.API_TOKEN_TTL)
         return AccessToken.objects.filter(user=self, is_deleted=False,
                                           created__gt=utc_limit)
-
-    def delete(self, using=None):
-        self.is_deleted = True
-        self.save()
 
     def followees(self):
         follow = Follow.objects.filter(follower=self)
