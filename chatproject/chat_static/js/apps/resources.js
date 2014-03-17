@@ -106,6 +106,9 @@ angular.module('chatApp').factory('accountService', function($http){
         report: function(username, payload, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/report/';
             $http.post(url, payload).then(successCallback, errorCallback);
+        },
+        search: function(payload, successCallback, errorCallback){
+            $http.get('/api/v1/search/', {params: payload}).then(successCallback, errorCallback)
         }
     }
 });

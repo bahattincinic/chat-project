@@ -25,6 +25,7 @@
 <script type="text/javascript" src="{% static "js/apps/controllers/chat.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/controllers/account.js" %}"></script>
 <script type="text/javascript" src="{% static "js/apps/controllers/shuffle.js" %}"></script>
+<script type="text/javascript" src="{% static "js/apps/controllers/search.js" %}"></script>
 {% endslimall %}
 
 {% block head %}{% endblock head %}
@@ -32,11 +33,11 @@
 <body ng-app="mainApp">
 
 <!-- Header -->
-<div class="topbar">
+<div class="topbar" ng-controller="searchController">
     <div class="header">
         <a href="{% url 'homepage' %}"><div class="logo"></div><div class="logo-small"></div></a>
         <div class="search-input">
-            <input type="text" id="search" placeholder="search people, hashtags" x-webkit-speech="x-webkit-speech" onwebkitspeechchange="liveSearch();">
+            <input type="text" ng-model="searchText" placeholder="search people, hashtags">
         </div>
 
         {% if request.user.is_anonymous %}
@@ -67,7 +68,35 @@
         {% endif %}
 
     </div>
-    <div class="search-container"></div>
+
+    <div class="search-container" ng-show="search.is_search">
+        <div class="search-content">
+            <div class="search-results">
+                <div class="notification-inner">
+                    <a onclick="manageResults(1)"><strong>View All Results</strong></a>
+                    <a ng-click="close()" title="Close Results">
+                        <div class="delete_btn"></div>
+                    </a>
+                </div>
+            <div class="message-inner" ng-repeat="item in search.user">
+                    <div class="message-avatar">
+                        <a href="/{[{ item.username }]}">
+                            <img ng-src="/media/avatar/{[{ item.avatar }]}">
+                        </a>
+                    </div>
+                <div class="message-top">
+                    <div class="message-author" id="author9476">
+                        <a href="/{[{ item.username }]}">{[{ item.username }]}</a>
+                    </div>
+                    <div class="message-time">
+                        &nbsp;
+                    </div>
+                </div>
+            </div>
+        </div>
+     </div>
+    </div>
+
 </div>
 
 <div class="topbar_margin"></div>

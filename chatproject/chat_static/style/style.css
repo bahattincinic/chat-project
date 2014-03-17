@@ -319,7 +319,6 @@ background: #FFF;
 .search-container, .search-list-container {
 max-width: 920px;
 width: 100%;
-display: none;
 top: 46px;
 margin: 0 auto;
 }
@@ -2522,23 +2521,23 @@ a[ ng-click ] {
 }
 
 .animation.ng-enter, .animation.ng-leave{
-  -webkit-transition: 1s;
+  /* -webkit-transition: 1s; */
 }
 
 .animation.ng-enter {
-  opacity: 0;
+  /* opacity: 0; */
 }
 
 .animation.ng-leave {
-  opacity: 1;
+  /* opacity: 1; */
 }
 
 .animation.ng-enter.ng-enter-active {
-  opacity: 1;
+  /* opacity: 1; */
 }
 
 .animation.ng-leave.ng-leave-active {
-  opacity: 0;
+  /* opacity: 0; */
 }
 
 .cover_loading{
