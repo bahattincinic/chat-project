@@ -1,6 +1,7 @@
 import logging
 import celery
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from account.models import User
 from network.models import Network
 from account.search_indexes import UserSearchIndex
@@ -53,4 +54,22 @@ def reindex_all():
     for k,v in index_map.items():
         klass = v.get('index')
         klass().update()
+
+
+@celery.task(name='search.tasks.record_search', ignore_result=True,
+             queue='haystack', retry=False)
+def save_search_query(query, user_ids, network_ids):
+    from .models import SiteSearch
+
+    if not query
+    with transaction.atomic():
+        s = SiteSearch.objects.create(query=query)
+        users = User.actives.filter(id__in=user_ids)
+        networks = Network.objects.filter(id__in=network_ids)
+        for user in users:
+            s.users.add(user)
+        for n in networks:
+            s.networks.add(n)
+        s.save()
+
 
