@@ -71,7 +71,7 @@ angular.module('chatApp').factory('chatService', function($http){
 });
 
 // User Service
-angular.module('chatApp').factory('accountService', function($http){
+angular.module('chatApp').factory('accountService', function($http, $cacheFactory){
     return {
         check_follow: function(username, successCallback, errorCallback){
             var url = '/api/v1/account/' + username + '/follow/';
@@ -108,7 +108,21 @@ angular.module('chatApp').factory('accountService', function($http){
             $http.post(url, payload).then(successCallback, errorCallback);
         },
         search: function(payload, successCallback, errorCallback){
-            $http.get('/api/v1/search/', {params: payload}).then(successCallback, errorCallback)
+            var key = 'searchkey_' + payload.q;
+            if($cacheFactory.get(key) == undefined || $cacheFactory.get(key) == ''){
+                $http.get('/api/v1/search/', {params: payload}).then(
+                    function(data){
+                        $cacheFactory(key).put('result', data.data);
+                        successCallback(data.data);
+                    },function(data){
+                        var tmp = {'users': [], 'networks': []};
+                        $cacheFactory(key).put('result', tmp);
+                        errorCallback(tmp);
+                    }
+                );
+            }else{
+                successCallback($cacheFactory.get(key).get('result'));
+            }
         }
     }
 });
