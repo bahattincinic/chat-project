@@ -61,7 +61,6 @@ def reindex_all():
 def save_search_query(query, user_ids, network_ids):
     from .models import SiteSearch
 
-    if not query
     with transaction.atomic():
         s = SiteSearch.objects.create(query=query)
         users = User.actives.filter(id__in=user_ids)
