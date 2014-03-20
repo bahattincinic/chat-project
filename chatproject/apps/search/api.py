@@ -1,33 +1,38 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from haystack.inputs import Clean
-from haystack.query import SearchQuerySet
-from rest_framework.permissions import AllowAny
-from rest_framework import generics, status
+from haystack.query import SearchQuerySet, SQ
+from rest_framework import generics
 from rest_framework.response import Response
 from django.conf import settings
 from account.models import User
 from network.models import Network
-from .serializers import CombinedSearchResultSerializer
-from .models import SearchQuery
+from . import serializers
+from .models import SiteSearch
+from .permissions import SearchQueryPermission
+from .tasks import save_search_query
 
 
 class UserSearchAPIView(generics.RetrieveAPIView):
-    model = SearchQuerySet
-    serializer_class = CombinedSearchResultSerializer
-    permission_classes = (AllowAny,)
+    model = SiteSearch
+    serializer_class = serializers.CombinedSearchResultSerializer
+    permission_classes = (SearchQueryPermission,)
 
-    def get_object(self, queryset=None):
-        query = self.request.QUERY_PARAMS.get('q')
-        if not query:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        query = Clean(query)
+    def retrieve(self, request, *args, **kwargs):
+        query = Clean(self.request.QUERY_PARAMS.get('q'))
         limit = getattr(settings, "SEARCH_LIMIT", 5)
-        users = SearchQuerySet().filter(content=query).models(User)[:limit]
-        networks = SearchQuerySet().filter(content=query).models(Network)[:limit]
+        users = SearchQuerySet().filter(SQ(username=query) | SQ(bio=query)).models(User)[:limit]
+        networks = SearchQuerySet().filter(name=query).models(Network)[:limit]
         user_pks = [x.pk for x in users]
         network_pks = [x.pk for x in networks]
-        search_query = SearchQuery.objects.create(query=query)
-        [search_query.users.add(u) for u in User.actives.filter(id__in=user_pks)]
-        [search_query.networks.add(u) for u in Network.objects.filter(id__in=network_pks)]
-        return search_query
+        users = User.actives.filter(id__in=user_pks)
+        networks = Network.objects.select_related().filter(id__in=network_pks)
+        data = {
+            'users': serializers.SimpleUserSerializer(users, many=True).data,
+            'networks': serializers.SimpleNetworkSerializer(networks, many=True).data,
+            'query': query.query_string
+        }
+        save_search_query.delay(query=query.query_string,
+                                user_ids=user_pks,
+                                network_ids=network_pks)
+        return Response(data)

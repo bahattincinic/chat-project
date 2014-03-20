@@ -264,6 +264,9 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_ROUTES = {
     'search.tasks.update_index': {
         'queue': 'haystack'
+    },
+    'search.tasks.save_search_query': {
+        'queue': 'haystack'
     }
 }
 
@@ -278,3 +281,4 @@ CELERYBEAT_SCHEDULE = {
 
 # search
 SEARCH_LIMIT = 5
+SEARCH_QUERY_LENGTH = 2
