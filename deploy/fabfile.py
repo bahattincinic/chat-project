@@ -251,7 +251,7 @@ class DeployTask(BaseTask):
     def src(self):
         def suffix():
             # branch suffix *_140128_22_30
-            return datetime.now().strftime("%y%m%e_%H_%M")
+            return datetime.now().strftime("%y%m_%d_%H_%M")
 
         try:
             deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
