@@ -13,7 +13,7 @@ from fabric.operations import put
 
 
 env.use_ssh_config = True
-env.hosts = ['burakalkan.com']
+env.hosts = ['x']
 # env.hosts = ['deploy']
 settings.configure()
 
@@ -62,6 +62,7 @@ class Log(object):
 
 class BaseTask:
     def __init__(self):
+        self.deploy_clone = ''
         self.remote_dir = ''
         self.remote_dir_conf = ''
         self.ini = {}
@@ -202,12 +203,14 @@ class DeployTask(BaseTask):
                 print magenta('removing old link')
                 run('rm %s' % self.target)
             run('ln -s %s %s' % (self.original, self.target))
+            with cd(self.production_src()):
+                print yellow("switch permissions to www-data")
+                run('sudo chown -R www-data:www-data %s' % self.deploy_clone)
 
     def validate_prod(self):
         # prod validate
         with cd(self.production_src()):
             self.parse_validate_output(self.run_management_command('validate'))
-
 
     def cleanup(self):
         try:
@@ -254,8 +257,8 @@ class DeployTask(BaseTask):
             return datetime.now().strftime("%y%m_%d_%H_%M")
 
         try:
-            deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
-            deploy_clone_dir = "/%s" % deploy_clone
+            self.deploy_clone = '%s_%s' % (self.ini['project_appname'], suffix())
+            deploy_clone_dir = "/%s" % self.deploy_clone
             with cd("/tmp"):
                 if exists(self.ini["project_appname"]):
                     print yellow('remove old clone: %s' % self.ini["project_appname"])
@@ -272,7 +275,8 @@ class DeployTask(BaseTask):
                     print yellow('remove old link %s' % self.ini['project_appname'])
                     run('rm -rf %s' % self.ini['project_appname'])
                 # link tree
-                run('ln -s %s %s' % (deploy_clone, self.ini['project_appname']))
+                run('ln -s %s %s' % (self.deploy_clone, self.ini['project_appname']))
+                # run('sudo chown -R www-data:www-data %s' % deploy_clone)
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
@@ -332,6 +336,11 @@ class DeployTask(BaseTask):
             print yellow("Nginx configured to use ssl, "
                          " make sure certificates "
                          "exists in config/ssl dir")
+
+    def revert_permissions(self):
+        target_dir = "%s/%s" % (self.ini['projects_root'], self.ini['project_address'])
+        print red(target_dir)
+        print yellow(exists(target_dir))
 
     def check_dir(self):
         try:
@@ -435,6 +444,7 @@ def deploy(branch_name):
     obj = DeployTask()
     if obj.load_legend(branch_name):
         try:
+            obj.revert_permissions()
             obj.check_dir()
             obj.render()
             obj.files()
