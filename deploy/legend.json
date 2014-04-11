@@ -15,7 +15,25 @@
     "use_django_static": true,
     "update_haystack_index": false,
 
-    "tasks" : [],
+    "tasks" : [
+        {
+            "filename": "chat_haystack.conf",
+            "comment": "handles instance updates and deletions on search index",
+            "name": "haystack-worker-chat",
+            "command": "/opt/projects/chat.burakalkan.com/venv/bin/python /opt/projects/chat.burakalkan.com/src/chatproject/manage.py celery worker -c 1 -l info -Q haystack",
+            "cwdir": "/opt/projects/chat.burakalkan.com/src/chatproject",
+            "user": "www-data",
+            "autostart": "true",
+            "use_custom_logging": true,
+            "logging": {
+                "purge": true,
+                "logdir": "/opt/projects/chat.burakalkan.com/log/chat_haystack",
+                "logfile": "chat_haystack.log",
+                "logfile_maxbytes": 20480,
+                "logfile_backups": 8
+            }
+        }
+    ],
 
     "keep_last_src_tree_count": 10,
 

@@ -203,9 +203,12 @@ class DeployTask(BaseTask):
                 print magenta('removing old link')
                 run('rm %s' % self.target)
             run('ln -s %s %s' % (self.original, self.target))
-            with cd(self.production_src()):
-                print yellow("switch permissions to www-data")
-                run('sudo chown -R www-data:www-data %s' % self.deploy_clone)
+
+    def restore_permissions(self):
+        with cd(self.production_src()):
+            print yellow("restore permissions to www-data")
+            run('sudo chown -R www-data:www-data %s' % self.deploy_clone)
+
 
     def validate_prod(self):
         # prod validate
@@ -276,7 +279,6 @@ class DeployTask(BaseTask):
                     run('rm -rf %s' % self.ini['project_appname'])
                 # link tree
                 run('ln -s %s %s' % (self.deploy_clone, self.ini['project_appname']))
-                # run('sudo chown -R www-data:www-data %s' % deploy_clone)
         except KeyError:
             print yellow(
                 'Src::no repo url found,'
@@ -455,6 +457,7 @@ def deploy(branch_name):
             obj.collectstatic()
             obj.validate_prod()
             obj.reload()
+            obj.restore_permissions()
             obj.render_tasks()
             obj.reload_search()
             obj.cleanup()
