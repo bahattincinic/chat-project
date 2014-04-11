@@ -186,7 +186,7 @@ USE_TZ = True
 
 DEFAULT_FROM_EMAIL = "system@chatproject.com"
 
-EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
+# EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/

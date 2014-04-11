@@ -32,6 +32,23 @@
                 "logfile_maxbytes": 20480,
                 "logfile_backups": 8
             }
+        },
+        {
+            "filename": "chat_sentry_email.conf",
+            "comment": "mails 500 error to admins",
+            "name": "sentry-email-chat",
+            "command": "/opt/projects/chat.burakalkan.com/venv/bin/python /opt/projects/chat.burakalkan.com/src/chatproject/manage.py celery worker -c 1 -l info -Q email",
+            "cwdir": "/opt/projects/chat.burakalkan.com/src/chatproject",
+            "user": "www-data",
+            "autostart": "true",
+            "use_custom_logging": true,
+            "logging": {
+                "purge": true,
+                "logdir": "/opt/projects/chat.burakalkan.com/log/chat_email",
+                "logfile": "chat_email.log",
+                "logfile_maxbytes": 20480,
+                "logfile_backups": 4
+            }
         }
     ],
 
