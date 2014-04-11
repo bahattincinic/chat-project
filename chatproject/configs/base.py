@@ -184,7 +184,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-DEFAULT_FROM_EMAIL = "system@chatproject.com"
+DEFAULT_FROM_EMAIL = "sentry@burakalkan.com"
 
 # EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
 
