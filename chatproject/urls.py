@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.conf import settings
+from django.http.response import HttpResponse
 from django.views.generic.base import TemplateView
 from chat.views import HomePageView
 from auth.views import ForgotPassword, NewPasswordView
