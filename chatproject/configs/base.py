@@ -7,6 +7,7 @@ from datetime import timedelta
 djcelery.setup_loader()
 
 PROJECT_NAME = 'chat'
+ADMINS = (('Balkan', 'mburakalkan@gmail.com'), ('bahattincinic', 'bahattincinic@gmail.com'))
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
 sys.path.insert(1, APPS)
