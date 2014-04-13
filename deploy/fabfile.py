@@ -474,8 +474,8 @@ def deploy(branch_name):
             obj.validate_prod()
             obj.reload()
             obj.restore_permissions()
-            obj.render_tasks()
             obj.nodejs()
+            obj.render_tasks()
             obj.reload_search()
             obj.cleanup()
         except:

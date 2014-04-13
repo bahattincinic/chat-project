@@ -55,6 +55,23 @@
                 "logfile_maxbytes": 20480,
                 "logfile_backups": 4
             }
+        },
+        {
+            "filename": "chat_node.conf",
+            "comment": "node js server for chat",
+            "name": "node-chat",
+            "command": "/usr/bin/node /opt/projects/chat.burakalkan.com/src/chatproject/node/server.js",
+            "cwdir": "/opt/projects/chat.burakalkan.com/src/chatproject/node/",
+            "user": "www-data",
+            "autostart": "true",
+            "use_custom_logging": true,
+            "logging": {
+                "purge": true,
+                "logdir": "/opt/projects/chat.burakalkan.com/log/chat_node",
+                "logfile": "chat_node.log",
+                "logfile_maxbytes": 20480,
+                "logfile_backups": 8
+            }
         }
     ],
 
