@@ -7,6 +7,7 @@ from datetime import timedelta
 djcelery.setup_loader()
 
 PROJECT_NAME = 'chat'
+ADMINS = (('Balkan', 'mburakalkan@gmail.com'), ('bahattincinic', 'bahattincinic@gmail.com'))
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 APPS = os.path.join(BASE_DIR, 'apps')
 sys.path.insert(1, APPS)
@@ -183,9 +184,9 @@ USE_L10N = True
 
 USE_TZ = True
 
-DEFAULT_FROM_EMAIL = "system@chatproject.com"
+DEFAULT_FROM_EMAIL = "sentry@burakalkan.com"
 
-EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
+# EMAIL_BACKEND = 'core.mail.backends.CeleryEmailBackend'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
