@@ -441,6 +441,23 @@ class DeployTask(BaseTask):
             print yellow("will reload/update search index")
             self.run_management_command("update_index")
 
+    def nodejs(self):
+        if self.ini.get('install_node', False):
+            with cd(self.production_src()):
+                print yellow('installing node js')
+                sudo('apt-get install python-software-properties -y')
+                sudo('apt-add-repository ppa:chris-lea/node.js -y')
+                sudo('apt-get update -y')
+                sudo('apt-get install nodejs -y')
+                sudo('apt-get install npm -y')
+                run('node -v')
+        if self.ini.get('install_npm_modules', False) and exists(self.ini['node_dir']):
+            with cd(self.ini['node_dir']):
+                print yellow('installing node packages')
+                packages = ' '.join(self.ini.get('npm_packages', []))
+                if packages:
+                    run('npm install %s' % packages)
+
 @task
 def deploy(branch_name):
     obj = DeployTask()
@@ -461,6 +478,7 @@ def deploy(branch_name):
             obj.render_tasks()
             obj.reload_search()
             obj.cleanup()
+            obj.nodejs()
         except:
             raise
         finally:

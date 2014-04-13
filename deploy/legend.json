@@ -15,6 +15,12 @@
     "use_django_static": true,
     "update_haystack_index": false,
 
+    "node_dir": "node",
+    "install_node": true,
+    "install_npm_modules": true,
+    "npm_packages": ["socket.io", "underscore",
+                     "moment", "redis", "cookie"],
+
     "tasks" : [
         {
             "filename": "chat_haystack.conf",
