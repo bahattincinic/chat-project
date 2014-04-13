@@ -252,7 +252,7 @@ class DeployTask(BaseTask):
             dirs = [x.strip('\r')[2:] for x in output.split('\n')]
             for x in range(len(dirs) - self.ini.get('keep_last_src_tree_count', 10)):
                 print yellow("removing old source tree: %s" % dirs[x])
-                run('rm -rf %s' % dirs[x])
+                sudo('rm -rf %s' % dirs[x])
 
     def src(self):
         def suffix():
@@ -449,7 +449,6 @@ class DeployTask(BaseTask):
                 sudo('apt-add-repository ppa:chris-lea/node.js -y')
                 sudo('apt-get update -y')
                 sudo('apt-get install nodejs -y')
-                sudo('apt-get install npm -y')
                 run('node -v')
         if self.ini.get('install_npm_modules', False) and exists(self.ini['node_dir']):
             with cd(self.ini['node_dir']):
