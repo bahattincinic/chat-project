@@ -15,7 +15,7 @@
     "use_django_static": true,
     "update_haystack_index": false,
 
-    "node_dir": "node",
+    "node_dir": "/opt/projects/chat.burakalkan.com/src/chatproject/node",
     "install_node": true,
     "install_npm_modules": true,
     "npm_packages": ["socket.io", "underscore",

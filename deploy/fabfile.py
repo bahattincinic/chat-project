@@ -476,9 +476,9 @@ def deploy(branch_name):
             obj.reload()
             obj.restore_permissions()
             obj.render_tasks()
+            obj.nodejs()
             obj.reload_search()
             obj.cleanup()
-            obj.nodejs()
         except:
             raise
         finally:
