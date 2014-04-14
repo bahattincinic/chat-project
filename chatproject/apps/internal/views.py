@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import logging
 import simplejson as json
@@ -10,6 +11,7 @@ from .decorators import ensure_request_origin
 
 
 @ensure_request_origin(['127.0.0.1', '127.0.1.1', '192.168.75.1'])
+@csrf_exempt
 @require_http_methods(["GET"])
 def translate_user_id(request, *args, **kwargs):
     userid = kwargs.get('userid')
@@ -26,6 +28,7 @@ def translate_user_id(request, *args, **kwargs):
 
 
 @ensure_request_origin(['127.0.0.1', '127.0.1.1', '192.168.75.1'])
+@csrf_exempt
 @require_http_methods(["GET"])
 def close_session(request):
     return HttpResponse('ok')
