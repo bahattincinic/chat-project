@@ -13,5 +13,6 @@ class LocalPermission(BasePermission):
             ip = request.META.get('REMOTE_ADDR')
         if not str(ip) in settings.INTERNAL_ALLOWED:
             logger.error("Deny ip: %s from reaching internal api" % str(ip))
+            print 'deny ip %s' % (str(ip))
             return False
         return True
