@@ -4,8 +4,11 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+
 class LocalPermission(BasePermission):
     def has_permission(self, request, view):
+        print 'permission runnin'
+        logger.error('logger error')
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[-1].strip()

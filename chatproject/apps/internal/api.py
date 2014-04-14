@@ -6,7 +6,6 @@ from .serializers import UserTranslateSerializer
 from .permissions import LocalPermission
 
 
-
 class TranslateApiView(RetrieveAPIView):
     model = User
     serializer_class = UserTranslateSerializer
