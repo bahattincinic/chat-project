@@ -30,6 +30,7 @@ exports.bindUserSocket = function(socket, sessionid) {
                             resp.on('data', function(rawdata) {
                                 var response = JSON.parse(new Buffer(rawdata, 'ascii').toString());
                                 if (_.has(response, 'username')) {
+                                    console.log(">>> setting socket username as " + response.username);
                                     socket.username = response.username;
                                     updateRank(socket.username);
 //                                    restoreMore(socket);
