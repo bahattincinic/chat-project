@@ -21,7 +21,7 @@ exports.bindUserSocket = function(socket, sessionid) {
                     var userid = djsession["_auth_user_id"];
                     if (userid) {
                         var options = {
-                            host: 'chat.burakalkan.com',
+                            host: '127.0.0.1',
                             port: 80,
                             path: '/internal/translate/' + userid + '/'
                         };
