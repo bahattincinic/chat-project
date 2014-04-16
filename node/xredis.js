@@ -33,7 +33,6 @@ exports.bindUserSocket = function(socket, sessionid) {
                                     console.log(">>> setting socket username as " + response.username);
                                     socket.username = response.username;
                                     updateRank(socket.username);
-//                                    restoreMore(socket);
                                 } else {
                                     // log this error
                                     console.error('username not found for id: ' + userid);
@@ -78,4 +77,3 @@ function removeUserFromRank(username) {
 
 exports.updateUserRank = updateRank;
 exports.removeUserFromRank = removeUserFromRank;
-
