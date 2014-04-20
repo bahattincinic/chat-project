@@ -139,7 +139,7 @@ angular.module('chatApp').controller('chatController', [
                     'target': session.target.username
                 };
                 $rootScope.active_session = session;
-                socket.emit('### initiate_session', socket_data);
+                socket.emit('initiate_session', socket_data);
                 $scope.createMessage();
             });
         }
