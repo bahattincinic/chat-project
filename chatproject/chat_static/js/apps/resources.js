@@ -28,8 +28,9 @@ angular.module('authApp').factory('authService', function($http) {
 });
 
 // Node Resource
-angular.module('mainApp').factory('socket', function ($rootScope, $location) {
-  var socket = io.connect('http://chat.burakalkan.com:9998', {resource: 'io'});
+angular.module('mainApp').factory('socket', function ($rootScope) {
+  var url = window.location.origin;
+  var socket = io.connect(url + ':9998', {resource: 'io'});
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {

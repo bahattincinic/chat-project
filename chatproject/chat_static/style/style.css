@@ -1609,6 +1609,7 @@ width: 100%;
 .welcome-inner {
 padding: 10px;
 overflow: auto;
+float: left;
 }
 .welcome-user {
 width: 70px;
