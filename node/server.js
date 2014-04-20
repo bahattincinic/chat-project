@@ -6,7 +6,7 @@ var app = require('http').createServer(),
     _ = require('underscore'),
     xredis = require('./xredis');
 // used when storing socket values in redis
-app.listen(9999);
+app.listen(9998);
 
 io.configure(function() {
     io.set('authorization', function(handshakeData, accept) {
