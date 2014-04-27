@@ -49,7 +49,7 @@ mainApp.service('alertService', function(){
 mainApp.service('ConfigService', function (){
     var _environments = {
         local: {
-            host: 'l',
+            host: ['l', 'localhost'],
             config: {
                 api_endpoint: '/api/v1',
                 node_url: 'http://l:9998'
@@ -64,15 +64,22 @@ mainApp.service('ConfigService', function (){
         }
     }, _environment;
 
-    this.getEnvironment = function () {
+    this.getEnvironment = function (){
         var host = window.location.host;
         if (_environment) {
             return _environment;
         }
-        for (var environment in _environments) {
-            if (typeof _environments[environment].host && _environments[environment].host == host) {
-                _environment = environment;
-                return _environment;
+        for (var environment in _environments){
+            if (typeof(_environments[environment].host) && typeof(_environments[environment].host) == 'object') {
+                if (_environments[environment].host.indexOf(host) >= 0) {
+                    _environment = environment;
+                    return _environment;
+                }
+            } else {
+                if (typeof(_environments[environment].host) && _environments[environment].host == host) {
+                    _environment = environment;
+                    return _environment;
+                }
             }
         }
         return null;
