@@ -68,13 +68,13 @@ angular.module('chatApp').factory('chatService', function($http, ConfigService, 
     var endpoint = ConfigService.get('api_endpoint');
     return {
         session: function(username, successCallback, errorCallback){
-            var url = UrlService.parse(':endPoint/v1/account/:username/sessions/',{
+            var url = UrlService.parse(':endPoint/account/:username/sessions/',{
                 'endPoint': endpoint, 'username': username});
             $http.post(url).then(successCallback, errorCallback)
         },
         message: function(payload, username, uuid , successCallback, errorCallback){
             payload = angular.toJson(payload);
-            var url = UrlService.parse(':endPoint/v1/account/:username/sessions/:uuid/messages/',{
+            var url = UrlService.parse(':endPoint/account/:username/sessions/:uuid/messages/',{
                 'endPoint': endpoint, 'username': username, 'uuid': uuid});
             $http.post(url, payload).then(successCallback, errorCallback)
         }

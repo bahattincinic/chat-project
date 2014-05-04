@@ -31,9 +31,33 @@
 {% block head %}{% endblock head %}
 </head>
 <body ng-app="mainApp">
+<div class="root">
+
+<div id="chatmenu" ng-class="{hide:!showmenu,slide:showmenu}">
+    <div class="topcoat-list-container">
+        <ul class="topcoat-list" ng-repeat="item in session_list">
+            <li>
+                <a href="javascript:void(0)" ng-click="sessionChangeStatus($event, item)">
+                    <span ng-switch="item.is_closed">
+                        <img ng-switch-when="false" src="{% static "images/icons/anonuser_active.png" %}" alt=""/>
+                        <img ng-switch-when="true" src="{% static "images/icons/anonuser_passive.png" %}" alt=""/>
+                    </span>
+                    <strong>{[{ item.anon.username }]}</strong>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div id="home" ng-class="{hide:showmenu,slide:!showmenu}">
 
 <!-- Header -->
-<div class="topbar" ng-controller="searchController">
+<div class="topbar" ng-class="{active:showmenu}" ng-controller="searchController">
+    <div class="chatmenu_button">
+        <a href="javascript:void(0)" ng-click="toggleMenu()">
+            <img src="{% static "images/feed.png" %}" width="26" height="26" alt=""/>
+        </a>
+    </div>
     <div class="header">
         <a href="{% url 'homepage' %}"><div class="logo"></div><div class="logo-small"></div></a>
         <div class="search-input">
@@ -119,7 +143,7 @@
 
 
 <!-- Footer -->
-<div class="row-body">
+<div class="row-body content-footer" ng-class="{active:showmenu}">
     <div class="footer">
         <div class="footer-container">
             <div class="footer-links">
@@ -139,6 +163,10 @@
             </div>
         </div>
     </div>
+</div>
+
+
+</div>
 </div>
 
 </body>
