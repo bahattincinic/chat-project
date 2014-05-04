@@ -1,14 +1,8 @@
 'use strict';
 
-angular.module('mainApp').controller('searchController', function($scope, accountService, $rootScope){
+angular.module('mainApp').controller('searchController', function($scope, accountService){
     $scope.searchText = '';
     $scope.search = {'is_search': false, 'user': [], 'network':[]};
-
-    $scope.toggleMenu = function(){
-      console.log('searchController::toggleMenu()');
-      $rootScope.showmenu = $rootScope.showmenu ? false : true;
-    };
-
     // search input keyup query
     $scope.$watch('searchText', function (val) {
         var payload = {'q': val};

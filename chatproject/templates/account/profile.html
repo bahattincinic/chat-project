@@ -4,7 +4,7 @@
 {% block title %}{{ object.username }} | The Chat{% endblock %}
 
 {% block body %}
-<div class="row-body content-profile" ng-class="{active:showmenu}" ng-init="state='{{ type }}'; authenticate={{ authenticate|lower }}">
+<div class="row-body content-profile" ng-init="state='{{ type }}'; authenticate={{ authenticate|lower }}">
      <!-- Cover/Profile Bar -->
      <div class="twelve columns">
         <div class="cover-container">
@@ -68,7 +68,7 @@
 </div>
 
 
-<div class="row-body content-messages" ng-class="{active:showmenu}">
+<div class="row-body content-messages">
     <div ng-view class="animation" ></div>
 </div>
 
