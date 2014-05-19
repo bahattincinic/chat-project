@@ -44,3 +44,57 @@ mainApp.service('alertService', function(){
        }
    };
 });
+
+
+mainApp.service('ConfigService', function (){
+    var _environments = {
+        local: {
+            host: ['l', 'localhost'],
+            config: {
+                api_endpoint: '/api/v1',
+                node_url: 'http://l:9998'
+            }
+        },
+        prod: {
+            host: 'chat.burakalkan.com',
+            config: {
+                api_endpoint: '/api/v1',
+                node_url: 'http://chat.burakalkan.com:9998'
+            }
+        }
+    }, _environment;
+
+    this.getEnvironment = function (){
+        var host = window.location.host;
+        if (_environment) {
+            return _environment;
+        }
+        for (var environment in _environments){
+            if (typeof(_environments[environment].host) && typeof(_environments[environment].host) == 'object') {
+                if (_environments[environment].host.indexOf(host) >= 0) {
+                    _environment = environment;
+                    return _environment;
+                }
+            } else {
+                if (typeof(_environments[environment].host) && _environments[environment].host == host) {
+                    _environment = environment;
+                    return _environment;
+                }
+            }
+        }
+        return null;
+    };
+    this.get = function (property) {
+        return _environments[this.getEnvironment()].config[property];
+    };
+});
+
+
+mainApp.service('UrlService', function () {
+    this.parse = function (url, data) {
+        angular.forEach(data, function (value, key) {
+            url = url.replace(":" + key, value);
+        });
+        return url;
+    }
+});
