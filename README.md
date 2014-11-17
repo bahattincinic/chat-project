@@ -18,12 +18,15 @@ Install Pip and Virtual Environment
     sudo apt-get install python-pip
     sudo pip install --upgrade pip
     sudo pip install --upgrade virtualenv
+
+Install Pillow Requirements
     sudo apt-get install libjpeg62-dev zlib1g-dev libfreetype6-dev tcl8.5-dev tk8.5-dev python-tk
     
 Install Npm and Bower Packages
     
-    npm install
     bower install
+    cd node/
+    npm install
 
 Create a virtual env:
 
