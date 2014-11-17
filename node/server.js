@@ -8,7 +8,7 @@ var app = require('http').createServer(),
 // used when storing socket values in redis
 app.listen(9998);
 
-io.configure(function() {
+//io.configure(function() {
     io.set('authorization', function(handshakeData, accept) {
         if (handshakeData.headers.cookie) {
             handshakeData.cookie = cookie_reader.parse(handshakeData.headers.cookie);
@@ -19,8 +19,8 @@ io.configure(function() {
         // allow connection always
         return accept(null, true);
     });
-    io.set('close timeout', 60*60*24); // 24h
-    io.set('log level', 1);
+    //io.set('close timeout', 60*60*24); // 24h
+    //io.set('log level', 1);
     io.set('resource', '/io');
     io.set('transports', [
         'websocket'
@@ -29,7 +29,7 @@ io.configure(function() {
         , 'xhr-polling'
         , 'jsonp-polling'
     ]);
-});
+//});
 
 io.sockets.on('connection', function(socket){
     console.log('connection socket with id: ' + socket.id);
