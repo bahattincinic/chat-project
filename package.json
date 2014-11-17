@@ -1,0 +1,25 @@
+{
+  "name": "chatproject",
+  "version": "0.0.0",
+  "description": "Chat Project ============ Anonymous Chat App",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:bahattincinic/chatproject.git"
+  },
+  "author": "",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "socket.io": "~1.2.0",
+    "underscore": "~1.7.0",
+    "moment": "~2.8.3",
+    "redis": "~0.12.1",
+    "cookie": "~0.1.2"
+  }
+}

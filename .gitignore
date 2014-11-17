@@ -49,3 +49,6 @@ static/
 
 # node modules
 node/node_modules
+
+# bower modules
+chatproject/chat_static/js/vendor
