@@ -2,6 +2,8 @@ Chat Project
 ============
 Anonymous Chat App
 
+**Not being maintained**
+
 Requirements
 -------------
 1. RabbitMQ
